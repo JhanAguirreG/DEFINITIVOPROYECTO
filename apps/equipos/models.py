@@ -12,18 +12,6 @@ class Equipo(models.Model):
         FUERA_SERVICIO = "FUERA_SERVICIO", "Fuera de servicio"
         BAJA = "BAJA", "Dado de baja"
 
-    class Riesgo(models.TextChoices):
-        I = "I", "Clase I"
-        IIA = "IIA", "Clase IIA"
-        IIB = "IIB", "Clase IIB"
-        III = "III", "Clase III"
-
-    class Tecnologia(models.TextChoices):
-        BIOMEDICO = "BIOMEDICO", "Equipo Biomédico"
-        INDUSTRIAL = "INDUSTRIAL", "Industrial"
-        LABORATORIO = "LABORATORIO", "Laboratorio"
-        IMAGENOLOGIA = "IMAGENOLOGIA", "Imagenología"
-
     institucion = models.ForeignKey(
         "instituciones.Institucion",
         on_delete=models.CASCADE,
@@ -36,6 +24,13 @@ class Equipo(models.Model):
         related_name="equipos",
     )
 
+    catalogo = models.ForeignKey(
+        "catalogo.CatalogoEquipo",
+        on_delete=models.PROTECT,
+        related_name="equipos",
+        null=True,
+        blank=True,
+    )
     codigo = models.CharField(
         max_length=50,
         unique=True,
@@ -77,18 +72,6 @@ class Equipo(models.Model):
         blank=True,
     )
 
-    riesgo = models.CharField(
-        max_length=5,
-        choices=Riesgo.choices,
-        default=Riesgo.I,
-    )
-
-    tecnologia = models.CharField(
-        max_length=20,
-        choices=Tecnologia.choices,
-        default=Tecnologia.BIOMEDICO,
-    )
-
     ubicacion = models.CharField(
         max_length=150,
         blank=True,
@@ -98,11 +81,6 @@ class Equipo(models.Model):
         max_length=30,
         choices=Estado.choices,
         default=Estado.ACTIVO,
-    )
-
-    frecuencia_mantenimiento = models.PositiveIntegerField(
-        default=6,
-        help_text="Frecuencia en meses",
     )
 
     fecha_ultimo_mantenimiento = models.DateField(
@@ -139,6 +117,35 @@ class Equipo(models.Model):
             "servicio",
             "nombre",
         ]
+    @property
+    def riesgo_catalogo(self):
+        return self.catalogo.riesgo if self.catalogo else None
+
+
+    @property
+    def tecnologia_catalogo(self):
+        return self.catalogo.tecnologia if self.catalogo else None
+
+    @property
+    def frecuencia_catalogo(self):
+        return (
+            self.catalogo.frecuencia_mantenimiento
+            if self.catalogo
+            else None
+        )
+
+    @property
+    def requiere_calibracion(self):
+        if self.catalogo:
+            return self.catalogo.requiere_calibracion
+        return False
+
+
+    @property
+    def requiere_mantenimiento(self):
+        if self.catalogo:
+            return self.catalogo.requiere_mantenimiento
+        return True
 
     def __str__(self):
         return f"{self.codigo} - {self.nombre}"

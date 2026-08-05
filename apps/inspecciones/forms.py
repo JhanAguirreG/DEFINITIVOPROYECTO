@@ -1,9 +1,13 @@
 from django import forms
+from django.forms import modelformset_factory
+
+from apps.instituciones.models import Institucion
+from apps.servicios.models import Servicio
 
 from .models import (
     Inspeccion,
-    DetalleInspeccion,
     FirmaInspeccion,
+    ResultadoItem,
 )
 
 
@@ -18,13 +22,9 @@ class InspeccionForm(forms.ModelForm):
         model = Inspeccion
 
         fields = (
-
             "institucion",
-
             "servicio",
-
             "observaciones_generales",
-
         )
 
         widgets = {
@@ -51,42 +51,17 @@ class InspeccionForm(forms.ModelForm):
 
         }
 
+    def __init__(self, *args, **kwargs):
 
-# ==========================================================
-# DETALLE DE INSPECCIÓN
-# ==========================================================
+        super().__init__(*args, **kwargs)
 
-class DetalleInspeccionForm(forms.ModelForm):
-
-    class Meta:
-
-        model = DetalleInspeccion
-
-        exclude = (
-
-            "inspeccion",
-
-            "equipo",
-
+        self.fields["institucion"].queryset = Institucion.objects.filter(
+            activa=True
         )
 
-        widgets = {
-
-            "estado": forms.Select(
-                attrs={
-                    "class": "form-select",
-                }
-            ),
-
-            "observaciones": forms.Textarea(
-                attrs={
-                    "class": "form-control",
-                    "rows": 2,
-                    "placeholder": "Observaciones del equipo...",
-                }
-            ),
-
-        }
+        self.fields["servicio"].queryset = Servicio.objects.filter(
+            activo=True
+        )
 
 
 # ==========================================================
@@ -100,13 +75,9 @@ class FirmaInspeccionForm(forms.ModelForm):
         model = FirmaInspeccion
 
         fields = (
-
             "responsable_servicio",
-
             "firma_biomedico",
-
             "firma_responsable",
-
         )
 
         widgets = {
@@ -117,4 +88,63 @@ class FirmaInspeccionForm(forms.ModelForm):
                 }
             ),
 
+            "firma_biomedico": forms.ClearableFileInput(
+                attrs={
+                    "class": "form-control",
+                    "accept": "image/*",
+                }
+            ),
+
+            "firma_responsable": forms.ClearableFileInput(
+                attrs={
+                    "class": "form-control",
+                    "accept": "image/*",
+                }
+            ),
+
         }
+
+
+# ==========================================================
+# RESULTADO DE ÍTEMS
+# ==========================================================
+
+class ResultadoItemForm(forms.ModelForm):
+
+    class Meta:
+
+        model = ResultadoItem
+
+        fields = (
+            "cumple",
+            "observacion",
+        )
+
+        widgets = {
+
+            "cumple": forms.CheckboxInput(
+                attrs={
+                    "class": "form-check-input",
+                }
+            ),
+
+            "observacion": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 2,
+                    "placeholder": "Observación (si aplica)...",
+                }
+            ),
+
+        }
+
+
+ResultadoItemFormSet = modelformset_factory(
+
+    ResultadoItem,
+
+    form=ResultadoItemForm,
+
+    extra=0,
+
+)

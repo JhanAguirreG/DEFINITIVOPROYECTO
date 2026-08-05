@@ -36,6 +36,10 @@ urlpatterns = [
     "mantenimientos/",
     include("apps.mantenimiento.urls"),
     ),
+    path(
+    "inspecciones/",
+    include("apps.inspecciones.urls"),
+    ),
 
 ]
 

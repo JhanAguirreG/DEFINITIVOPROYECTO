@@ -71,3 +71,76 @@ class CatalogoEquipo(models.Model):
 
     def __str__(self):
         return self.nombre
+
+        # ==========================================================
+# PLANTILLAS DE INSPECCIÓN
+# ==========================================================
+
+class PlantillaInspeccion(models.Model):
+
+    catalogo = models.OneToOneField(
+        CatalogoEquipo,
+        on_delete=models.CASCADE,
+        related_name="plantilla",
+    )
+
+    nombre = models.CharField(
+        max_length=200,
+    )
+
+    activa = models.BooleanField(
+        default=True,
+    )
+
+    class Meta:
+
+        ordering = [
+            "nombre",
+        ]
+
+        verbose_name = "Plantilla de Inspección"
+
+        verbose_name_plural = "Plantillas de Inspección"
+
+    def __str__(self):
+
+        return self.nombre
+
+
+# ==========================================================
+# ITEMS
+# ==========================================================
+
+class ItemPlantilla(models.Model):
+
+    plantilla = models.ForeignKey(
+        PlantillaInspeccion,
+        on_delete=models.CASCADE,
+        related_name="items",
+    )
+
+    descripcion = models.CharField(
+        max_length=250,
+    )
+
+    obligatorio = models.BooleanField(
+        default=True,
+    )
+
+    orden = models.PositiveIntegerField(
+        default=1,
+    )
+
+    class Meta:
+
+        ordering = [
+            "orden",
+        ]
+
+        verbose_name = "Ítem"
+
+        verbose_name_plural = "Ítems"
+
+    def __str__(self):
+
+        return self.descripcion

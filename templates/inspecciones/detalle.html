@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}
+Detalle de Inspección
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- ===================================== -->
+    <!-- CABECERA -->
+    <!-- ===================================== -->
+
+    <div class="card shadow-sm border-0 mb-4">
+
+        <div class="card-header bg-primary text-white">
+
+            <h4 class="mb-0">
+
+                <i class="bi bi-clipboard-check"></i>
+
+                Ronda de Inspección
+
+            </h4>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="row">
+
+                <div class="col-md-3">
+
+                    <strong>Institución</strong>
+
+                    <br>
+
+                    {{ inspeccion.institucion }}
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <strong>Servicio</strong>
+
+                    <br>
+
+                    {{ inspeccion.servicio }}
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <strong>Biomédico</strong>
+
+                    <br>
+
+                    {{ inspeccion.biomedico }}
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <strong>Fecha</strong>
+
+                    <br>
+
+                    {{ inspeccion.fecha|date:"d/m/Y" }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ===================================== -->
+    <!-- EQUIPOS -->
+    <!-- ===================================== -->
+
+ <div class="accordion" id="accordionEquipos">
+
+    {% for detalle in detalles %}
+
+    <div class="accordion-item mb-3 shadow-sm">
+
+        <h2 class="accordion-header">
+
+            <button
+                class="accordion-button collapsed"
+                data-bs-toggle="collapse"
+                data-bs-target="#equipo{{ detalle.id }}"
+            >
+
+                <strong>{{ detalle.equipo.nombre }}</strong>
+
+                &nbsp;
+
+                <span class="badge bg-secondary">
+
+                    {{ detalle.equipo.codigo }}
+
+                </span>
+
+            </button>
+
+        </h2>
+
+        <div
+            id="equipo{{ detalle.id }}"
+            class="accordion-collapse collapse"
+        >
+
+            <div class="accordion-body">
+
+                <div class="row mb-3">
+
+                    <div class="col-md-3">
+                        <strong>Marca</strong><br>
+                        {{ detalle.equipo.marca }}
+                    </div>
+
+                    <div class="col-md-3">
+                        <strong>Modelo</strong><br>
+                        {{ detalle.equipo.modelo }}
+                    </div>
+
+                    <div class="col-md-3">
+                        <strong>Serie</strong><br>
+                        {{ detalle.equipo.serie }}
+                    </div>
+
+                    <div class="col-md-3">
+                        <strong>Ubicación</strong><br>
+                        {{ detalle.equipo.ubicacion }}
+                    </div>
+
+                </div>
+
+                <table class="table table-bordered align-middle">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th width="65%">
+                                Ítem de inspección
+                            </th>
+
+                            <th width="15%">
+                                Cumple
+                            </th>
+
+                            <th>
+                                Observaciones
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    {% for resultado in detalle.resultados.all %}
+
+                        <tr>
+
+                            <td>
+
+                                {{ resultado.item.descripcion }}
+
+                                {% if resultado.item.obligatorio %}
+
+                                    <span class="text-danger">*</span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td class="text-center">
+
+                                {% if resultado.cumple %}
+
+                                    <span class="badge bg-success">
+
+                                        Sí
+
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-danger">
+
+                                        No
+
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                {{ resultado.observacion|default:"-" }}
+
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td colspan="3" class="text-center text-muted">
+
+                                Este equipo no tiene plantilla de inspección.
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+
+    <!-- ===================================== -->
+    <!-- BOTONES -->
+    <!-- ===================================== -->
+
+    <div class="d-flex justify-content-between mb-5">
+
+        <a href="{% url 'inspecciones:lista_inspecciones' %}"
+           class="btn btn-secondary">
+
+            <i class="bi bi-arrow-left"></i>
+
+            Volver
+
+        </a>
+
+        {% if inspeccion.estado == "ABIERTA" %}
+
+        <a href="{% url 'inspecciones:finalizar_inspeccion' inspeccion.id %}"
+           class="btn btn-success">
+
+            <i class="bi bi-check-circle"></i>
+
+            Finalizar Inspección
+
+        </a>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

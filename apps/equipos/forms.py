@@ -1,7 +1,9 @@
 from django import forms
 
+from apps.catalogo.models import CatalogoEquipo
 from apps.instituciones.models import Institucion
 from apps.servicios.models import Servicio
+
 from .models import Equipo
 
 
@@ -16,6 +18,8 @@ class EquipoForm(forms.ModelForm):
             "institucion",
             "servicio",
 
+            "catalogo",
+
             "codigo",
             "inventario",
 
@@ -27,14 +31,9 @@ class EquipoForm(forms.ModelForm):
 
             "registro_invima",
 
-            "riesgo",
-            "tecnologia",
-
             "ubicacion",
 
             "estado",
-
-            "frecuencia_mantenimiento",
 
             "fecha_ultimo_mantenimiento",
             "fecha_proximo_mantenimiento",
@@ -54,6 +53,12 @@ class EquipoForm(forms.ModelForm):
             ),
 
             "servicio": forms.Select(
+                attrs={
+                    "class": "form-select",
+                }
+            ),
+
+            "catalogo": forms.Select(
                 attrs={
                     "class": "form-select",
                 }
@@ -107,18 +112,6 @@ class EquipoForm(forms.ModelForm):
                 }
             ),
 
-            "riesgo": forms.Select(
-                attrs={
-                    "class": "form-select",
-                }
-            ),
-
-            "tecnologia": forms.Select(
-                attrs={
-                    "class": "form-select",
-                }
-            ),
-
             "ubicacion": forms.TextInput(
                 attrs={
                     "class": "form-control",
@@ -128,13 +121,6 @@ class EquipoForm(forms.ModelForm):
             "estado": forms.Select(
                 attrs={
                     "class": "form-select",
-                }
-            ),
-
-            "frecuencia_mantenimiento": forms.NumberInput(
-                attrs={
-                    "class": "form-control",
-                    "min": 1,
                 }
             ),
 
@@ -179,9 +165,18 @@ class EquipoForm(forms.ModelForm):
             activo=True
         )
 
+        self.fields["catalogo"].queryset = CatalogoEquipo.objects.filter(
+            activo=True
+        )
+
         self.fields["codigo"].label = "Código interno"
+
         self.fields["inventario"].label = "Número de inventario"
+
+        self.fields["catalogo"].label = "Tipo de equipo"
+
         self.fields["registro_invima"].label = "Registro INVIMA"
-        self.fields["frecuencia_mantenimiento"].label = "Frecuencia de mantenimiento (meses)"
+
         self.fields["fecha_ultimo_mantenimiento"].label = "Último mantenimiento"
+
         self.fields["fecha_proximo_mantenimiento"].label = "Próximo mantenimiento"

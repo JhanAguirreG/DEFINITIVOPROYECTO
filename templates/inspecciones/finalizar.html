@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}
+Finalizar Inspección
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-8">
+
+            <div class="card shadow border-0">
+
+                <div class="card-header bg-success text-white">
+
+                    <h4 class="mb-0">
+
+                        <i class="bi bi-check-circle"></i>
+
+                        Finalizar Inspección
+
+                    </h4>
+
+                </div>
+
+                <div class="card-body">
+
+                    <div class="alert alert-info">
+
+                        <strong>Institución:</strong>
+
+                        {{ inspeccion.institucion }}
+
+                        <br>
+
+                        <strong>Servicio:</strong>
+
+                        {{ inspeccion.servicio }}
+
+                        <br>
+
+                        <strong>Biomédico:</strong>
+
+                        {{ inspeccion.biomedico }}
+
+                        <br>
+
+                        <strong>Fecha:</strong>
+
+                        {{ inspeccion.fecha|date:"d/m/Y" }}
+
+                    </div>
+
+                    <form
+                        method="post"
+                        enctype="multipart/form-data">
+
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+
+                                Responsable del Servicio
+
+                            </label>
+
+                            {{ form.responsable_servicio }}
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+
+                                Firma Biomédico
+
+                            </label>
+
+                            {{ form.firma_biomedico }}
+                        </div>
+
+                        <div class="mb-4">
+
+                            <label class="form-label">
+
+                                Firma Responsable
+
+                            </label>
+
+                            {{ form.firma_responsable }}
+
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between">
+
+                            <a
+                                href="{% url 'inspecciones:detalle_inspeccion' inspeccion.id %}"
+                                class="btn btn-secondary">
+
+                                <i class="bi bi-arrow-left"></i>
+
+                                Volver
+
+                            </a>
+
+                            <button
+                                type="submit"
+                                class="btn btn-success">
+
+                                <i class="bi bi-check-circle"></i>
+
+                                Finalizar Inspección
+
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
