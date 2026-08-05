@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ titulo }} | SIGHI
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-10">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-header bg-primary text-white">
+
+                    <h4 class="mb-0">
+
+                        {{ titulo }}
+
+                    </h4>
+
+                </div>
+
+                <div class="card-body">
+
+                    {% if form.errors %}
+
+                        <div class="alert alert-danger">
+
+                            <strong>Corrija los siguientes errores:</strong>
+
+                            {{ form.errors }}
+
+                        </div>
+
+                    {% endif %}
+
+                    <form method="POST">
+
+                        {% csrf_token %}
+
+                        <!-- DATOS GENERALES -->
+
+                        <h5 class="border-bottom pb-2 mb-3">
+
+                            Información General
+
+                        </h5>
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+
+                                    {{ form.institucion.label }}
+
+                                </label>
+
+                                {{ form.institucion }}
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+
+                                    {{ form.servicio.label }}
+
+                                </label>
+
+                                {{ form.servicio }}
+
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+
+                                <label class="form-label">
+
+                                    {{ form.codigo.label }}
+
+                                </label>
+
+                                {{ form.codigo }}
+
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+
+                                <label class="form-label">
+
+                                    {{ form.inventario.label }}
+
+                                </label>
+
+                                {{ form.inventario }}
+
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+
+                                <label class="form-label">
+
+                                    {{ form.estado.label }}
+
+                                </label>
+
+                                {{ form.estado }}
+
+                            </div>
+
+                        </div>
+
+                        <!-- IDENTIFICACIÓN -->
+
+                        <h5 class="border-bottom pb-2 mt-4 mb-3">
+
+                            Identificación del Equipo
+
+                        </h5>
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+
+                                    {{ form.nombre.label }}
+
+                                </label>
+
+                                {{ form.nombre }}
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+
+                                    {{ form.fabricante.label }}
+
+                                </label>
+
+                                {{ form.fabricante }}
+
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+
+                                <label class="form-label">
+
+                                    {{ form.marca.label }}
+
+                                </label>
+
+                                {{ form.marca }}
+
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+
+                                <label class="form-label">
+
+                                    {{ form.modelo.label }}
+
+                                </label>
+
+                                {{ form.modelo }}
+
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+
+                                <label class="form-label">
+
+                                    {{ form.serie.label }}
+
+                                </label>
+
+                                {{ form.serie }}
+
+                            </div>
+
+                        </div>
+
+                        <!-- INFORMACIÓN TÉCNICA -->
+
+                        <h5 class="border-bottom pb-2 mt-4 mb-3">
+
+                            Información Técnica
+
+                        </h5>
+
+                        <div class="row">
+
+                            <div class="col-md-4 mb-3">
+
+                                <label class="form-label">
+
+                                    {{ form.registro_invima.label }}
+
+                                </label>
+
+                                {{ form.registro_invima }}
+
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+
+                                <label class="form-label">
+
+                                    {{ form.riesgo.label }}
+
+                                </label>
+
+                                {{ form.riesgo }}
+
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+
+                                <label class="form-label">
+
+                                    {{ form.tecnologia.label }}
+
+                                </label>
+
+                                {{ form.tecnologia }}
+
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+
+                                <label class="form-label">
+
+                                    {{ form.ubicacion.label }}
+
+                                </label>
+
+                                {{ form.ubicacion }}
+
+                            </div>
+
+                        </div>
+
+                        <!-- MANTENIMIENTO -->
+
+                        <h5 class="border-bottom pb-2 mt-4 mb-3">
+
+                            Mantenimiento
+
+                        </h5>
+
+                        <div class="row">
+
+                            <div class="col-md-4 mb-3">
+
+                                <label class="form-label">
+
+                                    {{ form.frecuencia_mantenimiento.label }}
+
+                                </label>
+
+                                {{ form.frecuencia_mantenimiento }}
+
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+
+                                <label class="form-label">
+
+                                    {{ form.fecha_ultimo_mantenimiento.label }}
+
+                                </label>
+
+                                {{ form.fecha_ultimo_mantenimiento }}
+
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+
+                                <label class="form-label">
+
+                                    {{ form.fecha_proximo_mantenimiento.label }}
+
+                                </label>
+
+                                {{ form.fecha_proximo_mantenimiento }}
+
+                            </div>
+
+                        </div>
+
+                        <!-- OBSERVACIONES -->
+
+                        <h5 class="border-bottom pb-2 mt-4 mb-3">
+
+                            Observaciones
+
+                        </h5>
+
+                        <div class="mb-3">
+
+                            {{ form.observaciones }}
+
+                        </div>
+
+                        <div class="form-check form-switch mb-4">
+
+                            {{ form.activo }}
+
+                            <label class="form-check-label ms-2">
+
+                                Equipo activo
+
+                            </label>
+
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+
+                            <a
+                                href="{% url 'lista_equipos' %}"
+                                class="btn btn-secondary">
+
+                                Cancelar
+
+                            </a>
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary">
+
+                                <i class="bi bi-save"></i>
+
+                                Guardar
+
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

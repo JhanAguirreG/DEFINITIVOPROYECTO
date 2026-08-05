@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if editar %}
+Editar Servicio
+{% else %}
+Nuevo Servicio
+{% endif %} | SIGHI
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-8">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-header bg-primary text-white">
+
+                    <h4 class="mb-0">
+
+                        <i class="bi bi-diagram-3-fill"></i>
+
+                        {% if editar %}
+                        Editar Servicio
+                        {% else %}
+                        Nuevo Servicio
+                        {% endif %}
+
+                    </h4>
+
+                </div>
+
+                <form method="post">
+
+                    {% csrf_token %}
+
+                    <div class="card-body">
+
+                        {% if messages %}
+
+                            {% for message in messages %}
+
+                                <div class="alert alert-success">
+
+                                    {{ message }}
+
+                                </div>
+
+                            {% endfor %}
+
+                        {% endif %}
+
+                        {% for field in form %}
+
+                            {% if field.name != "activo" %}
+
+                                <div class="mb-3">
+
+                                    <label class="form-label">
+
+                                        {{ field.label }}
+
+                                    </label>
+
+                                    {{ field }}
+
+                                    {% if field.errors %}
+
+                                        <div class="text-danger small mt-1">
+
+                                            {{ field.errors }}
+
+                                        </div>
+
+                                    {% endif %}
+
+                                </div>
+
+                            {% endif %}
+
+                        {% endfor %}
+
+                        <hr>
+
+                        <div class="form-check form-switch">
+
+                            {{ form.activo }}
+
+                            <label
+                                class="form-check-label"
+                                for="{{ form.activo.id_for_label }}">
+
+                                Servicio activo
+
+                            </label>
+
+                        </div>
+
+                        <small class="text-muted">
+
+                            Si el servicio está inactivo no podrá utilizarse en el sistema.
+
+                        </small>
+
+                    </div>
+
+                    <div class="card-footer d-flex justify-content-between">
+
+                        <a
+                            href="{% url 'lista_servicios' %}"
+                            class="btn btn-secondary">
+
+                            <i class="bi bi-arrow-left"></i>
+
+                            Volver
+
+                        </a>
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary">
+
+                            <i class="bi bi-check-circle"></i>
+
+                            {% if editar %}
+                            Actualizar
+                            {% else %}
+                            Guardar
+                            {% endif %}
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

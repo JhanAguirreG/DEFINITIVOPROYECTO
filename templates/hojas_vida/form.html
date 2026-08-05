@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ titulo }} | SIGHI
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="fw-bold">
+
+                {{ titulo }}
+
+            </h2>
+
+            <p class="text-muted">
+
+                Información técnica y documental del equipo biomédico.
+
+            </p>
+
+        </div>
+
+        <a href="{% url 'lista_hojas_vida' %}"
+           class="btn btn-secondary">
+
+            <i class="bi bi-arrow-left"></i>
+
+            Volver
+
+        </a>
+
+    </div>
+
+
+    <form
+        method="POST"
+        enctype="multipart/form-data">
+
+        {% csrf_token %}
+
+        <div class="card shadow-sm border-0">
+
+            <div class="card-body">
+
+                {% if form.errors %}
+
+                <div class="alert alert-danger">
+
+                    <strong>
+
+                        Corrija los siguientes errores:
+
+                    </strong>
+
+                    <hr>
+
+                    {{ form.errors }}
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- DATOS GENERALES -->
+
+                <h5 class="fw-bold mb-3">
+
+                    Datos Generales
+
+                </h5>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Equipo
+
+                        </label>
+
+                        {{ form.equipo }}
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+
+                            Fecha compra
+
+                        </label>
+
+                        {{ form.fecha_compra }}
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+
+                            Fecha instalación
+
+                        </label>
+
+                        {{ form.fecha_instalacion }}
+
+                    </div>
+
+                </div>
+
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Proveedor
+
+                        </label>
+
+                        {{ form.proveedor }}
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+
+                            Vida útil (años)
+
+                        </label>
+
+                        {{ form.vida_util }}
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+
+                            Garantía hasta
+
+                        </label>
+
+                        {{ form.garantia_hasta }}
+
+                    </div>
+
+                </div>
+
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Costo adquisición
+
+                        </label>
+
+                        {{ form.costo_adquisicion }}
+
+                    </div>
+
+                    <div class="col-md-8 mb-3">
+
+                        <label class="form-label">
+
+                            Ubicación detallada
+
+                        </label>
+
+                        {{ form.ubicacion_detallada }}
+
+                    </div>
+
+                </div>
+
+
+                <hr>
+
+
+                <!-- DOCUMENTOS -->
+
+                <h5 class="fw-bold mb-3">
+
+                    Documentación
+
+                </h5>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Manual de Operación
+
+                        </label>
+
+                        {{ form.manual_operacion }}
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Manual de Servicio
+
+                        </label>
+
+                        {{ form.manual_servicio }}
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Fotografía
+
+                        </label>
+
+                        {{ form.fotografia }}
+
+                    </div>
+
+                </div>
+
+
+                <hr>
+
+
+                <!-- OBSERVACIONES -->
+
+                <h5 class="fw-bold mb-3">
+
+                    Observaciones
+
+                </h5>
+
+                <div class="mb-3">
+
+                    {{ form.observaciones }}
+
+                </div>
+
+            </div>
+
+
+            <div class="card-footer bg-white text-end">
+
+                <a href="{% url 'lista_hojas_vida' %}"
+                   class="btn btn-secondary">
+
+                    Cancelar
+
+                </a>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary">
+
+                    <i class="bi bi-save"></i>
+
+                    Guardar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

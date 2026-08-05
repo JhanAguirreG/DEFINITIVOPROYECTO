@@ -1,0 +1,1084 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Hoja de Vida
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!--======================================================
+    CABECERA
+    =======================================================-->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="fw-bold mb-1">
+
+                <i class="bi bi-file-earmark-medical"></i>
+
+                Hoja de Vida del Equipo
+
+            </h2>
+
+            <small class="text-muted">
+
+                Expediente técnico completo del equipo biomédico
+
+            </small>
+
+        </div>
+
+        <div>
+
+            <a href="{% url 'lista_hojas_vida' %}"
+               class="btn btn-secondary">
+
+                <i class="bi bi-arrow-left"></i>
+
+                Volver
+
+            </a>
+
+            {% if user.es_superadmin or user.es_admin %}
+
+            <a href="{% url 'editar_hoja_vida' hoja.id %}"
+               class="btn btn-warning">
+
+                <i class="bi bi-pencil-square"></i>
+
+                Editar
+
+            </a>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+
+    <!--======================================================
+    PANEL DE INDICADORES
+    =======================================================-->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-lg-3">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <i class="bi bi-tools text-primary fs-1"></i>
+
+                    <h2 class="mt-2">
+
+                        {{ total_mantenimientos }}
+
+                    </h2>
+
+                    <small class="text-muted">
+
+                        Total mantenimientos
+
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="col-lg-3">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <i class="bi bi-check-circle text-success fs-1"></i>
+
+                    <h2>
+
+                        {{ preventivos }}
+
+                    </h2>
+
+                    <small class="text-muted">
+
+                        Preventivos
+
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="col-lg-3">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <i class="bi bi-wrench-adjustable-circle text-danger fs-1"></i>
+
+                    <h2>
+
+                        {{ correctivos }}
+
+                    </h2>
+
+                    <small class="text-muted">
+
+                        Correctivos
+
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="col-lg-3">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body text-center">
+
+                    {% if equipo_fuera_servicio %}
+
+                    <i class="bi bi-x-octagon-fill text-danger fs-1"></i>
+
+                    <h5 class="mt-2">
+
+                        Fuera de servicio
+
+                    </h5>
+
+                    {% else %}
+
+                    <i class="bi bi-check-circle-fill text-success fs-1"></i>
+
+                    <h5 class="mt-2">
+
+                        Operativo
+
+                    </h5>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!--======================================================
+    DATOS DEL EQUIPO
+    =======================================================-->
+
+    <div class="card shadow-sm border-0 mb-4">
+
+        <div class="card-header bg-primary text-white">
+
+            <i class="bi bi-cpu"></i>
+
+            Información General
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="row">
+
+                <div class="col-md-4 mb-3">
+
+                    <strong>Código</strong><br>
+
+                    {{ hoja.equipo.codigo }}
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <strong>Inventario</strong><br>
+
+                    {{ hoja.equipo.inventario|default:"-" }}
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <strong>Nombre</strong><br>
+
+                    {{ hoja.equipo.nombre }}
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <strong>Marca</strong><br>
+
+                    {{ hoja.equipo.marca|default:"-" }}
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <strong>Modelo</strong><br>
+
+                    {{ hoja.equipo.modelo|default:"-" }}
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <strong>Serie</strong><br>
+
+                    {{ hoja.equipo.serie|default:"-" }}
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <strong>Institución</strong><br>
+
+                    {{ hoja.equipo.institucion }}
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <strong>Servicio</strong><br>
+
+                    {{ hoja.equipo.servicio }}
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <strong>Estado</strong><br>
+
+                    {% if hoja.equipo.estado == "ACTIVO" %}
+
+                        <span class="badge bg-success">
+
+                            Activo
+
+                        </span>
+
+                    {% elif hoja.equipo.estado == "MANTENIMIENTO" %}
+
+                        <span class="badge bg-warning text-dark">
+
+                            En mantenimiento
+
+                        </span>
+
+                    {% elif hoja.equipo.estado == "FUERA_SERVICIO" %}
+
+                        <span class="badge bg-danger">
+
+                            Fuera de servicio
+
+                        </span>
+
+                    {% else %}
+
+                        <span class="badge bg-dark">
+
+                            Baja
+
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+<!--======================================================
+FICHA TÉCNICA
+=======================================================-->
+
+<div class="row">
+
+    <!-- DATOS TÉCNICOS -->
+
+    <div class="col-lg-8">
+
+        <div class="card shadow-sm border-0 mb-4">
+
+            <div class="card-header bg-success text-white">
+
+                <i class="bi bi-card-checklist"></i>
+
+                Información Técnica
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <strong>Proveedor</strong><br>
+
+                        {{ hoja.proveedor|default:"No registrado" }}
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <strong>Ubicación detallada</strong><br>
+
+                        {{ hoja.ubicacion_detallada|default:"No registrada" }}
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <strong>Fecha de compra</strong><br>
+
+                        {% if hoja.fecha_compra %}
+                            {{ hoja.fecha_compra|date:"d/m/Y" }}
+                        {% else %}
+                            -
+                        {% endif %}
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <strong>Fecha de instalación</strong><br>
+
+                        {% if hoja.fecha_instalacion %}
+                            {{ hoja.fecha_instalacion|date:"d/m/Y" }}
+                        {% else %}
+                            -
+                        {% endif %}
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <strong>Garantía hasta</strong><br>
+
+                        {% if hoja.garantia_hasta %}
+                            {{ hoja.garantia_hasta|date:"d/m/Y" }}
+                        {% else %}
+                            -
+                        {% endif %}
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <strong>Vida útil</strong><br>
+
+                        {{ hoja.vida_util }} años
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <strong>Costo adquisición</strong><br>
+
+                        {% if hoja.costo_adquisicion %}
+                            $ {{ hoja.costo_adquisicion }}
+                        {% else %}
+                            No registrado
+                        {% endif %}
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <strong>Registro INVIMA</strong><br>
+
+                        {{ hoja.equipo.registro_invima|default:"No registrado" }}
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <strong>Tecnología</strong><br>
+
+                        {{ hoja.equipo.get_tecnologia_display }}
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <strong>Clasificación de Riesgo</strong><br>
+
+                        {{ hoja.equipo.get_riesgo_display }}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- DOCUMENTOS -->
+
+    <div class="col-lg-4">
+
+        <div class="card shadow-sm border-0 mb-4">
+
+            <div class="card-header bg-info text-white">
+
+                <i class="bi bi-folder2-open"></i>
+
+                Documentación
+
+            </div>
+
+            <div class="card-body">
+
+                {% if hoja.manual_operacion %}
+
+                    <a href="{{ hoja.manual_operacion.url }}"
+                       target="_blank"
+                       class="btn btn-outline-primary w-100 mb-2">
+
+                        <i class="bi bi-file-earmark-pdf"></i>
+
+                        Manual de Operación
+
+                    </a>
+
+                {% else %}
+
+                    <button class="btn btn-outline-secondary w-100 mb-2"
+                            disabled>
+
+                        Manual de Operación
+
+                    </button>
+
+                {% endif %}
+
+
+
+                {% if hoja.manual_servicio %}
+
+                    <a href="{{ hoja.manual_servicio.url }}"
+                       target="_blank"
+                       class="btn btn-outline-success w-100 mb-2">
+
+                        <i class="bi bi-file-earmark-medical"></i>
+
+                        Manual de Servicio
+
+                    </a>
+
+                {% else %}
+
+                    <button class="btn btn-outline-secondary w-100 mb-2"
+                            disabled>
+
+                        Manual de Servicio
+
+                    </button>
+
+                {% endif %}
+
+
+
+                {% if hoja.fotografia %}
+
+                    <hr>
+
+                    <img src="{{ hoja.fotografia.url }}"
+                         class="img-fluid rounded shadow-sm">
+
+                {% else %}
+
+                    <div class="text-center text-muted mt-4">
+
+                        <i class="bi bi-camera"
+                           style="font-size:70px;"></i>
+
+                        <p class="mt-2">
+
+                            Sin fotografía
+
+                        </p>
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!--======================================================
+OBSERVACIONES
+=======================================================-->
+
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-secondary text-white">
+
+        <i class="bi bi-chat-left-text"></i>
+
+        Observaciones
+
+    </div>
+
+    <div class="card-body">
+
+        {% if hoja.observaciones %}
+
+            {{ hoja.observaciones|linebreaks }}
+
+        {% else %}
+
+            <span class="text-muted">
+
+                No existen observaciones registradas.
+
+            </span>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+<!--======================================================
+HISTORIAL DE MANTENIMIENTOS
+=======================================================-->
+
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+
+        <div>
+
+            <i class="bi bi-tools"></i>
+
+            Historial de Mantenimientos
+
+        </div>
+
+        {% if user.es_superadmin or user.es_admin %}
+
+        <a href="{% url 'crear_mantenimiento' %}?hoja={{ hoja.id }}"
+           class="btn btn-light btn-sm">
+
+            <i class="bi bi-plus-circle"></i>
+
+            Registrar mantenimiento
+
+        </a>
+
+        {% endif %}
+
+    </div>
+
+    <div class="card-body">
+
+        {% if mantenimientos %}
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle">
+
+                <thead class="table-light">
+
+                    <tr>
+
+                        <th>Fecha</th>
+
+                        <th>Tipo</th>
+
+                        <th>Estado</th>
+
+                        <th>Ingeniero</th>
+
+                        <th>Empresa</th>
+
+                        <th>Costo</th>
+
+                        <th class="text-center">
+
+                            Acciones
+
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for mantenimiento in mantenimientos %}
+
+                    <tr>
+
+                        <td>
+
+                            {{ mantenimiento.fecha_programada|date:"d/m/Y" }}
+
+                        </td>
+
+                        <td>
+
+                            {% if mantenimiento.tipo == "PREVENTIVO" %}
+
+                                <span class="badge bg-success">
+
+                                    Preventivo
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-danger">
+
+                                    Correctivo
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {% if mantenimiento.estado == "PROGRAMADO" %}
+
+                                <span class="badge bg-warning text-dark">
+
+                                    Programado
+
+                                </span>
+
+                            {% elif mantenimiento.estado == "EN_PROCESO" %}
+
+                                <span class="badge bg-info">
+
+                                    En proceso
+
+                                </span>
+
+                            {% elif mantenimiento.estado == "FINALIZADO" %}
+
+                                <span class="badge bg-success">
+
+                                    Finalizado
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {{ mantenimiento.ingeniero|default:"Sin asignar" }}
+
+                        </td>
+
+                        <td>
+
+                            {{ mantenimiento.empresa|default:"Interno" }}
+
+                        </td>
+
+                        <td>
+
+                            $ {{ mantenimiento.costo }}
+
+                        </td>
+
+                        <td class="text-center">
+
+                            <div class="btn-group">
+
+                                <a href="{% url 'detalle_mantenimiento' mantenimiento.id %}"
+                                   class="btn btn-outline-primary btn-sm">
+
+                                    <i class="bi bi-eye"></i>
+
+                                </a>
+
+                                {% if user.es_superadmin or user.es_admin %}
+
+                                <a href="{% url 'editar_mantenimiento' mantenimiento.id %}"
+                                   class="btn btn-outline-warning btn-sm">
+
+                                    <i class="bi bi-pencil"></i>
+
+                                </a>
+
+                                {% endif %}
+
+                                {% if mantenimiento.archivo %}
+
+                                <a href="{{ mantenimiento.archivo.url }}"
+                                   target="_blank"
+                                   class="btn btn-outline-success btn-sm">
+
+                                    <i class="bi bi-file-earmark-pdf"></i>
+
+                                </a>
+
+                                {% endif %}
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="text-center py-5">
+
+            <i class="bi bi-tools text-secondary"
+               style="font-size:70px;"></i>
+
+            <h5 class="mt-3">
+
+                Este equipo aún no registra mantenimientos.
+
+            </h5>
+
+            <p class="text-muted">
+
+                Cuando se registren mantenimientos aparecerán automáticamente en esta sección.
+
+            </p>
+
+            {% if user.es_superadmin or user.es_admin %}
+
+            <a href="{% url 'crear_mantenimiento' %}?hoja={{ hoja.id }}"
+               class="btn btn-primary">
+
+                <i class="bi bi-plus-circle"></i>
+
+                Registrar primer mantenimiento
+
+            </a>
+
+            {% endif %}
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+<!--======================================================
+CALIBRACIONES
+=======================================================-->
+
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+
+        <div>
+
+            <i class="bi bi-rulers"></i>
+
+            Historial de Calibraciones
+
+        </div>
+
+        {% if user.es_superadmin or user.es_admin %}
+
+        <button class="btn btn-light btn-sm" disabled>
+
+            <i class="bi bi-plus-circle"></i>
+
+            Nueva calibración
+
+        </button>
+
+        {% endif %}
+
+    </div>
+
+    <div class="card-body">
+
+        {% if calibraciones %}
+
+        <div class="table-responsive">
+
+            <table class="table table-hover">
+
+                <thead class="table-light">
+
+                    <tr>
+
+                        <th>Fecha</th>
+
+                        <th>Proveedor</th>
+
+                        <th>Resultado</th>
+
+                        <th>Próxima</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for calibracion in calibraciones %}
+
+                    <tr>
+
+                        <td>{{ calibracion.fecha|date:"d/m/Y" }}</td>
+
+                        <td>{{ calibracion.proveedor }}</td>
+
+                        <td>{{ calibracion.resultado }}</td>
+
+                        <td>{{ calibracion.proxima_fecha|date:"d/m/Y" }}</td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="text-center py-5 text-muted">
+
+            <i class="bi bi-rulers fs-1"></i>
+
+            <h5 class="mt-3">
+
+                No existen calibraciones registradas
+
+            </h5>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+
+<!--======================================================
+INSPECCIONES
+=======================================================-->
+
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-info text-white">
+
+        <i class="bi bi-clipboard-check"></i>
+
+        Historial de Inspecciones
+
+    </div>
+
+    <div class="card-body">
+
+        {% if inspecciones %}
+
+        <div class="table-responsive">
+
+            <table class="table table-striped">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Fecha</th>
+
+                        <th>Servicio</th>
+
+                        <th>Resultado</th>
+
+                        <th>Inspector</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for inspeccion in inspecciones %}
+
+                    <tr>
+
+                        <td>{{ inspeccion.fecha }}</td>
+
+                        <td>{{ inspeccion.servicio }}</td>
+
+                        <td>{{ inspeccion.resultado }}</td>
+
+                        <td>{{ inspeccion.usuario }}</td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="text-center py-5 text-muted">
+
+            <i class="bi bi-clipboard-check fs-1"></i>
+
+            <h5 class="mt-3">
+
+                No existen inspecciones registradas
+
+            </h5>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+
+<!--======================================================
+TECNOVIGILANCIA
+=======================================================-->
+
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-danger text-white">
+
+        <i class="bi bi-exclamation-triangle"></i>
+
+        Eventos de Tecnovigilancia
+
+    </div>
+
+    <div class="card-body">
+
+        {% if tecnovigilancias %}
+
+        <div class="table-responsive">
+
+            <table class="table table-hover">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Fecha</th>
+
+                        <th>Tipo</th>
+
+                        <th>Severidad</th>
+
+                        <th>Estado</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for evento in tecnovigilancias %}
+
+                    <tr>
+
+                        <td>{{ evento.fecha }}</td>
+
+                        <td>{{ evento.tipo }}</td>
+
+                        <td>{{ evento.severidad }}</td>
+
+                        <td>{{ evento.estado }}</td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="text-center py-5 text-muted">
+
+            <i class="bi bi-shield-exclamation fs-1"></i>
+
+            <h5 class="mt-3">
+
+                Sin eventos reportados
+
+            </h5>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,289 @@
+    {% extends "base.html" %}
+
+{% block title %}
+Hojas de Vida | SIGHI
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- Encabezado -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="fw-bold mb-1">
+
+                Hojas de Vida
+
+            </h2>
+
+            <p class="text-muted mb-0">
+
+                Gestión documental de equipos biomédicos.
+
+            </p>
+
+        </div>
+
+        {% if user.es_superadmin or user.es_admin %}
+
+        <a href="{% url 'crear_hoja_vida' %}"
+           class="btn btn-primary">
+
+            <i class="bi bi-plus-circle"></i>
+
+            Nueva Hoja de Vida
+
+        </a>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- Indicadores -->
+
+    <div class="row mb-4">
+
+        <div class="col-md-4">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body">
+
+                    <h6 class="text-muted">
+
+                        Total Hojas de Vida
+
+                    </h6>
+
+                    <h2 class="fw-bold">
+
+                        {{ hojas|length }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Mensajes -->
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+        <div class="alert alert-success alert-dismissible fade show">
+
+            {{ message }}
+
+            <button
+                class="btn-close"
+                data-bs-dismiss="alert">
+            </button>
+
+        </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <!-- Buscador -->
+
+    <div class="card shadow-sm border-0 mb-3">
+
+        <div class="card-body">
+
+            <input
+                type="text"
+                id="buscarHoja"
+                class="form-control"
+                placeholder="Buscar equipo...">
+
+        </div>
+
+    </div>
+
+
+    <!-- Tabla -->
+
+    <div class="card shadow-sm border-0">
+
+        <div class="table-responsive">
+
+            <table
+                class="table table-hover align-middle mb-0"
+                id="tablaHojas">
+
+                <thead class="table-light">
+
+                    <tr>
+
+                        <th>Equipo</th>
+
+                        <th>Código</th>
+
+                        <th>Institución</th>
+
+                        <th>Servicio</th>
+
+                        <th>Proveedor</th>
+
+                        <th>Garantía</th>
+
+                        <th width="170">
+
+                            Acciones
+
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for hoja in hojas %}
+
+                    <tr>
+
+                        <td>
+
+                            <strong>
+
+                                {{ hoja.equipo.nombre }}
+
+                            </strong>
+
+                        </td>
+
+                        <td>
+
+                            {{ hoja.equipo.codigo }}
+
+                        </td>
+
+                        <td>
+
+                            {{ hoja.equipo.institucion.nombre }}
+
+                        </td>
+
+                        <td>
+
+                            {{ hoja.equipo.servicio.nombre }}
+
+                        </td>
+
+                        <td>
+
+                            {{ hoja.proveedor|default:"—" }}
+
+                        </td>
+
+                        <td>
+
+                            {% if hoja.garantia_hasta %}
+
+                                {{ hoja.garantia_hasta }}
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            <a
+                                href="{% url 'detalle_hoja_vida' hoja.id %}"
+                                class="btn btn-info btn-sm">
+
+                                <i class="bi bi-eye"></i>
+
+                            </a>
+
+                            {% if user.es_superadmin or user.es_admin %}
+
+                            <a
+                                href="{% url 'editar_hoja_vida' hoja.id %}"
+                                class="btn btn-warning btn-sm">
+
+                                <i class="bi bi-pencil"></i>
+
+                            </a>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+
+                        <td colspan="7"
+                            class="text-center py-5">
+
+                            No existen hojas de vida registradas.
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+document
+.getElementById("buscarHoja")
+.addEventListener("keyup", function(){
+
+    let texto = this.value.toLowerCase();
+
+    let filas = document.querySelectorAll(
+        "#tablaHojas tbody tr"
+    );
+
+    filas.forEach(function(fila){
+
+        fila.style.display =
+
+        fila.textContent
+            .toLowerCase()
+            .includes(texto)
+
+        ? ""
+
+        : "none";
+
+    });
+
+});
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,479 @@
+{% extends "base.html" %}
+
+{% block title %}
+Mantenimientos | SIGHI
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- ===========================
+         ENCABEZADO
+    ============================ -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="fw-bold">
+
+                Gestión de Mantenimientos
+
+            </h2>
+
+            <p class="text-muted mb-0">
+
+                Administración de mantenimientos preventivos y correctivos.
+
+            </p>
+
+        </div>
+
+        {% if user.es_superadmin or user.es_admin %}
+
+        <a href="{% url 'crear_mantenimiento' %}"
+           class="btn btn-primary">
+
+            <i class="bi bi-plus-circle"></i>
+
+            Nuevo mantenimiento
+
+        </a>
+
+        {% endif %}
+
+    </div>
+
+
+
+    <!-- ===========================
+         INDICADORES
+    ============================ -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-lg-3 col-md-6">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        Total
+                    </small>
+
+                    <h2 class="fw-bold text-primary">
+
+                        {{ total_mantenimientos }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="col-lg-3 col-md-6">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        Preventivos
+                    </small>
+
+                    <h2 class="fw-bold text-success">
+
+                        {{ preventivos }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="col-lg-3 col-md-6">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        Correctivos
+                    </small>
+
+                    <h2 class="fw-bold text-danger">
+
+                        {{ correctivos }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="col-lg-3 col-md-6">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        Programados
+                    </small>
+
+                    <h2 class="fw-bold text-warning">
+
+                        {{ programados }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="col-lg-3 col-md-6">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        En proceso
+                    </small>
+
+                    <h2 class="fw-bold text-info">
+
+                        {{ en_proceso }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="col-lg-3 col-md-6">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        Finalizados
+                    </small>
+
+                    <h2 class="fw-bold text-success">
+
+                        {{ finalizados }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="col-lg-3 col-md-6">
+
+            <div class="card border-0 shadow-sm border-start border-4 border-danger">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        Vencidos
+                    </small>
+
+                    <h2 class="fw-bold text-danger">
+
+                        {{ vencidos }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="col-lg-3 col-md-6">
+
+            <div class="card border-0 shadow-sm border-start border-4 border-primary">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        Próximos 30 días
+                    </small>
+
+                    <h2 class="fw-bold text-primary">
+
+                        {{ proximos }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ===========================
+         BUSCADOR
+    ============================ -->
+
+    <div class="card border-0 shadow-sm mb-3">
+
+        <div class="card-body">
+
+            <input
+                type="text"
+                id="buscar"
+                class="form-control"
+                placeholder="Buscar por equipo, código, ingeniero o empresa...">
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ===========================
+         TABLA
+    ============================ -->
+
+    <div class="card border-0 shadow-sm">
+
+        <div class="table-responsive">
+
+            <table
+                class="table table-hover align-middle mb-0"
+                id="tablaMantenimiento">
+
+                <thead class="table-light">
+
+                    <tr>
+
+                        <th>Equipo</th>
+
+                        <th>Tipo</th>
+
+                        <th>Estado</th>
+
+                        <th>Fecha</th>
+
+                        <th>Ingeniero</th>
+
+                        <th>Empresa</th>
+
+                        <th class="text-center">
+
+                            Acciones
+
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for mantenimiento in mantenimientos %}
+
+                    <tr>
+
+                        <td>
+
+                            <strong>
+
+                                {{ mantenimiento.hoja_vida.equipo.nombre }}
+
+                            </strong>
+
+                            <br>
+
+                            <small class="text-muted">
+
+                                {{ mantenimiento.hoja_vida.equipo.codigo }}
+
+                            </small>
+
+                        </td>
+
+                        <td>
+
+                            {% if mantenimiento.tipo == "PREVENTIVO" %}
+
+                                <span class="badge bg-success">
+
+                                    Preventivo
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-danger">
+
+                                    Correctivo
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {% if mantenimiento.estado == "PROGRAMADO" %}
+
+                                <span class="badge bg-warning text-dark">
+
+                                    Programado
+
+                                </span>
+
+                            {% elif mantenimiento.estado == "EN_PROCESO" %}
+
+                                <span class="badge bg-info">
+
+                                    En proceso
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-success">
+
+                                    Finalizado
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {{ mantenimiento.fecha_programada }}
+
+                        </td>
+
+                        <td>
+
+                            {{ mantenimiento.ingeniero|default:"-" }}
+
+                        </td>
+
+                        <td>
+
+                            {{ mantenimiento.empresa|default:"Interno" }}
+
+                        </td>
+
+                        <td class="text-center">
+
+                            <a href="{% url 'detalle_mantenimiento' mantenimiento.id %}"
+                               class="btn btn-info btn-sm">
+
+                                <i class="bi bi-eye"></i>
+
+                            </a>
+
+                            {% if user.es_superadmin or user.es_admin %}
+
+                            <a href="{% url 'editar_mantenimiento' mantenimiento.id %}"
+                               class="btn btn-warning btn-sm">
+
+                                <i class="bi bi-pencil"></i>
+
+                            </a>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+
+                        <td colspan="7"
+                            class="text-center py-5 text-muted">
+
+                            No existen mantenimientos registrados.
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+const buscador = document.getElementById("buscar");
+
+buscador.addEventListener("keyup", function () {
+
+    const texto = this.value.toLowerCase();
+
+    const filas = document.querySelectorAll(
+        "#tablaMantenimiento tbody tr"
+    );
+
+    filas.forEach(function (fila) {
+
+        fila.style.display = fila.textContent
+            .toLowerCase()
+            .includes(texto)
+            ? ""
+            : "none";
+
+    });
+
+});
+
+</script>
+
+{% endblock %}

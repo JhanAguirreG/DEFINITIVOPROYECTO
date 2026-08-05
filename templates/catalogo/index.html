@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}
+Catálogo Maestro | SIGHI
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="fw-bold mb-1">
+                Catálogo Maestro de Equipos
+            </h2>
+
+            <p class="text-muted mb-0">
+                Tipos de equipos biomédicos registrados en SIGHI.
+            </p>
+
+        </div>
+
+        <a href="{% url 'crear_catalogo' %}"
+           class="btn btn-primary">
+
+            <i class="bi bi-plus-circle"></i>
+
+            Nuevo Equipo
+
+        </a>
+
+    </div>
+
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="alert alert-success alert-dismissible fade show">
+
+                {{ message }}
+
+                <button
+                    class="btn-close"
+                    data-bs-dismiss="alert">
+                </button>
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-body">
+
+            <div class="row mb-3">
+
+                <div class="col-md-4">
+
+                    <input
+                        type="text"
+                        id="buscarCatalogo"
+                        class="form-control"
+                        placeholder="Buscar equipo...">
+
+                </div>
+
+            </div>
+
+
+            <div class="table-responsive">
+
+                <table
+                    class="table table-hover align-middle"
+                    id="tablaCatalogo">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th>Equipo</th>
+
+                            <th>Tecnología</th>
+
+                            <th>Riesgo</th>
+
+                            <th>Calibración</th>
+
+                            <th>Mantenimiento</th>
+
+                            <th>Frecuencia</th>
+
+                            <th>Estado</th>
+
+                            <th width="140">
+                                Acciones
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    {% for equipo in catalogo %}
+
+                        <tr>
+
+                            <td>
+
+                                <strong>
+
+                                    {{ equipo.nombre }}
+
+                                </strong>
+
+                            </td>
+
+                            <td>
+
+                                {{ equipo.get_tecnologia_display }}
+
+                            </td>
+
+                            <td>
+
+                                <span class="badge bg-primary">
+
+                                    {{ equipo.get_riesgo_display }}
+
+                                </span>
+
+                            </td>
+
+                            <td>
+
+                                {% if equipo.requiere_calibracion %}
+
+                                    <span class="badge bg-success">
+
+                                        Sí
+
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-secondary">
+
+                                        No
+
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                {% if equipo.requiere_mantenimiento %}
+
+                                    <span class="badge bg-success">
+
+                                        Sí
+
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-secondary">
+
+                                        No
+
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                {{ equipo.frecuencia_mantenimiento }} meses
+
+                            </td>
+
+                            <td>
+
+                                {% if equipo.activo %}
+
+                                    <span class="badge bg-success">
+
+                                        Activo
+
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-danger">
+
+                                        Inactivo
+
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                <a
+                                    href="{% url 'editar_catalogo' equipo.id %}"
+                                    class="btn btn-warning btn-sm">
+
+                                    <i class="bi bi-pencil"></i>
+
+                                </a>
+
+                                <a
+                                    href="{% url 'cambiar_estado_catalogo' equipo.id %}"
+                                    class="btn btn-secondary btn-sm">
+
+                                    {% if equipo.activo %}
+
+                                        <i class="bi bi-lock"></i>
+
+                                    {% else %}
+
+                                        <i class="bi bi-unlock"></i>
+
+                                    {% endif %}
+
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td
+                                colspan="8"
+                                class="text-center py-5">
+
+                                No existen equipos registrados en el catálogo.
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+document
+.getElementById("buscarCatalogo")
+.addEventListener("keyup", function(){
+
+    let filtro = this.value.toLowerCase();
+
+    let filas = document.querySelectorAll(
+        "#tablaCatalogo tbody tr"
+    );
+
+    filas.forEach(function(fila){
+
+        fila.style.display =
+        fila.textContent
+        .toLowerCase()
+        .includes(filtro)
+        ? ""
+        : "none";
+
+    });
+
+});
+
+</script>
+
+{% endblock %}

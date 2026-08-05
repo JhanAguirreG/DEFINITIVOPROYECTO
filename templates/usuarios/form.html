@@ -1,0 +1,55 @@
+<div class="card shadow-sm mt-4">
+    <div class="card-header bg-light">
+        <strong>Estado del usuario</strong>
+    </div>
+
+    <div class="card-body">
+
+        <div class="form-check form-switch fs-5">
+
+            <div class="card shadow-sm mt-4">
+
+    <div class="card-header bg-light">
+        <strong>Estado del usuario</strong>
+    </div>
+
+    <div class="card-body">
+
+        <div class="form-check form-switch">
+
+            {{ form.is_active }}
+
+            <label
+                class="form-check-label"
+                for="{{ form.is_active.id_for_label }}">
+
+                Usuario activo
+
+            </label>
+
+        </div>
+
+        <small class="text-muted">
+            Si el usuario está inactivo, no podrá iniciar sesión en SIGHI.
+        </small>
+
+    </div>
+
+</div>
+
+            <label class="form-check-label ms-2" for="{{ form.is_active.id_for_label }}">
+
+                <span class="fw-bold">Usuario activo</span>
+
+                <br>
+
+                <small class="text-muted">
+                    Si desactiva este usuario no podrá iniciar sesión en el sistema.
+                </small>
+
+            </label>
+
+        </div>
+
+    </div>
+</div>

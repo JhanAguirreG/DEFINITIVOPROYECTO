@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}
+Dashboard | SIGHI
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- Encabezado -->
+    <div class="row mb-4">
+
+        <div class="col">
+
+            <h2 class="fw-bold">
+                Dashboard
+            </h2>
+
+            <p class="text-muted">
+                Bienvenido <strong>{{ user.get_full_name|default:user.username }}</strong>
+            </p>
+
+        </div>
+
+    </div>
+
+    <!-- Indicadores -->
+
+    <div class="row g-4 mb-4">
+
+        <div class="col-xl-3 col-md-6">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+
+                            <small class="text-muted">
+                                Instituciones
+                            </small>
+
+                            <h2 class="mb-0">
+                                {{ total_instituciones }}
+                            </h2>
+
+                        </div>
+
+                        <i class="bi bi-building display-5 text-primary"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+
+                            <small class="text-muted">
+                                Servicios
+                            </small>
+
+                            <h2 class="mb-0">
+                                {{ total_servicios }}
+                            </h2>
+
+                        </div>
+
+                        <i class="bi bi-hospital display-5 text-success"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+
+                            <small class="text-muted">
+                                Equipos
+                            </small>
+
+                            <h2 class="mb-0">
+                                {{ total_equipos }}
+                            </h2>
+
+                        </div>
+
+                        <i class="bi bi-cpu display-5 text-danger"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+
+                            <small class="text-muted">
+                                Inspecciones
+                            </small>
+
+                            <h2 class="mb-0">
+                                {{ total_inspecciones }}
+                            </h2>
+
+                        </div>
+
+                        <i class="bi bi-clipboard-check display-5 text-warning"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Últimas inspecciones -->
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white">
+
+            <h5 class="mb-0">
+                Últimas inspecciones registradas
+            </h5>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th>Fecha</th>
+                            <th>Equipo</th>
+                            <th>Biomédico</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    {% for inspeccion in ultimas_inspecciones %}
+
+                        <tr>
+
+                            <td>
+
+                                {{ inspeccion.fecha }}
+
+                            </td>
+
+                            <td>
+
+                                {{ inspeccion.equipo }}
+
+                            </td>
+
+                            <td>
+
+                                {{ inspeccion.biomedico }}
+
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td colspan="3" class="text-center text-muted py-5">
+
+                                <i class="bi bi-clipboard-x display-5"></i>
+
+                                <br><br>
+
+                                No existen inspecciones registradas.
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

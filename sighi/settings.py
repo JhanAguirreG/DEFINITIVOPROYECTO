@@ -1,5 +1,4 @@
 from pathlib import Path
-import os
 
 # --------------------------------------------------
 # BASE
@@ -9,18 +8,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'jhanprueba'
 
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = [
-    '.railway.app',
-]
-
+ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 # --------------------------------------------------
 # APLICACIONES
 # --------------------------------------------------
 
 INSTALLED_APPS = [
+    # Django
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -28,10 +25,17 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Tu app
-    'inspecciones',
+    # Apps del proyecto
+    'apps.usuarios',
+    'apps.instituciones',
+    'apps.servicios',
+    'apps.equipos',
+    'apps.inspecciones',
+    'apps.catalogo',
+    'apps.hojas_vida',
+    'apps.mantenimiento',
+        
 ]
-
 
 # --------------------------------------------------
 # MIDDLEWARE
@@ -40,7 +44,6 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -66,7 +69,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
 
         # Puedes dejarlo vacío porque usaremos templates dentro de la app
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
 
         'APP_DIRS': True,  # 🔥 ESTO DEBE ESTAR EN TRUE
 
@@ -137,24 +140,28 @@ USE_TZ = True
 # ARCHIVOS ESTÁTICOS
 # --------------------------------------------------
 
-STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATIC_URL = "static/"
 
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 # --------------------------------------------------
 # ARCHIVOS MEDIA (PDFS Y FIRMAS)
 # --------------------------------------------------
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 # --------------------------------------------------
 # LOGIN
 # --------------------------------------------------
-LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/inspecciones/dashboard/'
-LOGOUT_REDIRECT_URL = '/login/'
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "dashboard"
+LOGOUT_REDIRECT_URL = "login"
 #LOGIN_REDIRECT_URL = '/inspecciones/'
 
 
@@ -163,3 +170,4 @@ LOGOUT_REDIRECT_URL = '/login/'
 # --------------------------------------------------
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+AUTH_USER_MODEL = 'usuarios.Usuario'

@@ -1,0 +1,429 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+Instituciones | SIGHI
+{% endblock %}
+
+
+
+{% block content %}
+
+
+
+<div class="container-fluid">
+
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+
+<div>
+
+<h2 class="fw-bold">
+
+<i class="bi bi-building"></i>
+
+Instituciones
+
+</h2>
+
+
+<p class="text-muted">
+
+Administración de instituciones registradas
+
+</p>
+
+
+</div>
+
+
+
+<button
+class="btn btn-primary"
+data-bs-toggle="modal"
+data-bs-target="#modalCrear">
+
+
+<i class="bi bi-plus-circle"></i>
+
+Nueva Institución
+
+
+</button>
+
+
+</div>
+
+
+
+
+
+{% if messages %}
+
+
+{% for message in messages %}
+
+
+<div class="alert alert-success alert-dismissible fade show">
+
+
+{{ message }}
+
+
+<button 
+type="button"
+class="btn-close"
+data-bs-dismiss="alert">
+</button>
+
+
+</div>
+
+
+{% endfor %}
+
+
+{% endif %}
+
+
+
+
+
+<div class="card shadow-sm">
+
+
+<div class="card-body">
+
+
+
+<div class="table-responsive">
+
+
+<table class="table table-hover align-middle">
+
+
+<thead class="table-light">
+
+
+<tr>
+
+<th>Nombre</th>
+
+<th>NIT</th>
+
+<th>Ciudad</th>
+
+<th>Teléfono</th>
+
+<th>Estado</th>
+
+<th>Acciones</th>
+
+
+</tr>
+
+
+</thead>
+
+
+
+<tbody>
+
+
+
+{% for institucion in instituciones %}
+
+
+
+<tr>
+
+
+<td>
+
+<strong>
+
+{{ institucion.nombre }}
+
+</strong>
+
+
+</td>
+
+
+
+<td>
+
+{{ institucion.nit }}
+
+</td>
+
+
+
+<td>
+
+{{ institucion.ciudad }}
+
+</td>
+
+
+
+<td>
+
+{{ institucion.telefono }}
+
+</td>
+
+
+
+
+<td>
+
+
+{% if institucion.activa %}
+
+
+<span class="badge bg-success">
+
+Activa
+
+</span>
+
+
+{% else %}
+
+
+<span class="badge bg-danger">
+
+Inactiva
+
+</span>
+
+
+{% endif %}
+
+
+</td>
+
+
+
+
+
+<td>
+
+
+
+<a 
+href="{% url 'editar_institucion' institucion.id %}"
+class="btn btn-warning btn-sm">
+
+
+<i class="bi bi-pencil"></i>
+
+
+</a>
+
+
+
+
+
+<a 
+href="{% url 'cambiar_estado_institucion' institucion.id %}"
+class="btn btn-secondary btn-sm">
+
+
+{% if institucion.activa %}
+
+
+<i class="bi bi-lock"></i>
+
+
+{% else %}
+
+
+<i class="bi bi-unlock"></i>
+
+
+{% endif %}
+
+
+</a>
+
+
+
+</td>
+
+
+</tr>
+
+
+
+{% empty %}
+
+
+<tr>
+
+
+<td colspan="6"
+class="text-center py-4">
+
+
+No existen instituciones registradas.
+
+
+</td>
+
+
+</tr>
+
+
+
+{% endfor %}
+
+
+
+</tbody>
+
+
+
+</table>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+<!-- MODAL CREAR -->
+
+
+<div class="modal fade"
+id="modalCrear"
+tabindex="-1">
+
+
+<div class="modal-dialog modal-lg">
+
+
+<div class="modal-content">
+
+
+
+<form method="POST">
+
+
+{% csrf_token %}
+
+
+
+<div class="modal-header">
+
+
+<h5 class="modal-title">
+
+Nueva Institución
+
+</h5>
+
+
+
+<button 
+type="button"
+class="btn-close"
+data-bs-dismiss="modal">
+
+</button>
+
+
+</div>
+
+
+
+
+<div class="modal-body">
+
+
+{% for field in form %}
+
+<div class="mb-3">
+
+<label class="form-label">
+{{ field.label }}
+</label>
+
+{{ field }}
+
+
+{% if field.errors %}
+
+<div class="text-danger">
+
+{{ field.errors }}
+
+</div>
+
+{% endif %}
+
+
+</div>
+
+{% endfor %}
+
+
+</div>
+
+
+
+
+<div class="modal-footer">
+
+
+<button 
+type="button"
+class="btn btn-secondary"
+data-bs-dismiss="modal">
+
+Cancelar
+
+</button>
+
+
+
+<button 
+type="submit"
+class="btn btn-primary">
+
+Guardar
+
+</button>
+
+
+
+</div>
+
+
+
+</form>
+
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+
+{% endblock %}
