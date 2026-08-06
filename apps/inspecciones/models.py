@@ -215,70 +215,44 @@ class DetalleInspeccion(models.Model):
 # ==========================================================
 
 class FirmaInspeccion(models.Model):
-    """
-    Firmas digitales de cierre de inspección.
-    """
-
 
     inspeccion = models.OneToOneField(
-
         Inspeccion,
-
         on_delete=models.CASCADE,
-
         related_name="firma",
-
     )
-
 
     responsable_servicio = models.CharField(
-
         max_length=150,
-
     )
 
+    # NUEVO CAMPO
+    observaciones_finales = models.TextField(
+        blank=True,
+    )
 
     firma_biomedico = models.ImageField(
-
         upload_to="firmas/biomedicos/",
-
-        null=True,
-
         blank=True,
-
+        null=True,
     )
-
 
     firma_responsable = models.ImageField(
-
         upload_to="firmas/responsables/",
-
-        null=True,
-
         blank=True,
-
+        null=True,
     )
-
 
     fecha_firma = models.DateTimeField(
-
         auto_now_add=True,
-
     )
 
-
     class Meta:
-
         verbose_name = "Firma de inspección"
-
         verbose_name_plural = "Firmas de inspección"
 
-
-
     def __str__(self):
-
-        return f"Firma {self.inspeccion}"
-
+        return f"Firma - Inspección {self.inspeccion.id}"
 
 
 # ==========================================================

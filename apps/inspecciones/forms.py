@@ -1,18 +1,16 @@
 from django import forms
 from django.forms import modelformset_factory
 
-from apps.instituciones.models import Institucion
-from apps.servicios.models import Servicio
-
 from .models import (
     Inspeccion,
     FirmaInspeccion,
     ResultadoItem,
+    DetalleInspeccion,
 )
 
 
 # ==========================================================
-# INSPECCIÓN
+# CREAR INSPECCIÓN
 # ==========================================================
 
 class InspeccionForm(forms.ModelForm):
@@ -21,11 +19,10 @@ class InspeccionForm(forms.ModelForm):
 
         model = Inspeccion
 
-        fields = (
+        fields = [
             "institucion",
             "servicio",
-            "observaciones_generales",
-        )
+        ]
 
         widgets = {
 
@@ -41,64 +38,40 @@ class InspeccionForm(forms.ModelForm):
                 }
             ),
 
-            "observaciones_generales": forms.Textarea(
-                attrs={
-                    "class": "form-control",
-                    "rows": 4,
-                    "placeholder": "Observaciones generales de la ronda...",
-                }
-            ),
-
         }
 
-    def __init__(self, *args, **kwargs):
-
-        super().__init__(*args, **kwargs)
-
-        self.fields["institucion"].queryset = Institucion.objects.filter(
-            activa=True
-        )
-
-        self.fields["servicio"].queryset = Servicio.objects.filter(
-            activo=True
-        )
-
 
 # ==========================================================
-# FIRMA
+# DETALLE DEL EQUIPO
 # ==========================================================
 
-class FirmaInspeccionForm(forms.ModelForm):
+class DetalleInspeccionForm(forms.ModelForm):
 
     class Meta:
 
-        model = FirmaInspeccion
+        model = DetalleInspeccion
 
-        fields = (
-            "responsable_servicio",
-            "firma_biomedico",
-            "firma_responsable",
-        )
+        fields = [
+
+            "estado",
+
+            "observaciones",
+
+        ]
 
         widgets = {
 
-            "responsable_servicio": forms.TextInput(
+            "estado": forms.Select(
                 attrs={
-                    "class": "form-control",
+                    "class": "form-select",
                 }
             ),
 
-            "firma_biomedico": forms.ClearableFileInput(
+            "observaciones": forms.Textarea(
                 attrs={
                     "class": "form-control",
-                    "accept": "image/*",
-                }
-            ),
-
-            "firma_responsable": forms.ClearableFileInput(
-                attrs={
-                    "class": "form-control",
-                    "accept": "image/*",
+                    "rows": 3,
+                    "placeholder": "Observaciones del equipo...",
                 }
             ),
 
@@ -106,7 +79,7 @@ class FirmaInspeccionForm(forms.ModelForm):
 
 
 # ==========================================================
-# RESULTADO DE ÍTEMS
+# CHECKLIST
 # ==========================================================
 
 class ResultadoItemForm(forms.ModelForm):
@@ -115,10 +88,13 @@ class ResultadoItemForm(forms.ModelForm):
 
         model = ResultadoItem
 
-        fields = (
+        fields = [
+
             "cumple",
+
             "observacion",
-        )
+
+        ]
 
         widgets = {
 
@@ -128,11 +104,10 @@ class ResultadoItemForm(forms.ModelForm):
                 }
             ),
 
-            "observacion": forms.Textarea(
+            "observacion": forms.TextInput(
                 attrs={
                     "class": "form-control",
-                    "rows": 2,
-                    "placeholder": "Observación (si aplica)...",
+                    "placeholder": "Observación...",
                 }
             ),
 
@@ -148,3 +123,49 @@ ResultadoItemFormSet = modelformset_factory(
     extra=0,
 
 )
+
+
+# ==========================================================
+# FIRMA
+# ==========================================================
+class FirmaInspeccionForm(forms.ModelForm):
+
+    class Meta:
+        model = FirmaInspeccion
+
+        fields = [
+
+            "responsable_servicio",
+
+            "observaciones_finales",
+
+            "firma_biomedico",
+
+            "firma_responsable",
+
+        ]
+
+        widgets = {
+
+            "responsable_servicio": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                }
+            ),
+
+            "observaciones_finales": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 3,
+                    "placeholder": "Observaciones finales...",
+                }
+            ),
+
+            # estos dos campos se ocultarán
+            # porque se llenarán mediante JavaScript
+
+            "firma_biomedico": forms.HiddenInput(),
+
+            "firma_responsable": forms.HiddenInput(),
+
+        }

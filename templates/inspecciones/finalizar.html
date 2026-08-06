@@ -1,26 +1,26 @@
 {% extends "base.html" %}
 
 {% block title %}
-Finalizar Inspección
+Finalizar inspección
 {% endblock %}
 
 {% block content %}
 
-<div class="container-fluid">
+<div class="container">
 
     <div class="row justify-content-center">
 
         <div class="col-lg-8">
 
-            <div class="card shadow border-0">
+            <div class="card shadow">
 
                 <div class="card-header bg-success text-white">
 
                     <h4 class="mb-0">
 
-                        <i class="bi bi-check-circle"></i>
+                        <i class="bi bi-check-circle-fill"></i>
 
-                        Finalizar Inspección
+                        Finalizar inspección
 
                     </h4>
 
@@ -28,35 +28,52 @@ Finalizar Inspección
 
                 <div class="card-body">
 
-                    <div class="alert alert-info">
+                    <div class="alert alert-warning">
 
-                        <strong>Institución:</strong>
+                        <strong>Importante:</strong>
 
-                        {{ inspeccion.institucion }}
-
-                        <br>
-
-                        <strong>Servicio:</strong>
-
-                        {{ inspeccion.servicio }}
-
-                        <br>
-
-                        <strong>Biomédico:</strong>
-
-                        {{ inspeccion.biomedico }}
-
-                        <br>
-
-                        <strong>Fecha:</strong>
-
-                        {{ inspeccion.fecha|date:"d/m/Y" }}
+                        Una vez finalizada la inspección no podrá modificarse el checklist.
 
                     </div>
 
-                    <form
-                        method="post"
-                        enctype="multipart/form-data">
+                    <table class="table table-bordered mb-4">
+
+                        <tr>
+
+                            <th width="30%">Institución</th>
+
+                            <td>{{ inspeccion.institucion }}</td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Servicio</th>
+
+                            <td>{{ inspeccion.servicio }}</td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Fecha</th>
+
+                            <td>{{ inspeccion.fecha }}</td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Biomédico</th>
+
+                            <td>{{ inspeccion.biomedico }}</td>
+
+                        </tr>
+
+                    </table>
+
+                    <form method="post"
+                          enctype="multipart/form-data">
 
                         {% csrf_token %}
 
@@ -64,7 +81,7 @@ Finalizar Inspección
 
                             <label class="form-label">
 
-                                Responsable del Servicio
+                                Responsable del servicio
 
                             </label>
 
@@ -72,26 +89,31 @@ Finalizar Inspección
 
                         </div>
 
-                        <div class="mb-3">
+                        <div class="row">
 
-                            <label class="form-label">
+                            <div class="col-md-6">
 
-                                Firma Biomédico
+                                <label class="form-label">
 
-                            </label>
+                                    Firma del biomédico
 
-                            {{ form.firma_biomedico }}
-                        </div>
+                                </label>
 
-                        <div class="mb-4">
+                                {{ form.firma_biomedico }}
 
-                            <label class="form-label">
+                            </div>
 
-                                Firma Responsable
+                            <div class="col-md-6">
 
-                            </label>
+                                <label class="form-label">
 
-                            {{ form.firma_responsable }}
+                                    Firma del responsable
+
+                                </label>
+
+                                {{ form.firma_responsable }}
+
+                            </div>
 
                         </div>
 
@@ -99,9 +121,8 @@ Finalizar Inspección
 
                         <div class="d-flex justify-content-between">
 
-                            <a
-                                href="{% url 'inspecciones:detalle_inspeccion' inspeccion.id %}"
-                                class="btn btn-secondary">
+                            <a href="{% url 'inspecciones:detalle_inspeccion' inspeccion.id %}"
+                               class="btn btn-secondary">
 
                                 <i class="bi bi-arrow-left"></i>
 
@@ -111,11 +132,11 @@ Finalizar Inspección
 
                             <button
                                 type="submit"
-                                class="btn btn-success">
+                                class="btn btn-success btn-lg">
 
                                 <i class="bi bi-check-circle"></i>
 
-                                Finalizar Inspección
+                                Finalizar inspección
 
                             </button>
 

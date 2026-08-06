@@ -8,242 +8,30 @@ Detalle de Inspección
 
 <div class="container-fluid">
 
-    <!-- ===================================== -->
-    <!-- CABECERA -->
-    <!-- ===================================== -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
 
-    <div class="card shadow-sm border-0 mb-4">
+        <div>
 
-        <div class="card-header bg-primary text-white">
+            <h2 class="fw-bold">
+                <i class="bi bi-clipboard2-pulse"></i>
+                Inspección de Equipos Biomédicos
+            </h2>
 
-            <h4 class="mb-0">
+            <div class="text-muted">
 
-                <i class="bi bi-clipboard-check"></i>
+                {{ inspeccion.institucion }}
 
-                Ronda de Inspección
+                |
 
-            </h4>
+                {{ inspeccion.servicio }}
 
-        </div>
+                |
 
-        <div class="card-body">
-
-            <div class="row">
-
-                <div class="col-md-3">
-
-                    <strong>Institución</strong>
-
-                    <br>
-
-                    {{ inspeccion.institucion }}
-
-                </div>
-
-                <div class="col-md-3">
-
-                    <strong>Servicio</strong>
-
-                    <br>
-
-                    {{ inspeccion.servicio }}
-
-                </div>
-
-                <div class="col-md-3">
-
-                    <strong>Biomédico</strong>
-
-                    <br>
-
-                    {{ inspeccion.biomedico }}
-
-                </div>
-
-                <div class="col-md-3">
-
-                    <strong>Fecha</strong>
-
-                    <br>
-
-                    {{ inspeccion.fecha|date:"d/m/Y" }}
-
-                </div>
+                {{ inspeccion.fecha }}
 
             </div>
 
         </div>
-
-    </div>
-
-
-    <!-- ===================================== -->
-    <!-- EQUIPOS -->
-    <!-- ===================================== -->
-
- <div class="accordion" id="accordionEquipos">
-
-    {% for detalle in detalles %}
-
-    <div class="accordion-item mb-3 shadow-sm">
-
-        <h2 class="accordion-header">
-
-            <button
-                class="accordion-button collapsed"
-                data-bs-toggle="collapse"
-                data-bs-target="#equipo{{ detalle.id }}"
-            >
-
-                <strong>{{ detalle.equipo.nombre }}</strong>
-
-                &nbsp;
-
-                <span class="badge bg-secondary">
-
-                    {{ detalle.equipo.codigo }}
-
-                </span>
-
-            </button>
-
-        </h2>
-
-        <div
-            id="equipo{{ detalle.id }}"
-            class="accordion-collapse collapse"
-        >
-
-            <div class="accordion-body">
-
-                <div class="row mb-3">
-
-                    <div class="col-md-3">
-                        <strong>Marca</strong><br>
-                        {{ detalle.equipo.marca }}
-                    </div>
-
-                    <div class="col-md-3">
-                        <strong>Modelo</strong><br>
-                        {{ detalle.equipo.modelo }}
-                    </div>
-
-                    <div class="col-md-3">
-                        <strong>Serie</strong><br>
-                        {{ detalle.equipo.serie }}
-                    </div>
-
-                    <div class="col-md-3">
-                        <strong>Ubicación</strong><br>
-                        {{ detalle.equipo.ubicacion }}
-                    </div>
-
-                </div>
-
-                <table class="table table-bordered align-middle">
-
-                    <thead class="table-light">
-
-                        <tr>
-
-                            <th width="65%">
-                                Ítem de inspección
-                            </th>
-
-                            <th width="15%">
-                                Cumple
-                            </th>
-
-                            <th>
-                                Observaciones
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                    {% for resultado in detalle.resultados.all %}
-
-                        <tr>
-
-                            <td>
-
-                                {{ resultado.item.descripcion }}
-
-                                {% if resultado.item.obligatorio %}
-
-                                    <span class="text-danger">*</span>
-
-                                {% endif %}
-
-                            </td>
-
-                            <td class="text-center">
-
-                                {% if resultado.cumple %}
-
-                                    <span class="badge bg-success">
-
-                                        Sí
-
-                                    </span>
-
-                                {% else %}
-
-                                    <span class="badge bg-danger">
-
-                                        No
-
-                                    </span>
-
-                                {% endif %}
-
-                            </td>
-
-                            <td>
-
-                                {{ resultado.observacion|default:"-" }}
-
-                            </td>
-
-                        </tr>
-
-                    {% empty %}
-
-                        <tr>
-
-                            <td colspan="3" class="text-center text-muted">
-
-                                Este equipo no tiene plantilla de inspección.
-
-                            </td>
-
-                        </tr>
-
-                    {% endfor %}
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    {% endfor %}
-
-</div>
-
-
-    <!-- ===================================== -->
-    <!-- BOTONES -->
-    <!-- ===================================== -->
-
-    <div class="d-flex justify-content-between mb-5">
 
         <a href="{% url 'inspecciones:lista_inspecciones' %}"
            class="btn btn-secondary">
@@ -254,21 +42,434 @@ Detalle de Inspección
 
         </a>
 
-        {% if inspeccion.estado == "ABIERTA" %}
+    </div>
 
-        <a href="{% url 'inspecciones:finalizar_inspeccion' inspeccion.id %}"
-           class="btn btn-success">
 
-            <i class="bi bi-check-circle"></i>
+<form method="post">
 
-            Finalizar Inspección
+{% csrf_token %}
 
-        </a>
+{{ formset.management_form }}
+{% for detalle in detalles %}
+
+<div class="card shadow mb-4">
+
+    <div class="card-header bg-primary text-white">
+
+        <div class="d-flex justify-content-between">
+
+            <strong>
+
+                {{ detalle.equipo.nombre }}
+
+            </strong>
+
+            <span>
+
+                {{ detalle.equipo.codigo }}
+
+            </span>
+
+        </div>
+
+    </div>
+
+    <div class="card-body">
+        <div class="table-responsive">
+
+<table class="table table-bordered align-middle">
+
+    <thead class="table-light">
+
+        <tr>
+
+            <th width="40%">
+                Checklist
+            </th>
+
+            <th width="10%" class="text-center">
+                Cumple
+            </th>
+
+            <th>
+                Observación
+            </th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+    {% for form in formset %}
+
+        {% if form.instance.detalle.id == detalle.id %}
+
+        <tr>
+
+            <td>
+
+                <strong>
+
+                    {{ form.instance.item.descripcion }}
+
+                </strong>
+
+                {{ form.id }}
+
+            </td>
+
+            <td class="text-center">
+
+                {{ form.cumple }}
+
+            </td>
+
+            <td>
+
+                {{ form.observacion }}
+
+            </td>
+
+        </tr>
 
         {% endif %}
+
+    {% endfor %}
+
+    </tbody>
+
+</table>
+
+</div>
+<div class="mt-3">
+
+    <label class="form-label fw-bold">
+
+        Observaciones del equipo
+
+    </label>
+
+    <textarea
+        class="form-control"
+        rows="3"
+        name="observaciones_{{ detalle.id }}"
+    >{{ detalle.observaciones }}</textarea>
+
+</div>
+
+</div>
+
+</div>
+
+{% endfor %}
+<hr class="my-4">
+
+<div class="card shadow">
+
+    <div class="card-header bg-light">
+
+        <h5 class="mb-0">
+
+            Cierre de la inspección
+
+        </h5>
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">
+
+                    Responsable del servicio
+
+                </label>
+
+                <input
+                    type="text"
+                    name="responsable_servicio"
+                    class="form-control"
+                    value="{{ inspeccion.responsable_servicio }}"
+                >
+
+            </div>
+
+        </div>
+
+
+        <div class="mb-4">
+
+            <label class="form-label">
+
+                Observaciones finales
+
+            </label>
+
+            <textarea
+                name="observaciones_finales"
+                rows="5"
+                class="form-control"
+            >{{ inspeccion.observaciones_finales }}</textarea>
+
+        </div>
+
+
+        <div class="row">
+
+            <div class="col-md-6">
+
+                <label class="fw-bold">
+
+                    Firma Biomédico
+
+                </label>
+
+                <canvas
+                    id="canvasBiomedico"
+                    width="500"
+                    height="200"
+                    style="border:1px solid #ccc;border-radius:8px;width:100%;background:white;">
+                </canvas>
+
+                <input
+                    type="hidden"
+                    id="firma_biomedico"
+                    name="firma_biomedico"
+                >
+
+                <button
+                    type="button"
+                    class="btn btn-outline-danger btn-sm mt-2"
+                    onclick="limpiarCanvas(canvasBio)"
+                >
+
+                    Limpiar firma
+
+                </button>
+
+            </div>
+
+
+            <div class="col-md-6">
+
+                <label class="fw-bold">
+
+                    Firma Responsable
+
+                </label>
+
+                <canvas
+                    id="canvasResponsable"
+                    width="500"
+                    height="200"
+                    style="border:1px solid #ccc;border-radius:8px;width:100%;background:white;">
+                </canvas>
+
+                <input
+                    type="hidden"
+                    id="firma_responsable"
+                    name="firma_responsable"
+                >
+
+                <button
+                    type="button"
+                    class="btn btn-outline-danger btn-sm mt-2"
+                    onclick="limpiarCanvas(canvasResp)"
+                >
+
+                    Limpiar firma
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <hr>
+
+        <div class="d-flex justify-content-end gap-2">
+
+            <button
+                type="submit"
+                name="accion"
+                value="guardar"
+                class="btn btn-primary"
+            >
+
+                <i class="bi bi-save"></i>
+
+                Guardar
+
+            </button>
+
+
+            <button
+                type="submit"
+                name="accion"
+                value="finalizar"
+                class="btn btn-success"
+            >
+
+                <i class="bi bi-check-circle"></i>
+
+                Finalizar inspección
+
+            </button>
+
+        </div>
 
     </div>
 
 </div>
+
+</form>
+<script>
+
+function activarCanvas(canvas){
+
+    const ctx = canvas.getContext("2d");
+
+    ctx.lineWidth = 2;
+
+    ctx.lineCap = "round";
+
+    let dibujando = false;
+
+    function obtenerPosicion(e){
+
+    const rect = canvas.getBoundingClientRect();
+
+    const scaleX = canvas.width / rect.width;
+
+    const scaleY = canvas.height / rect.height;
+
+    let clientX;
+    let clientY;
+
+    if (e.touches){
+
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+
+    }else{
+
+        clientX = e.clientX;
+        clientY = e.clientY;
+
+    }
+
+    return{
+
+        x:(clientX-rect.left)*scaleX,
+
+        y:(clientY-rect.top)*scaleY
+
+    };
+
+}
+    function iniciar(e){
+
+        dibujando = true;
+
+        const p = obtenerPosicion(e);
+
+        ctx.beginPath();
+
+        ctx.moveTo(p.x,p.y);
+
+        e.preventDefault();
+
+    }
+
+    function mover(e){
+
+        if(!dibujando) return;
+
+        const p = obtenerPosicion(e);
+
+        ctx.lineTo(p.x,p.y);
+
+        ctx.stroke();
+
+        e.preventDefault();
+
+    }
+
+    function terminar(){
+
+        dibujando = false;
+
+    }
+
+    canvas.addEventListener("mousedown", iniciar);
+
+    canvas.addEventListener("mousemove", mover);
+
+    canvas.addEventListener("mouseup", terminar);
+
+    canvas.addEventListener("mouseleave", terminar);
+
+    canvas.addEventListener("touchstart", iniciar);
+
+    canvas.addEventListener("touchmove", mover);
+
+    canvas.addEventListener("touchend", terminar);
+
+}
+
+const canvasBio = document.getElementById("canvasBiomedico");
+
+const canvasResp = document.getElementById("canvasResponsable");
+
+activarCanvas(canvasBio);
+
+activarCanvas(canvasResp);
+
+function limpiarCanvas(canvas){
+
+    const ctx = canvas.getContext("2d");
+
+    ctx.clearRect(
+
+        0,
+
+        0,
+
+        canvas.width,
+
+        canvas.height
+
+    );
+
+}
+
+document.querySelector("form").addEventListener(
+
+    "submit",
+
+    function(){
+
+        document.getElementById(
+
+            "firma_biomedico"
+
+        ).value = canvasBio.toDataURL("image/png");
+
+        document.getElementById(
+
+            "firma_responsable"
+
+        ).value = canvasResp.toDataURL("image/png");
+
+    }
+
+);
+
+</script>
 
 {% endblock %}
