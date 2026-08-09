@@ -15,7 +15,6 @@ from django.utils import timezone
 # ==========================================================
 # LISTADO
 # ==========================================================
-
 @login_required
 @rol_requerido(["SUPERADMIN", "ADMIN", "BIOMEDICO"])
 def lista_mantenimientos(request):
@@ -31,15 +30,70 @@ def lista_mantenimientos(request):
         .order_by("-fecha_programada")
     )
 
+    # ==========================================================
+    # FILTRO POR INSTITUCIÓN
+    # ==========================================================
+
     if request.user.es_admin or request.user.es_biomedico:
 
         mantenimientos = mantenimientos.filter(
             hoja_vida__equipo__institucion=request.user.institucion
         )
 
-    hoy = timezone.now().date()
+    # ==========================================================
+    # FILTRO POR MES Y AÑO
+    # ==========================================================
+
+    mes = request.GET.get("mes")
+    anio = request.GET.get("anio")
+
+    if mes and anio:
+
+        try:
+
+            mes = int(mes)
+            anio = int(anio)
+
+            if 1 <= mes <= 12:
+
+                mantenimientos = mantenimientos.filter(
+                    fecha_programada__year=anio,
+                    fecha_programada__month=mes,
+                )
+
+        except (ValueError, TypeError):
+
+            pass
+
+    # ==========================================================
+    # FILTRO POR ESTADO
+    # ==========================================================
+
+    estado = request.GET.get("estado")
+
+    estados_validos = [
+        Mantenimiento.Estado.PROGRAMADO,
+        Mantenimiento.Estado.EN_PROCESO,
+        Mantenimiento.Estado.FINALIZADO,
+    ]
+
+    if estado in estados_validos:
+
+        mantenimientos = mantenimientos.filter(
+            estado=estado
+        )
+
+    # ==========================================================
+    # FECHAS
+    # ==========================================================
+
+    hoy = timezone.localdate()
 
     proximos_30 = hoy + timedelta(days=30)
+
+    # ==========================================================
+    # CONTEXTO
+    # ==========================================================
 
     context = {
 
@@ -86,6 +140,11 @@ def lista_mantenimientos(request):
                 fecha_programada__lte=proximos_30,
             ).count(),
 
+        # Filtros activos
+        "mes_filtro": mes,
+        "anio_filtro": anio,
+        "estado_filtro": estado,
+
     }
 
     return render(
@@ -93,7 +152,6 @@ def lista_mantenimientos(request):
         "mantenimiento/index.html",
         context,
     )
-
 
 # ==========================================================
 # CREAR

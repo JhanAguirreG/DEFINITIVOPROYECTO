@@ -11,7 +11,7 @@ from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-
+from django.db.models import Q
 
 from reportlab.platypus import Image
 from reportlab.lib import colors
@@ -79,6 +79,7 @@ def guardar_firma_base64(data):
         "BIOMEDICO",
     ]
 )
+
 def lista_inspecciones(request):
 
     inspecciones = (
@@ -88,11 +89,19 @@ def lista_inspecciones(request):
             "servicio",
             "biomedico",
         )
+        .prefetch_related(
+            "detalles",
+            "detalles__resultados",
+        )
         .order_by(
             "-fecha",
             "-hora_inicio",
         )
     )
+
+    # ==========================================================
+    # PERMISOS POR INSTITUCIÓN
+    # ==========================================================
 
     if request.user.es_admin or request.user.es_biomedico:
 
@@ -100,24 +109,108 @@ def lista_inspecciones(request):
             institucion=request.user.institucion
         )
 
+    # ==========================================================
+    # FILTRO POR MES Y AÑO
+    # ==========================================================
+
+    mes = request.GET.get("mes")
+    anio = request.GET.get("anio")
+
+    if mes and anio:
+
+        try:
+
+            mes = int(mes)
+            anio = int(anio)
+
+            if 1 <= mes <= 12:
+
+                inspecciones = inspecciones.filter(
+                    fecha__year=anio,
+                    fecha__month=mes,
+                )
+
+        except (ValueError, TypeError):
+
+            pass
+
+    # ==========================================================
+    # FILTRO: INSPECCIONES CON NOVEDADES
+    # ==========================================================
+
+    if request.GET.get("novedades") == "1":
+
+        inspecciones = inspecciones.filter(
+
+            Q(
+                detalles__estado__in=[
+                    DetalleInspeccion.EstadoEquipo.OBSERVACION,
+                    DetalleInspeccion.EstadoEquipo.FUERA_SERVICIO,
+                ]
+            )
+
+            |
+
+            Q(
+                detalles__resultados__cumple=False
+            )
+
+        ).distinct()
+
+    # ==========================================================
+    # FILTRO: CHECKLIST NO CUMPLE
+    # ==========================================================
+
+    if request.GET.get("checklist") == "1":
+
+        inspecciones = inspecciones.filter(
+            detalles__resultados__cumple=False
+        ).distinct()
+
+    # ==========================================================
+    # CONTADORES
+    # ==========================================================
+
+    inspecciones_abiertas = inspecciones.filter(
+        estado=Inspeccion.Estado.ABIERTA
+    ).count()
+
+    inspecciones_finalizadas = inspecciones.filter(
+        estado=Inspeccion.Estado.FINALIZADA
+    ).count()
+
+    inspecciones_hoy = inspecciones.filter(
+        fecha=timezone.localdate()
+    ).count()
+
+    # ==========================================================
+    # CONTEXTO
+    # ==========================================================
+
     context = {
 
         "inspecciones": inspecciones,
 
         "inspecciones_abiertas":
-            inspecciones.filter(
-                estado=Inspeccion.Estado.ABIERTA
-            ).count(),
+            inspecciones_abiertas,
 
         "inspecciones_finalizadas":
-            inspecciones.filter(
-                estado=Inspeccion.Estado.FINALIZADA
-            ).count(),
+            inspecciones_finalizadas,
 
         "inspecciones_hoy":
-          inspecciones.filter(
-                fecha=timezone.localdate()
-            ).count(),
+            inspecciones_hoy,
+
+        "mes_filtro":
+            mes,
+
+        "anio_filtro":
+            anio,
+
+        "filtro_novedades":
+            request.GET.get("novedades") == "1",
+
+        "filtro_checklist":
+            request.GET.get("checklist") == "1",
 
     }
 
@@ -126,7 +219,6 @@ def lista_inspecciones(request):
         "inspecciones/index.html",
         context,
     )
-
 # ==========================================================
 # CREAR INSPECCIÓN
 # ==========================================================

@@ -11,20 +11,25 @@ from .models import Equipo
 # ======================================================
 # LISTADO
 # ======================================================
-
 @login_required
 @rol_requerido(["SUPERADMIN", "ADMIN"])
 def lista_equipos(request):
+
+    # ==========================================================
+    # FILTRO POR ESTADO
+    # ==========================================================
+
+    estado = request.GET.get("estado")
+
+    # ==========================================================
+    # EQUIPOS SEGÚN INSTITUCIÓN
+    # ==========================================================
 
     if request.user.es_superadmin:
 
         equipos = Equipo.objects.select_related(
             "institucion",
             "servicio",
-        ).order_by(
-            "institucion__nombre",
-            "servicio__nombre",
-            "nombre",
         )
 
     else:
@@ -34,16 +39,56 @@ def lista_equipos(request):
         ).select_related(
             "institucion",
             "servicio",
-        ).order_by(
+        )
+
+    # ==========================================================
+    # APLICAR FILTRO
+    # ==========================================================
+
+    if estado:
+
+        estados_validos = [
+            Equipo.Estado.ACTIVO,
+            Equipo.Estado.MANTENIMIENTO,
+            Equipo.Estado.FUERA_SERVICIO,
+            Equipo.Estado.BAJA,
+        ]
+
+        if estado in estados_validos:
+
+            equipos = equipos.filter(
+                estado=estado
+            )
+
+    # ==========================================================
+    # ORDEN
+    # ==========================================================
+
+    if request.user.es_superadmin:
+
+        equipos = equipos.order_by(
+            "institucion__nombre",
             "servicio__nombre",
             "nombre",
         )
+
+    else:
+
+        equipos = equipos.order_by(
+            "servicio__nombre",
+            "nombre",
+        )
+
+    # ==========================================================
+    # CONTEXTO
+    # ==========================================================
 
     return render(
         request,
         "equipos/index.html",
         {
             "equipos": equipos,
+            "estado_filtro": estado,
         },
     )
 

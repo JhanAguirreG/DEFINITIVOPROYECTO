@@ -70,17 +70,150 @@ def logout_view(request):
 @login_required
 def dashboard(request):
 
-    # ==========================================================
-    # FECHA ACTUAL
-    # ==========================================================
+    from django.db.models import Count, Q
+    from django.utils import timezone
+    from datetime import date
 
     hoy = timezone.localdate()
 
-    mes_actual = hoy.month
-    año_actual = hoy.year
+    # ==========================================================
+    # INDICADORES GENERALES
+    # ==========================================================
+
+    total_instituciones = Institucion.objects.count()
+    total_servicios = Servicio.objects.count()
+    total_equipos = Equipo.objects.count()
+    total_inspecciones = Inspeccion.objects.count()
+
+    # ==========================================================
+    # MES ACTUAL
+    # ==========================================================
+
+    inspecciones_mes = Inspeccion.objects.filter(
+        fecha__year=hoy.year,
+        fecha__month=hoy.month,
+    ).count()
+
+    mantenimientos_mes = Mantenimiento.objects.filter(
+        fecha_programada__year=hoy.year,
+        fecha_programada__month=hoy.month,
+    ).count()
+
+    # ==========================================================
+    # NOVEDADES
+    # ==========================================================
+
+    equipos_observacion = Inspeccion.objects.filter(
+        fecha__year=hoy.year,
+        fecha__month=hoy.month,
+        detalles__estado=DetalleInspeccion.EstadoEquipo.OBSERVACION,
+    ).distinct().count()
+
+    equipos_fuera_servicio = Equipo.objects.filter(
+        estado=Equipo.Estado.FUERA_SERVICIO,
+    ).count()
+
+    checklist_no_cumple = ResultadoItem.objects.filter(
+        cumple=False,
+        detalle__inspeccion__fecha__year=hoy.year,
+        detalle__inspeccion__fecha__month=hoy.month,
+    ).count()
+
+    novedades_mes = (
+        equipos_observacion
+        + checklist_no_cumple
+    )
+
+    # ==========================================================
+    # ESTADO DE MANTENIMIENTOS
+    # ==========================================================
+
+    mantenimientos_programados = Mantenimiento.objects.filter(
+        estado=Mantenimiento.Estado.PROGRAMADO,
+    ).count()
+
+    mantenimientos_proceso = Mantenimiento.objects.filter(
+        estado=Mantenimiento.Estado.EN_PROCESO,
+    ).count()
+
+    mantenimientos_finalizados = Mantenimiento.objects.filter(
+        estado=Mantenimiento.Estado.FINALIZADO,
+    ).count()
+
+    # ==========================================================
+    # ÚLTIMAS INSPECCIONES
+    # ==========================================================
+
+    ultimas_inspecciones = (
+        Inspeccion.objects
+        .select_related(
+            "institucion",
+            "servicio",
+            "biomedico",
+        )
+        .prefetch_related(
+            "detalles__equipo",
+            "detalles__resultados",
+        )
+        .order_by("-fecha", "-hora_inicio")[:8]
+    )
+
+    # Agregar total de novedades a cada inspección
+    for inspeccion in ultimas_inspecciones:
+
+        novedades_estado = inspeccion.detalles.filter(
+            estado__in=[
+                DetalleInspeccion.EstadoEquipo.OBSERVACION,
+                DetalleInspeccion.EstadoEquipo.FUERA_SERVICIO,
+            ]
+        ).count()
+
+        novedades_checklist = ResultadoItem.objects.filter(
+            detalle__inspeccion=inspeccion,
+            cumple=False,
+        ).count()
+
+        inspeccion.novedades_total = (
+            novedades_estado
+            + novedades_checklist
+        )
+
+    # ==========================================================
+    # ÚLTIMOS MANTENIMIENTOS
+    # ==========================================================
+
+    ultimos_mantenimientos = (
+        Mantenimiento.objects
+        .select_related(
+            "hoja_vida__equipo",
+            "ingeniero",
+        )
+        .order_by("-fecha_programada")[:8]
+    )
+
+    # ==========================================================
+    # EQUIPOS EN MANTENIMIENTO
+    # ==========================================================
+
+    equipos_mantenimiento = (
+        Mantenimiento.objects
+        .filter(
+            estado__in=[
+                Mantenimiento.Estado.PROGRAMADO,
+                Mantenimiento.Estado.EN_PROCESO,
+            ]
+        )
+        .select_related(
+            "hoja_vida__equipo",
+        )
+        .order_by("fecha_programada")[:8]
+    )
+
+    # ==========================================================
+    # ESTADÍSTICAS ÚLTIMOS 6 MESES
+    # ==========================================================
 
     meses = [
-        "",
         "Enero",
         "Febrero",
         "Marzo",
@@ -95,289 +228,52 @@ def dashboard(request):
         "Diciembre",
     ]
 
-    mes_actual_nombre = meses[mes_actual]
-
-
-    # ==========================================================
-    # INDICADORES GENERALES
-    # ==========================================================
-
-    total_instituciones = Institucion.objects.count()
-
-    total_servicios = Servicio.objects.count()
-
-    total_equipos = Equipo.objects.count()
-
-    total_inspecciones = Inspeccion.objects.count()
-
-
-    # ==========================================================
-    # INSPECCIONES DEL MES
-    # ==========================================================
-
-    inspecciones_mes = Inspeccion.objects.filter(
-        fecha__year=año_actual,
-        fecha__month=mes_actual,
-    ).count()
-
-
-    # ==========================================================
-    # DETALLES DEL MES
-    # ==========================================================
-
-    detalles_mes = DetalleInspeccion.objects.filter(
-        inspeccion__fecha__year=año_actual,
-        inspeccion__fecha__month=mes_actual,
-    )
-
-
-    # ==========================================================
-    # NOVEDADES DEL MES
-    #
-    # Una novedad puede ser:
-    #
-    # 1. Equipo con observaciones
-    # 2. Equipo fuera de servicio
-    # 3. Checklist que no cumple
-    # ==========================================================
-
-    equipos_observacion_mes = detalles_mes.filter(
-        estado=DetalleInspeccion.EstadoEquipo.OBSERVACION
-    ).count()
-
-
-    equipos_fuera_servicio_mes = detalles_mes.filter(
-        estado=DetalleInspeccion.EstadoEquipo.FUERA_SERVICIO
-    ).count()
-
-
-    checklist_no_cumple_mes = ResultadoItem.objects.filter(
-        detalle__inspeccion__fecha__year=año_actual,
-        detalle__inspeccion__fecha__month=mes_actual,
-        cumple=False,
-    ).count()
-
-
-    novedades_mes = (
-        equipos_observacion_mes
-        + equipos_fuera_servicio_mes
-        + checklist_no_cumple_mes
-    )
-
-
-    # ==========================================================
-    # ESTADO GENERAL DE NOVEDADES
-    # ==========================================================
-
-    equipos_observacion = DetalleInspeccion.objects.filter(
-        estado=DetalleInspeccion.EstadoEquipo.OBSERVACION
-    ).count()
-
-
-    equipos_fuera_servicio = DetalleInspeccion.objects.filter(
-        estado=DetalleInspeccion.EstadoEquipo.FUERA_SERVICIO
-    ).count()
-
-
-    checklist_no_cumple = ResultadoItem.objects.filter(
-        cumple=False
-    ).count()
-
-
-    # ==========================================================
-    # ÚLTIMAS INSPECCIONES
-    # ==========================================================
-
-    ultimas_inspecciones = (
-        Inspeccion.objects
-        .select_related(
-            "institucion",
-            "servicio",
-            "biomedico",
-            "firma",
-        )
-        .prefetch_related(
-            "detalles__equipo",
-            "detalles__resultados",
-        )
-        .order_by(
-            "-fecha",
-            "-hora_inicio",
-        )[:8]
-    )
-
-
-    # ==========================================================
-    # AGREGAR NÚMERO DE NOVEDADES A CADA INSPECCIÓN
-    # ==========================================================
-
-    for inspeccion in ultimas_inspecciones:
-
-        novedades = 0
-
-        for detalle in inspeccion.detalles.all():
-
-            if detalle.estado in [
-                DetalleInspeccion.EstadoEquipo.OBSERVACION,
-                DetalleInspeccion.EstadoEquipo.FUERA_SERVICIO,
-            ]:
-                novedades += 1
-
-            novedades += detalle.resultados.filter(
-                cumple=False
-            ).count()
-
-        inspeccion.novedades_total = novedades
-
-
-    # ==========================================================
-    # MANTENIMIENTOS DEL MES
-    # ==========================================================
-
-    mantenimientos_mes = Mantenimiento.objects.filter(
-        fecha_programada__year=año_actual,
-        fecha_programada__month=mes_actual,
-    ).count()
-
-
-    # ==========================================================
-    # ESTADO DE MANTENIMIENTOS
-    # ==========================================================
-
-    mantenimientos_programados = Mantenimiento.objects.filter(
-        estado=Mantenimiento.Estado.PROGRAMADO
-    ).count()
-
-
-    mantenimientos_proceso = Mantenimiento.objects.filter(
-        estado=Mantenimiento.Estado.EN_PROCESO
-    ).count()
-
-
-    mantenimientos_finalizados = Mantenimiento.objects.filter(
-        estado=Mantenimiento.Estado.FINALIZADO
-    ).count()
-
-
-    # ==========================================================
-    # ÚLTIMOS MANTENIMIENTOS
-    # ==========================================================
-
-    ultimos_mantenimientos = (
-        Mantenimiento.objects
-        .select_related(
-            "hoja_vida",
-            "hoja_vida__equipo",
-            "ingeniero",
-        )
-        .order_by(
-            "-fecha_programada"
-        )[:8]
-    )
-
-
-    # ==========================================================
-    # EQUIPOS CON MANTENIMIENTO PENDIENTE
-    # ==========================================================
-
-    equipos_mantenimiento = (
-        Mantenimiento.objects
-        .select_related(
-            "hoja_vida",
-            "hoja_vida__equipo",
-        )
-        .filter(
-            estado__in=[
-                Mantenimiento.Estado.PROGRAMADO,
-                Mantenimiento.Estado.EN_PROCESO,
-            ]
-        )
-        .order_by(
-            "fecha_programada"
-        )[:8]
-    )
-
-
-    # ==========================================================
-    # ESTADÍSTICAS DE LOS ÚLTIMOS 6 MESES
-    # ==========================================================
-
     estadisticas_mensuales = []
-
 
     for i in range(5, -1, -1):
 
-        # Calcular mes anterior
-        mes = mes_actual - i
-        año = año_actual
+        año = hoy.year
+        mes = hoy.month - i
 
-        while mes <= 0:
-
+        if mes <= 0:
             mes += 12
             año -= 1
-
-
-        # ------------------------------------------------------
-        # INSPECCIONES
-        # ------------------------------------------------------
 
         inspecciones = Inspeccion.objects.filter(
             fecha__year=año,
             fecha__month=mes,
         ).count()
 
-
-        # ------------------------------------------------------
-        # DETALLES DE INSPECCIÓN
-        # ------------------------------------------------------
-
-        detalles = DetalleInspeccion.objects.filter(
+        novedades_estado = DetalleInspeccion.objects.filter(
             inspeccion__fecha__year=año,
             inspeccion__fecha__month=mes,
-        )
-
-
-        observaciones = detalles.filter(
-            estado=DetalleInspeccion.EstadoEquipo.OBSERVACION
+            estado__in=[
+                DetalleInspeccion.EstadoEquipo.OBSERVACION,
+                DetalleInspeccion.EstadoEquipo.FUERA_SERVICIO,
+            ],
         ).count()
 
-
-        fuera_servicio = detalles.filter(
-            estado=DetalleInspeccion.EstadoEquipo.FUERA_SERVICIO
-        ).count()
-
-
-        # ------------------------------------------------------
-        # CHECKLIST
-        # ------------------------------------------------------
-
-        checklist = ResultadoItem.objects.filter(
+        novedades_checklist = ResultadoItem.objects.filter(
             detalle__inspeccion__fecha__year=año,
             detalle__inspeccion__fecha__month=mes,
             cumple=False,
         ).count()
 
-
         novedades = (
-            observaciones
-            + fuera_servicio
-            + checklist
+            novedades_estado
+            + novedades_checklist
         )
-
-
-        # ------------------------------------------------------
-        # MANTENIMIENTOS
-        # ------------------------------------------------------
 
         mantenimientos = Mantenimiento.objects.filter(
             fecha_programada__year=año,
             fecha_programada__month=mes,
         ).count()
 
-
         estadisticas_mensuales.append({
 
-            "mes": meses[mes],
+            "mes": meses[mes - 1],
+
+            "mes_numero": mes,
 
             "año": año,
 
@@ -389,9 +285,8 @@ def dashboard(request):
 
         })
 
-
     # ==========================================================
-    # MÁXIMOS PARA LAS BARRAS DEL DASHBOARD
+    # MÁXIMOS PARA LAS BARRAS
     # ==========================================================
 
     max_inspecciones = max(
@@ -399,18 +294,15 @@ def dashboard(request):
         default=0,
     )
 
-
     max_novedades = max(
         [x["novedades"] for x in estadisticas_mensuales],
         default=0,
     )
 
-
     max_mantenimientos = max(
         [x["mantenimientos"] for x in estadisticas_mensuales],
         default=0,
     )
-
 
     # ==========================================================
     # CONTEXTO
@@ -418,65 +310,25 @@ def dashboard(request):
 
     context = {
 
-        # ------------------------------------------------------
-        # GENERALES
-        # ------------------------------------------------------
+        "total_instituciones": total_instituciones,
 
-        "total_instituciones":
-            total_instituciones,
+        "total_servicios": total_servicios,
 
-        "total_servicios":
-            total_servicios,
+        "total_equipos": total_equipos,
 
-        "total_equipos":
-            total_equipos,
+        "total_inspecciones": total_inspecciones,
 
-        "total_inspecciones":
-            total_inspecciones,
+        "inspecciones_mes": inspecciones_mes,
 
+        "novedades_mes": novedades_mes,
 
-        # ------------------------------------------------------
-        # FECHA
-        # ------------------------------------------------------
+        "mantenimientos_mes": mantenimientos_mes,
 
-        "mes_actual_nombre":
-            mes_actual_nombre,
+        "equipos_observacion": equipos_observacion,
 
-        "año_actual":
-            año_actual,
+        "equipos_fuera_servicio": equipos_fuera_servicio,
 
-
-        # ------------------------------------------------------
-        # MES
-        # ------------------------------------------------------
-
-        "inspecciones_mes":
-            inspecciones_mes,
-
-        "novedades_mes":
-            novedades_mes,
-
-        "mantenimientos_mes":
-            mantenimientos_mes,
-
-
-        # ------------------------------------------------------
-        # NOVEDADES
-        # ------------------------------------------------------
-
-        "equipos_observacion":
-            equipos_observacion,
-
-        "equipos_fuera_servicio":
-            equipos_fuera_servicio,
-
-        "checklist_no_cumple":
-            checklist_no_cumple,
-
-
-        # ------------------------------------------------------
-        # MANTENIMIENTOS
-        # ------------------------------------------------------
+        "checklist_no_cumple": checklist_no_cumple,
 
         "mantenimientos_programados":
             mantenimientos_programados,
@@ -486,30 +338,6 @@ def dashboard(request):
 
         "mantenimientos_finalizados":
             mantenimientos_finalizados,
-
-
-        # ------------------------------------------------------
-        # INSPECCIONES
-        # ------------------------------------------------------
-
-        "ultimas_inspecciones":
-            ultimas_inspecciones,
-
-
-        # ------------------------------------------------------
-        # MANTENIMIENTOS
-        # ------------------------------------------------------
-
-        "ultimos_mantenimientos":
-            ultimos_mantenimientos,
-
-        "equipos_mantenimiento":
-            equipos_mantenimiento,
-
-
-        # ------------------------------------------------------
-        # ESTADÍSTICAS
-        # ------------------------------------------------------
 
         "estadisticas_mensuales":
             estadisticas_mensuales,
@@ -523,8 +351,24 @@ def dashboard(request):
         "max_mantenimientos":
             max_mantenimientos,
 
-    }
+        "ultimas_inspecciones":
+            ultimas_inspecciones,
 
+        "ultimos_mantenimientos":
+            ultimos_mantenimientos,
+
+        "equipos_mantenimiento":
+            equipos_mantenimiento,
+
+        "mes_actual_nombre":
+            meses[hoy.month - 1],
+
+        "año_actual":
+            hoy.year,
+            
+        "hoy": hoy,
+
+    }
 
     return render(
         request,

@@ -193,9 +193,14 @@
                         Inspecciones del mes
                     </p>
 
-                    <h2 class="fw-bold">
-                        {{ inspecciones_mes }}
-                    </h2>
+                    <a
+                        href="{% url 'inspecciones:lista_inspecciones' %}?mes={{ hoy.month }}&anio={{ hoy.year }}"
+                        class="text-decoration-none"
+                    >
+                        <h2 class="fw-bold">
+                            {{ inspecciones_mes }}
+                        </h2>
+                    </a>
 
                     <small class="text-muted">
                         {{ mes_actual_nombre }} {{ año_actual }}
@@ -220,9 +225,14 @@
                         Novedades del mes
                     </p>
 
-                    <h2 class="fw-bold text-danger">
-                        {{ novedades_mes }}
-                    </h2>
+                    <a
+                        href="{% url 'inspecciones:lista_inspecciones' %}?mes={{ hoy.month }}&anio={{ hoy.year }}&novedades=1"
+                        class="text-decoration-none"
+                    >
+                        <h2 class="fw-bold text-danger">
+                            {{ novedades_mes }}
+                        </h2>
+                    </a>
 
                     <small class="text-muted">
                         Observaciones, fuera de servicio y checklist
@@ -293,10 +303,13 @@
                             Equipos con observaciones
                         </span>
 
-                        <strong>
-                            {{ equipos_observacion }}
-                        </strong>
+                        <a href="{% url 'inspecciones:lista_inspecciones' %}?estado=OBSERVACION"
+                            class="text-decoration-none">
 
+                            <strong class="text-warning">
+                                {{ equipos_observacion }}
+                            </strong>
+                        </a>
                     </div>
 
                     <div class="progress mb-3"
@@ -313,12 +326,22 @@
                     <div class="d-flex justify-content-between mb-2">
 
                         <span>
-                            Fuera de servicio
+                            <a
+                                href="{% url 'lista_equipos' %}?estado=FUERA_SERVICIO"
+                                class="text-decoration-none text-dark"
+                            >
+                                Fuera de servicio
+                            </a>
                         </span>
 
-                        <strong class="text-danger">
-                            {{ equipos_fuera_servicio }}
-                        </strong>
+                        <a
+                            href="{% url 'lista_equipos' %}?estado=FUERA_SERVICIO"
+                            class="text-decoration-none"
+                        >
+                            <strong class="text-danger">
+                                {{ equipos_fuera_servicio }}
+                            </strong>
+                        </a>
 
                     </div>
 
@@ -339,10 +362,14 @@
                             Checklist no cumple
                         </span>
 
-                        <strong>
-                            {{ checklist_no_cumple }}
-                        </strong>
-
+                        <a
+                            href="{% url 'inspecciones:lista_inspecciones' %}?mes={{ hoy.month }}&anio={{ hoy.year }}&checklist=1"
+                            class="text-decoration-none"
+                        >
+                            <strong class="text-danger">
+                                {{ checklist_no_cumple }}
+                            </strong>
+                        </a>
                     </div>
 
                 </div>
@@ -374,9 +401,14 @@
                             Programados
                         </span>
 
-                        <span class="badge bg-warning text-dark">
-                            {{ mantenimientos_programados }}
-                        </span>
+                        <a
+                            href="{% url 'lista_mantenimientos' %}?estado=PROGRAMADO"
+                            class="text-decoration-none"
+                        >
+                            <span class="badge bg-warning text-dark">
+                                {{ mantenimientos_programados }}
+                            </span>
+                        </a>
 
                     </div>
 
@@ -387,9 +419,14 @@
                             En proceso
                         </span>
 
-                        <span class="badge bg-primary">
-                            {{ mantenimientos_proceso }}
-                        </span>
+                        <a
+                            href="{% url 'lista_mantenimientos' %}?estado=EN_PROCESO"
+                            class="text-decoration-none"
+                        >
+                            <span class="badge bg-primary">
+                                {{ mantenimientos_proceso }}
+                            </span>
+                        </a>
 
                     </div>
 
@@ -400,9 +437,14 @@
                             Finalizados
                         </span>
 
-                        <span class="badge bg-success">
-                            {{ mantenimientos_finalizados }}
-                        </span>
+                        <a
+                            href="{% url 'lista_mantenimientos' %}?estado=FINALIZADO"
+                            class="text-decoration-none"
+                        >
+                            <span class="badge bg-success">
+                                {{ mantenimientos_finalizados }}
+                            </span>
+                        </a>
 
                     </div>
 
@@ -441,17 +483,41 @@
 
                     <div class="d-flex justify-content-between mb-1">
 
-                        <strong>
+                        <a
+                            href="{% url 'inspecciones:lista_inspecciones' %}?mes={{ estadistica.mes_numero }}&anio={{ estadistica.año }}"
+                            class="text-decoration-none fw-bold"
+                        >
                             {{ estadistica.mes }}
                             {{ estadistica.año }}
-                        </strong>
+                        </a>
 
                         <span class="text-muted">
-                            {{ estadistica.inspecciones }} inspecciones
+
+                            <a
+                                href="{% url 'inspecciones:lista_inspecciones' %}?mes={{ estadistica.mes_numero }}&anio={{ estadistica.año }}"
+                                class="text-decoration-none"
+                            >
+                                {{ estadistica.inspecciones }} inspecciones
+                            </a>
+
                             ·
-                            {{ estadistica.novedades }} novedades
+
+                            <a
+                                href="{% url 'inspecciones:lista_inspecciones' %}?mes={{ estadistica.mes_numero }}&anio={{ estadistica.año }}&novedades=1"
+                                class="text-decoration-none text-danger"
+                            >
+                                {{ estadistica.novedades }} novedades
+                            </a>
+
                             ·
-                            {{ estadistica.mantenimientos }} mantenimientos
+
+                            <a
+                                href="{% url 'lista_mantenimientos' %}?mes={{ estadistica.mes_numero }}&anio={{ estadistica.año }}"
+                                class="text-decoration-none text-success"
+                            >
+                                {{ estadistica.mantenimientos }} mantenimientos
+                            </a>
+
                         </span>
 
                     </div>
@@ -612,7 +678,14 @@
                     <tr>
 
                         <td>
-                            {{ inspeccion.fecha|date:"d/m/Y" }}
+
+                            <a href="{% url 'inspecciones:detalle_inspeccion' inspeccion.id %}"
+                            class="text-decoration-none fw-semibold">
+
+                                {{ inspeccion.fecha|date:"d/m/Y" }}
+
+                            </a>
+
                         </td>
 
                         <td>
@@ -627,9 +700,12 @@
 
                             {% for detalle in inspeccion.detalles.all %}
 
-                                <div>
+                                <a href="#"
+                                class="text-decoration-none d-block">
+
                                     {{ detalle.equipo.nombre }}
-                                </div>
+
+                                </a>
 
                             {% empty %}
 
@@ -758,7 +834,12 @@
 
                         <td>
 
-                            {{ mantenimiento.hoja_vida.equipo.nombre }}
+                            <a href="{% url 'detalle_mantenimiento' mantenimiento.id %}"
+                            class="text-decoration-none fw-semibold">
+
+                                {{ mantenimiento.hoja_vida.equipo.nombre }}
+
+                            </a>
 
                         </td>
 
@@ -950,5 +1031,23 @@
     </div>
 
 </div>
+
+<style>
+
+.dashboard-card {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+}
+
+.dashboard-card:hover h2 {
+    color: #0d6efd;
+}
+
+</style>
 
 {% endblock %}
