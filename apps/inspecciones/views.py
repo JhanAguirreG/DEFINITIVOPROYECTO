@@ -564,7 +564,36 @@ def detalle_inspeccion(request, id):
         },
     )
 # funciones anteriores...
+@login_required
+def eliminar_inspeccion(request, id):
 
+    inspeccion = get_object_or_404(
+        Inspeccion,
+        id=id,
+    )
+
+    if request.method == "POST":
+
+        with transaction.atomic():
+
+            inspeccion.delete()
+
+        messages.success(
+            request,
+            "La inspección fue eliminada correctamente.",
+        )
+
+        return redirect(
+            "inspecciones:lista_inspecciones"
+        )
+
+    return render(
+        request,
+        "inspecciones/confirmar_eliminacion.html",
+        {
+            "inspeccion": inspeccion,
+        },
+    )
 def cargar_firma_pdf(campo_firma):
     """
     Carga una firma almacenada en MEDIA_ROOT
@@ -1105,7 +1134,7 @@ def generar_pdf(request, id):
         [
             "Hora de inicio",
             (
-                inspeccion.hora_inicio.strftime(
+                timezone.localtime(inspeccion.hora_inicio).strftime(
                     "%d/%m/%Y %H:%M"
                 )
                 if inspeccion.hora_inicio
@@ -1115,7 +1144,7 @@ def generar_pdf(request, id):
         [
             "Hora de finalización",
             (
-                inspeccion.hora_fin.strftime(
+                timezone.localtime(inspeccion.hora_fin).strftime(
                     "%d/%m/%Y %H:%M"
                 )
                 if inspeccion.hora_fin

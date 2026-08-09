@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="card shadow-sm border-danger">
+
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-exclamation-triangle"></i>
+                Confirmar eliminación
+            </h5>
+        </div>
+
+        <div class="card-body">
+
+            <p class="fs-5">
+                ¿Está seguro de que desea eliminar esta inspección?
+            </p>
+
+            <div class="alert alert-warning">
+
+                <strong>Institución:</strong>
+                {{ inspeccion.institucion }}
+                <br>
+
+                <strong>Servicio:</strong>
+                {{ inspeccion.servicio }}
+                <br>
+
+                <strong>Fecha:</strong>
+                {{ inspeccion.fecha|date:"d/m/Y" }}
+                <br>
+
+                <strong>Estado:</strong>
+                {{ inspeccion.get_estado_display }}
+
+            </div>
+
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-circle"></i>
+
+                Esta acción eliminará también los detalles,
+                resultados del checklist y la información de firma
+                asociada a esta inspección.
+            </div>
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                <a
+                    href="{% url 'inspecciones:lista_inspecciones' %}"
+                    class="btn btn-secondary"
+                >
+                    <i class="bi bi-arrow-left"></i>
+                    Cancelar
+                </a>
+
+                <button
+                    type="submit"
+                    class="btn btn-danger"
+                >
+                    <i class="bi bi-trash"></i>
+                    Sí, eliminar inspección
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -65,23 +65,37 @@ def logout_view(request):
 @login_required
 def dashboard(request):
 
+    ultimas_inspecciones = (
+        Inspeccion.objects
+        .select_related(
+            "institucion",
+            "servicio",
+            "biomedico",
+            "firma",
+        )
+        .prefetch_related(
+            "detalles__equipo",
+        )
+        .order_by("-id")[:8]
+    )
+
     context = {
 
         "total_instituciones": Institucion.objects.count(),
+
         "total_servicios": Servicio.objects.count(),
+
         "total_equipos": Equipo.objects.count(),
+
         "total_inspecciones": Inspeccion.objects.count(),
 
-        "ultimas_inspecciones":
-            Inspeccion.objects.select_related(
-                "equipo",
-                "biomedico",
-            ).order_by("-id")[:8],
+        "ultimas_inspecciones": ultimas_inspecciones,
 
-        "equipos_mantenimiento":
+        "equipos_mantenimiento": (
             Equipo.objects.filter(
                 estado=Equipo.Estado.MANTENIMIENTO
-            )[:8],
+            )[:8]
+        ),
 
     }
 
@@ -90,7 +104,6 @@ def dashboard(request):
         "usuarios/dashboard.html",
         context,
     )
-
 
 @login_required
 def redireccionar(request):

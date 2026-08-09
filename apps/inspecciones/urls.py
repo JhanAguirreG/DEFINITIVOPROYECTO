@@ -47,4 +47,9 @@ urlpatterns = [
         views.generar_pdf,
         name="generar_pdf",
     ),
+    path(
+    "<int:id>/eliminar/",
+    views.eliminar_inspeccion,
+    name="eliminar_inspeccion",
+    ),
 ]
