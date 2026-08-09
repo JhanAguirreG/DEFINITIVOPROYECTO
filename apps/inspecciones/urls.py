@@ -2,9 +2,15 @@ from django.urls import path
 
 from . import views
 
+
 app_name = "inspecciones"
 
+
 urlpatterns = [
+
+    # ======================================================
+    # LISTADO
+    # ======================================================
 
     path(
         "",
@@ -12,11 +18,19 @@ urlpatterns = [
         name="lista_inspecciones",
     ),
 
+    # ======================================================
+    # CREAR INSPECCIÓN
+    # ======================================================
+
     path(
         "crear/",
         views.crear_inspeccion,
         name="crear_inspeccion",
     ),
+
+    # ======================================================
+    # DETALLE DE INSPECCIÓN
+    # ======================================================
 
     path(
         "<int:id>/",
@@ -24,4 +38,13 @@ urlpatterns = [
         name="detalle_inspeccion",
     ),
 
+    # ======================================================
+    # GENERAR PDF
+    # ======================================================
+
+    path(
+        "<int:id>/pdf/",
+        views.generar_pdf,
+        name="generar_pdf",
+    ),
 ]

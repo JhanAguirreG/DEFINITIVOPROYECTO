@@ -6,373 +6,717 @@ Detalle de Inspección
 
 {% block content %}
 
-<div class="container-fluid">
+<form method="post" id="formInspeccion">
+    {% csrf_token %}
+
+    {{ formset.management_form }}
+
+    <!-- =====================================================
+         ENCABEZADO
+    ====================================================== -->
 
     <div class="d-flex justify-content-between align-items-center mb-4">
 
         <div>
-
             <h2 class="fw-bold">
                 <i class="bi bi-clipboard2-pulse"></i>
                 Inspección de Equipos Biomédicos
             </h2>
 
             <div class="text-muted">
-
                 {{ inspeccion.institucion }}
-
                 |
-
                 {{ inspeccion.servicio }}
-
                 |
-
                 {{ inspeccion.fecha }}
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+
+            <a
+                href="{% url 'inspecciones:lista_inspecciones' %}"
+                class="btn btn-secondary"
+            >
+                <i class="bi bi-arrow-left"></i>
+                Volver
+            </a>
+
+            <!-- =================================================
+                 BOTÓN PDF
+            ================================================== -->
+
+            <a
+                href="{% url 'inspecciones:generar_pdf' inspeccion.id %}"
+                class="btn btn-danger"
+                target="_blank"
+            >
+                <i class="bi bi-file-earmark-pdf"></i>
+                Generar PDF
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         MENSAJES
+    ====================================================== -->
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div
+                class="alert alert-{{ message.tags }} alert-dismissible fade show"
+                role="alert"
+            >
+                {{ message }}
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                ></button>
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <!-- =====================================================
+         ESTADO DE LA INSPECCIÓN
+    ====================================================== -->
+
+    {% if inspeccion.estado == "FINALIZADA" %}
+
+        <div class="alert alert-success">
+
+            <i class="bi bi-check-circle-fill"></i>
+
+            <strong>Inspección finalizada.</strong>
+
+            Esta inspección ya no debe modificarse.
+
+        </div>
+
+    {% else %}
+
+        <div class="alert alert-warning">
+
+            <i class="bi bi-exclamation-circle"></i>
+
+            <strong>Inspección abierta.</strong>
+
+            Recuerda guardar los cambios antes de finalizar.
+
+        </div>
+
+    {% endif %}
+
+
+    <!-- =====================================================
+         EQUIPOS
+    ====================================================== -->
+
+    {% for detalle in detalles %}
+
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header bg-primary text-white">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <strong>
+                        <i class="bi bi-cpu"></i>
+                        {{ detalle.equipo.nombre }}
+                    </strong>
+
+                    <span>
+                        Código:
+                        {{ detalle.equipo.codigo|default:"Sin código" }}
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="card-body">
+
+                <!-- =========================================
+                     INFORMACIÓN DEL EQUIPO
+                ========================================== -->
+
+                <div class="row mb-3">
+
+                    <div class="col-md-3">
+                        <strong>Marca:</strong>
+                        {{ detalle.equipo.marca|default:"-" }}
+                    </div>
+
+                    <div class="col-md-3">
+                        <strong>Modelo:</strong>
+                        {{ detalle.equipo.modelo|default:"-" }}
+                    </div>
+
+                    <div class="col-md-3">
+                        <strong>Serie:</strong>
+                        {{ detalle.equipo.serie|default:"-" }}
+                    </div>
+
+                    <div class="col-md-3">
+                        <strong>Ubicación:</strong>
+                        {{ detalle.equipo.ubicacion|default:"-" }}
+                    </div>
+
+                </div>
+
+
+                <!-- =========================================
+                     CHECKLIST
+                ========================================== -->
+
+                <div class="table-responsive">
+
+                    <table class="table table-bordered align-middle">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th style="width: 40%;">
+                                    Checklist
+                                </th>
+
+                                <th
+                                    width="10%"
+                                    class="text-center"
+                                >
+                                    Cumple
+                                </th>
+
+                                <th>
+                                    Observación
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            {% for form in formset %}
+
+                                {% if form.instance.detalle.id == detalle.id %}
+
+                                    <tr>
+
+                                        <td>
+
+                                            <strong>
+                                                {{ form.instance.item.descripcion }}
+                                            </strong>
+
+                                            {{ form.id }}
+
+                                        </td>
+
+                                        <td class="text-center">
+
+                                            {{ form.cumple }}
+
+                                        </td>
+
+                                        <td>
+
+                                            {{ form.observacion }}
+
+                                        </td>
+
+                                    </tr>
+
+                                {% endif %}
+
+                            {% empty %}
+
+                                <tr>
+
+                                    <td
+                                        colspan="3"
+                                        class="text-center text-muted"
+                                    >
+                                        Este equipo no tiene checklist configurado.
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- =========================================
+                     OBSERVACIONES DEL EQUIPO
+                ========================================== -->
+
+                <div class="mt-3">
+
+                    <label class="form-label fw-bold">
+
+                        <i class="bi bi-chat-left-text"></i>
+
+                        Observaciones del equipo
+
+                    </label>
+
+                    <textarea
+                        class="form-control"
+                        rows="3"
+                        name="observaciones_{{ detalle.id }}"
+                        {% if inspeccion.estado == "FINALIZADA" %}readonly{% endif %}
+                    >{{ detalle.observaciones }}</textarea>
+
+                </div>
 
             </div>
 
         </div>
-
-        <a href="{% url 'inspecciones:lista_inspecciones' %}"
-           class="btn btn-secondary">
-
-            <i class="bi bi-arrow-left"></i>
-
-            Volver
-
-        </a>
-
-    </div>
-
-
-<form method="post">
-
-{% csrf_token %}
-
-{{ formset.management_form }}
-{% for detalle in detalles %}
-
-<div class="card shadow mb-4">
-
-    <div class="card-header bg-primary text-white">
-
-        <div class="d-flex justify-content-between">
-
-            <strong>
-
-                {{ detalle.equipo.nombre }}
-
-            </strong>
-
-            <span>
-
-                {{ detalle.equipo.codigo }}
-
-            </span>
-
-        </div>
-
-    </div>
-
-    <div class="card-body">
-        <div class="table-responsive">
-
-<table class="table table-bordered align-middle">
-
-    <thead class="table-light">
-
-        <tr>
-
-            <th width="40%">
-                Checklist
-            </th>
-
-            <th width="10%" class="text-center">
-                Cumple
-            </th>
-
-            <th>
-                Observación
-            </th>
-
-        </tr>
-
-    </thead>
-
-    <tbody>
-
-    {% for form in formset %}
-
-        {% if form.instance.detalle.id == detalle.id %}
-
-        <tr>
-
-            <td>
-
-                <strong>
-
-                    {{ form.instance.item.descripcion }}
-
-                </strong>
-
-                {{ form.id }}
-
-            </td>
-
-            <td class="text-center">
-
-                {{ form.cumple }}
-
-            </td>
-
-            <td>
-
-                {{ form.observacion }}
-
-            </td>
-
-        </tr>
-
-        {% endif %}
 
     {% endfor %}
 
-    </tbody>
 
-</table>
+    <!-- =====================================================
+         CIERRE DE LA INSPECCIÓN
+    ====================================================== -->
 
-</div>
-<div class="mt-3">
+    <div class="card shadow-sm mb-4">
 
-    <label class="form-label fw-bold">
+        <div class="card-header bg-light">
 
-        Observaciones del equipo
+            <h5 class="mb-0">
 
-    </label>
+                <i class="bi bi-clipboard-check"></i>
 
-    <textarea
-        class="form-control"
-        rows="3"
-        name="observaciones_{{ detalle.id }}"
-    >{{ detalle.observaciones }}</textarea>
+                Cierre de la inspección
 
-</div>
+            </h5>
 
-</div>
+        </div>
 
-</div>
 
-{% endfor %}
-<hr class="my-4">
+        <div class="card-body">
 
-<div class="card shadow">
+            <!-- =============================================
+                 RESPONSABLE
+            ============================================== -->
 
-    <div class="card-header bg-light">
+            <div class="row">
 
-        <h5 class="mb-0">
+                <div class="col-md-6 mb-3">
 
-            Cierre de la inspección
+                    <label class="form-label fw-bold">
 
-        </h5>
+                        Responsable del servicio
 
-    </div>
+                    </label>
 
-    <div class="card-body">
+                    <input
+                        type="text"
+                        name="responsable_servicio"
+                        class="form-control"
+                        value="{{ firma.responsable_servicio|default:'' }}"
+                        {% if inspeccion.estado == "FINALIZADA" %}readonly{% endif %}
+                    >
 
-        <div class="row">
+                </div>
 
-            <div class="col-md-6 mb-3">
+            </div>
 
-                <label class="form-label">
 
-                    Responsable del servicio
+            <!-- =============================================
+                 OBSERVACIONES FINALES
+            ============================================== -->
+
+            <div class="mb-4">
+
+                <label class="form-label fw-bold">
+
+                    <i class="bi bi-chat-square-text"></i>
+
+                    Observaciones finales
 
                 </label>
 
-                <input
-                    type="text"
-                    name="responsable_servicio"
+                <textarea
+                    name="observaciones_finales"
+                    rows="5"
                     class="form-control"
-                    value="{{ inspeccion.responsable_servicio }}"
-                >
+                    {% if inspeccion.estado == "FINALIZADA" %}readonly{% endif %}
+                >{{ firma.observaciones_finales|default:'' }}</textarea>
 
             </div>
+                <!-- ======================================================
+                    FIRMAS
+                ====================================================== -->
 
-        </div>
+                <div class="card shadow-sm mt-4">
 
+                    <div class="card-header bg-light">
 
-        <div class="mb-4">
+                        <h4 class="mb-0">
 
-            <label class="form-label">
+                            <i class="bi bi-pen"></i>
 
-                Observaciones finales
+                            Firmas
 
-            </label>
+                        </h4>
 
-            <textarea
-                name="observaciones_finales"
-                rows="5"
-                class="form-control"
-            >{{ inspeccion.observaciones_finales }}</textarea>
-
-        </div>
+                    </div>
 
 
-        <div class="row">
+                    <div class="card-body">
 
-            <div class="col-md-6">
-
-                <label class="fw-bold">
-
-                    Firma Biomédico
-
-                </label>
-
-                <canvas
-                    id="canvasBiomedico"
-                    width="500"
-                    height="200"
-                    style="border:1px solid #ccc;border-radius:8px;width:100%;background:white;">
-                </canvas>
-
-                <input
-                    type="hidden"
-                    id="firma_biomedico"
-                    name="firma_biomedico"
-                >
-
-                <button
-                    type="button"
-                    class="btn btn-outline-danger btn-sm mt-2"
-                    onclick="limpiarCanvas(canvasBio)"
-                >
-
-                    Limpiar firma
-
-                </button>
-
-            </div>
+                        <div class="row g-4">
 
 
-            <div class="col-md-6">
+                            <!-- ==================================================
+                                FIRMA BIOMÉDICO
+                            =================================================== -->
 
-                <label class="fw-bold">
+                            <div class="col-md-6">
 
-                    Firma Responsable
+                                <label class="form-label fw-bold">
 
-                </label>
+                                    Firma Biomédico
 
-                <canvas
-                    id="canvasResponsable"
-                    width="500"
-                    height="200"
-                    style="border:1px solid #ccc;border-radius:8px;width:100%;background:white;">
-                </canvas>
-
-                <input
-                    type="hidden"
-                    id="firma_responsable"
-                    name="firma_responsable"
-                >
-
-                <button
-                    type="button"
-                    class="btn btn-outline-danger btn-sm mt-2"
-                    onclick="limpiarCanvas(canvasResp)"
-                >
-
-                    Limpiar firma
-
-                </button>
-
-            </div>
-
-        </div>
+                                </label>
 
 
-        <hr>
+                                {% if inspeccion.estado == "FINALIZADA" and firma and firma.firma_biomedico %}
 
-        <div class="d-flex justify-content-end gap-2">
+                                    <!-- FIRMA YA GUARDADA -->
 
-            <button
-                type="submit"
-                name="accion"
-                value="guardar"
-                class="btn btn-primary"
-            >
+                                    <div
+                                        class="firma-container border rounded bg-white"
+                                        style="
+                                            height:120px;
+                                            display:flex;
+                                            align-items:center;
+                                            justify-content:center;
+                                            overflow:hidden;
+                                        "
+                                    >
 
-                <i class="bi bi-save"></i>
+                                        <img
+                                            src="{{ firma.firma_biomedico.url }}"
+                                            alt="Firma Biomédico"
+                                            style="
+                                                max-width:90%;
+                                                max-height:100px;
+                                                object-fit:contain;
+                                            "
+                                        >
 
-                Guardar
-
-            </button>
+                                    </div>
 
 
-            <button
-                type="submit"
-                name="accion"
-                value="finalizar"
-                class="btn btn-success"
-            >
+                                {% else %}
 
-                <i class="bi bi-check-circle"></i>
+                                    <!-- CANVAS PARA FIRMAR -->
 
-                Finalizar inspección
+                                    <div
+                                        class="firma-container"
+                                        style="
+                                            width:100%;
+                                            height:120px;
+                                            border:1px solid #ccc;
+                                            border-radius:8px;
+                                            background:white;
+                                            overflow:hidden;
+                                        "
+                                    >
 
-            </button>
+                                        <canvas
+                                            id="canvasBiomedico"
+                                            width="600"
+                                            height="180"
+                                            style="
+                                                width:100%;
+                                                height:100%;
+                                                display:block;
+                                                background:white;
+                                            "
+                                        ></canvas>
+
+                                    </div>
+
+
+                                    <input
+                                        type="hidden"
+                                        id="firma_biomedico"
+                                        name="firma_biomedico"
+                                    >
+
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-danger btn-sm mt-2"
+                                        onclick="limpiarCanvas(canvasBio)"
+                                    >
+
+                                        <i class="bi bi-eraser"></i>
+
+                                        Limpiar firma
+
+                                    </button>
+
+                                {% endif %}
+
+                            </div>
+
+
+
+                            <!-- ==================================================
+                                FIRMA RESPONSABLE
+                            =================================================== -->
+
+                            <div class="col-md-6">
+
+                                <label class="form-label fw-bold">
+
+                                    Firma Responsable
+
+                                </label>
+
+
+                                {% if inspeccion.estado == "FINALIZADA" and firma and firma.firma_responsable %}
+
+                                    <!-- FIRMA YA GUARDADA -->
+
+                                    <div
+                                        class="firma-container border rounded bg-white"
+                                        style="
+                                            height:120px;
+                                            display:flex;
+                                            align-items:center;
+                                            justify-content:center;
+                                            overflow:hidden;
+                                        "
+                                    >
+
+                                        <img
+                                            src="{{ firma.firma_responsable.url }}"
+                                            alt="Firma Responsable"
+                                            style="
+                                                max-width:90%;
+                                                max-height:100px;
+                                                object-fit:contain;
+                                            "
+                                        >
+
+                                    </div>
+
+
+                                {% else %}
+
+                                    <!-- CANVAS PARA FIRMAR -->
+
+                                    <div
+                                        class="firma-container"
+                                        style="
+                                            width:100%;
+                                            height:120px;
+                                            border:1px solid #ccc;
+                                            border-radius:8px;
+                                            background:white;
+                                            overflow:hidden;
+                                        "
+                                    >
+
+                                        <canvas
+                                            id="canvasResponsable"
+                                            width="600"
+                                            height="180"
+                                            style="
+                                                width:100%;
+                                                height:100%;
+                                                display:block;
+                                                background:white;
+                                            "
+                                        ></canvas>
+
+                                    </div>
+
+
+                                    <input
+                                        type="hidden"
+                                        id="firma_responsable"
+                                        name="firma_responsable"
+                                    >
+
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-danger btn-sm mt-2"
+                                        onclick="limpiarCanvas(canvasResp)"
+                                    >
+
+                                        <i class="bi bi-eraser"></i>
+
+                                        Limpiar firma
+
+                                    </button>
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            
+
+            {% if inspeccion.estado != "FINALIZADA" %}
+
+                <hr>
+
+                <!-- =========================================
+                     BOTONES
+                ========================================== -->
+
+                <div class="d-flex justify-content-end gap-2">
+
+                    <button
+                        type="submit"
+                        name="accion"
+                        value="guardar"
+                        class="btn btn-primary"
+                    >
+
+                        <i class="bi bi-save"></i>
+
+                        Guardar
+
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        name="accion"
+                        value="finalizar"
+                        class="btn btn-success"
+                    >
+
+                        <i class="bi bi-check-circle"></i>
+
+                        Finalizar inspección
+
+                    </button>
+
+                </div>
+
+            {% endif %}
 
         </div>
 
     </div>
-
-</div>
 
 </form>
+
+
+<!-- =======================================================
+     JAVASCRIPT DE FIRMAS
+======================================================== -->
+
+{% if inspeccion.estado != "FINALIZADA" %}
+{% if firma.firma_biomedico %}
+    <input
+        type="hidden"
+        id="firmaBiomedicoUrl"
+        value="{{ firma.firma_biomedico.url }}"
+    >
+{% else %}
+    <input
+        type="hidden"
+        id="firmaBiomedicoUrl"
+        value=""
+    >
+{% endif %}
+
+
+{% if firma.firma_responsable %}
+    <input
+        type="hidden"
+        id="firmaResponsableUrl"
+        value="{{ firma.firma_responsable.url }}"
+    >
+{% else %}
+    <input
+        type="hidden"
+        id="firmaResponsableUrl"
+        value=""
+    >
+{% endif %}
 <script>
 
-function activarCanvas(canvas){
+function activarCanvas(canvas) {
 
     const ctx = canvas.getContext("2d");
 
     ctx.lineWidth = 2;
-
     ctx.lineCap = "round";
+    ctx.lineJoin = "round";
 
     let dibujando = false;
 
-    function obtenerPosicion(e){
 
-    const rect = canvas.getBoundingClientRect();
+    function obtenerPosicion(e) {
 
-    const scaleX = canvas.width / rect.width;
+        const rect = canvas.getBoundingClientRect();
 
-    const scaleY = canvas.height / rect.height;
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
 
-    let clientX;
-    let clientY;
+        let clientX;
+        let clientY;
 
-    if (e.touches){
 
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
+        if (e.touches && e.touches.length > 0) {
 
-    }else{
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
 
-        clientX = e.clientX;
-        clientY = e.clientY;
+        } else {
+
+            clientX = e.clientX;
+            clientY = e.clientY;
+
+        }
+
+
+        return {
+
+            x: (clientX - rect.left) * scaleX,
+
+            y: (clientY - rect.top) * scaleY
+
+        };
 
     }
 
-    return{
 
-        x:(clientX-rect.left)*scaleX,
-
-        y:(clientY-rect.top)*scaleY
-
-    };
-
-}
-    function iniciar(e){
+    function iniciar(e) {
 
         dibujando = true;
 
@@ -380,19 +724,28 @@ function activarCanvas(canvas){
 
         ctx.beginPath();
 
-        ctx.moveTo(p.x,p.y);
+        ctx.moveTo(
+            p.x,
+            p.y
+        );
 
         e.preventDefault();
 
     }
 
-    function mover(e){
 
-        if(!dibujando) return;
+    function mover(e) {
+
+        if (!dibujando) {
+            return;
+        }
 
         const p = obtenerPosicion(e);
 
-        ctx.lineTo(p.x,p.y);
+        ctx.lineTo(
+            p.x,
+            p.y
+        );
 
         ctx.stroke();
 
@@ -400,76 +753,245 @@ function activarCanvas(canvas){
 
     }
 
-    function terminar(){
+
+    function terminar(e) {
 
         dibujando = false;
 
+        if (e) {
+            e.preventDefault();
+        }
+
     }
 
-    canvas.addEventListener("mousedown", iniciar);
 
-    canvas.addEventListener("mousemove", mover);
+    canvas.addEventListener(
+        "mousedown",
+        iniciar
+    );
 
-    canvas.addEventListener("mouseup", terminar);
+    canvas.addEventListener(
+        "mousemove",
+        mover
+    );
 
-    canvas.addEventListener("mouseleave", terminar);
+    canvas.addEventListener(
+        "mouseup",
+        terminar
+    );
 
-    canvas.addEventListener("touchstart", iniciar);
+    canvas.addEventListener(
+        "mouseleave",
+        terminar
+    );
 
-    canvas.addEventListener("touchmove", mover);
 
-    canvas.addEventListener("touchend", terminar);
+    canvas.addEventListener(
+        "touchstart",
+        iniciar,
+        { passive: false }
+    );
+
+    canvas.addEventListener(
+        "touchmove",
+        mover,
+        { passive: false }
+    );
+
+    canvas.addEventListener(
+        "touchend",
+        terminar,
+        { passive: false }
+    );
 
 }
 
-const canvasBio = document.getElementById("canvasBiomedico");
+function cargarFirmaGuardada(canvas, url) {
 
-const canvasResp = document.getElementById("canvasResponsable");
-
-activarCanvas(canvasBio);
-
-activarCanvas(canvasResp);
-
-function limpiarCanvas(canvas){
+    if (!url) {
+        return;
+    }
 
     const ctx = canvas.getContext("2d");
 
+    const imagen = new Image();
+
+    imagen.onload = function () {
+
+        ctx.clearRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+        const margen = 10;
+
+        const anchoDisponible =
+            canvas.width - (margen * 2);
+
+        const altoDisponible =
+            canvas.height - (margen * 2);
+
+        const escala = Math.min(
+            anchoDisponible / imagen.width,
+            altoDisponible / imagen.height
+        );
+
+        const ancho =
+            imagen.width * escala;
+
+        const alto =
+            imagen.height * escala;
+
+        const x =
+            (canvas.width - ancho) / 2;
+
+        const y =
+            (canvas.height - alto) / 2;
+
+        ctx.drawImage(
+            imagen,
+            x,
+            y,
+            ancho,
+            alto
+        );
+    };
+
+    imagen.src = url;
+}
+
+const canvasBio =   
+    document.getElementById(
+        "canvasBiomedico"
+    );
+
+const canvasResp =
+    document.getElementById(
+        "canvasResponsable"
+    );
+
+
+if (canvasBio) {
+
+    activarCanvas(canvasBio);
+
+}
+
+
+if (canvasResp) {
+
+    activarCanvas(canvasResp);
+
+}
+const firmaBiomedicoUrl =
+    document.getElementById(
+        "firmaBiomedicoUrl"
+    ).value;
+
+const firmaResponsableUrl =
+    document.getElementById(
+        "firmaResponsableUrl"
+    ).value;
+
+
+if (firmaBiomedicoUrl) {
+
+    cargarFirmaGuardada(
+        canvasBio,
+        firmaBiomedicoUrl
+    );
+}
+
+
+if (firmaResponsableUrl) {
+
+    cargarFirmaGuardada(
+        canvasResp,
+        firmaResponsableUrl
+    );
+}
+
+function limpiarCanvas(canvas) {
+
+    if (!canvas) {
+        return;
+    }
+
+    const ctx =
+        canvas.getContext("2d");
+
     ctx.clearRect(
-
         0,
-
         0,
-
         canvas.width,
-
         canvas.height
-
     );
 
 }
 
 document.querySelector("form").addEventListener(
-
     "submit",
-
     function(){
 
-        document.getElementById(
+        const firmaBio =
+            document.getElementById("firma_biomedico");
 
-            "firma_biomedico"
+        const firmaResp =
+            document.getElementById("firma_responsable");
 
-        ).value = canvasBio.toDataURL("image/png");
 
-        document.getElementById(
+        // ----------------------------------------------
+        // FIRMA BIOMÉDICO
+        // ----------------------------------------------
 
-            "firma_responsable"
+        if (!canvasEstaVacio(canvasBio)) {
 
-        ).value = canvasResp.toDataURL("image/png");
+            firmaBio.value =
+                canvasBio.toDataURL("image/png");
+        }
+
+
+        // ----------------------------------------------
+        // FIRMA RESPONSABLE
+        // ----------------------------------------------
+
+        if (!canvasEstaVacio(canvasResp)) {
+
+            firmaResp.value =
+                canvasResp.toDataURL("image/png");
+        }
 
     }
-
 );
 
+function canvasEstaVacio(canvas) {
+
+    const ctx = canvas.getContext("2d");
+
+    const datos = ctx.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    ).data;
+
+    for (
+        let i = 3;
+        i < datos.length;
+        i += 4
+    ) {
+
+        if (datos[i] !== 0) {
+            return false;
+        }
+    }
+
+    return true;
+}
 </script>
+
+{% endif %}
 
 {% endblock %}
