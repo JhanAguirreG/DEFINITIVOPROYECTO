@@ -455,146 +455,80 @@
         </div>
 
     </div>
-
-
     <!-- ====================================================== -->
-    <!-- ESTADÍSTICAS ÚLTIMOS 6 MESES -->
+    <!-- COMPORTAMIENTO DE LA GESTIÓN - ÚLTIMOS 6 MESES -->
     <!-- ====================================================== -->
 
     <div class="card border-0 shadow-sm mb-4">
 
-        <div class="card-header bg-white">
+        <!-- ENCABEZADO -->
 
-            <h5 class="fw-bold mb-1">
-                📊 Estadísticas de los últimos 6 meses
-            </h5>
+        <div class="card-header bg-white border-0 pt-4 px-4">
 
-            <small class="text-muted">
-                Inspecciones, novedades y mantenimientos
-            </small>
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+                        📊 Comportamiento de la gestión
+                    </h5>
+
+                    <small class="text-muted">
+                        Estadísticas de los últimos 6 meses
+                    </small>
+
+                </div>
+
+                <span class="badge bg-light text-dark border">
+                    Últimos 6 meses
+                </span>
+
+            </div>
 
         </div>
 
-        <div class="card-body">
 
-            {% for estadistica in estadisticas_mensuales %}
+        <!-- CUERPO -->
 
-                <div class="mb-4">
-
-                    <div class="d-flex justify-content-between mb-1">
-
-                        <a
-                            href="{% url 'inspecciones:lista_inspecciones' %}?mes={{ estadistica.mes_numero }}&anio={{ estadistica.año }}"
-                            class="text-decoration-none fw-bold"
-                        >
-                            {{ estadistica.mes }}
-                            {{ estadistica.año }}
-                        </a>
-
-                        <span class="text-muted">
-
-                            <a
-                                href="{% url 'inspecciones:lista_inspecciones' %}?mes={{ estadistica.mes_numero }}&anio={{ estadistica.año }}"
-                                class="text-decoration-none"
-                            >
-                                {{ estadistica.inspecciones }} inspecciones
-                            </a>
-
-                            ·
-
-                            <a
-                                href="{% url 'inspecciones:lista_inspecciones' %}?mes={{ estadistica.mes_numero }}&anio={{ estadistica.año }}&novedades=1"
-                                class="text-decoration-none text-danger"
-                            >
-                                {{ estadistica.novedades }} novedades
-                            </a>
-
-                            ·
-
-                            <a
-                                href="{% url 'lista_mantenimientos' %}?mes={{ estadistica.mes_numero }}&anio={{ estadistica.año }}"
-                                class="text-decoration-none text-success"
-                            >
-                                {{ estadistica.mantenimientos }} mantenimientos
-                            </a>
-
-                        </span>
-
-                    </div>
+        <div class="card-body px-4 pb-4">
 
 
-                    <!-- INSPECCIONES -->
+            <!-- ================================================== -->
+            <!-- RESUMEN DE LOS 6 MESES -->
+            <!-- ================================================== -->
 
-                    <div class="mb-1">
-
-                        <div
-                            class="progress"
-                            style="height: 10px;"
-                        >
-
-                            <div
-                                class="progress-bar bg-primary"
-                                style="
-                                    width:
-                                    {% if max_inspecciones %}
-                                        {% widthratio estadistica.inspecciones max_inspecciones 100 %}
-                                    {% else %}
-                                        0
-                                    {% endif %}%;
-                                "
-                            ></div>
-
-                        </div>
-
-                    </div>
+            <div class="row g-3 mb-4">
 
 
-                    <!-- NOVEDADES -->
+                <!-- INSPECCIONES -->
 
-                    <div class="mb-1">
+                <div class="col-md-4">
 
-                        <div
-                            class="progress"
-                            style="height: 10px;"
-                        >
+                    <div class="p-3 rounded-3 bg-primary bg-opacity-10">
 
-                            <div
-                                class="progress-bar bg-danger"
-                                style="
-                                    width:
-                                    {% if max_novedades %}
-                                        {% widthratio estadistica.novedades max_novedades 100 %}
-                                    {% else %}
-                                        0
-                                    {% endif %}%;
-                                "
-                            ></div>
+                        <div class="d-flex justify-content-between align-items-center">
 
-                        </div>
+                            <div>
 
-                    </div>
+                                <small class="text-muted">
+                                    Inspecciones
+                                </small>
 
+                                <h4 class="fw-bold text-primary mb-0">
 
-                    <!-- MANTENIMIENTOS -->
+                                    {{ total_inspecciones_6_meses|default:"0" }}
 
-                    <div>
+                                </h4>
 
-                        <div
-                            class="progress"
-                            style="height: 10px;"
-                        >
+                                <small class="text-muted">
+                                    Últimos 6 meses
+                                </small>
 
-                            <div
-                                class="progress-bar bg-success"
-                                style="
-                                    width:
-                                    {% if max_mantenimientos %}
-                                        {% widthratio estadistica.mantenimientos max_mantenimientos 100 %}
-                                    {% else %}
-                                        0
-                                    {% endif %}%;
-                                "
-                            ></div>
+                            </div>
+
+                            <span class="fs-2">
+                                📋
+                            </span>
 
                         </div>
 
@@ -602,27 +536,249 @@
 
                 </div>
 
-            {% endfor %}
 
-            <div class="mt-3">
+                <!-- NOVEDADES -->
 
-                <span class="me-4">
-                    <span class="badge bg-primary">
-                        Inspecciones
-                    </span>
-                </span>
+                <div class="col-md-4">
 
-                <span class="me-4">
-                    <span class="badge bg-danger">
-                        Novedades
-                    </span>
-                </span>
+                    <div class="p-3 rounded-3 bg-danger bg-opacity-10">
 
-                <span>
-                    <span class="badge bg-success">
-                        Mantenimientos
-                    </span>
-                </span>
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+
+                                <small class="text-muted">
+                                    Novedades
+                                </small>
+
+                                <h4 class="fw-bold text-danger mb-0">
+
+                                    {{ total_novedades_6_meses|default:"0" }}
+
+                                </h4>
+
+                                <small class="text-muted">
+                                    Últimos 6 meses
+                                </small>
+
+                            </div>
+
+                            <span class="fs-2">
+                                ⚠️
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- MANTENIMIENTOS -->
+
+                <div class="col-md-4">
+
+                    <div class="p-3 rounded-3 bg-success bg-opacity-10">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+
+                                <small class="text-muted">
+                                    Mantenimientos
+                                </small>
+
+                                <h4 class="fw-bold text-success mb-0">
+
+                                    {{ total_mantenimientos_6_meses|default:"0" }}
+
+                                </h4>
+
+                                <small class="text-muted">
+                                    Últimos 6 meses
+                                </small>
+
+                            </div>
+
+                            <span class="fs-2">
+                                🔧
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================== -->
+            <!-- GRÁFICO -->
+            <!-- ================================================== -->
+
+            <div class="border rounded-3 p-3">
+
+                <div
+                    style="
+                        position: relative;
+                        width: 100%;
+                        height: 380px;
+                    "
+                >
+
+                    <canvas id="estadisticasSeisMeses"></canvas>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================== -->
+            <!-- TABLA DE ESTADÍSTICAS -->
+            <!-- ================================================== -->
+
+            <div class="mt-4">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+
+                    <div>
+
+                        <h6 class="fw-bold mb-0">
+                            📅 Detalle mensual
+                        </h6>
+
+                        <small class="text-muted">
+                            Comparación de la actividad registrada
+                        </small>
+
+                    </div>
+
+                </div>
+
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle mb-0">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th>
+                                    Mes
+                                </th>
+
+                                <th class="text-center">
+                                    Inspecciones
+                                </th>
+
+                                <th class="text-center">
+                                    Novedades
+                                </th>
+
+                                <th class="text-center">
+                                    Mantenimientos
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for estadistica in estadisticas_mensuales %}
+
+                            <tr>
+
+                                <!-- MES -->
+
+                                <td>
+
+                                    <strong>
+                                        {{ estadistica.mes }}
+                                        {{ estadistica.año }}
+                                    </strong>
+
+                                </td>
+
+
+                                <!-- INSPECCIONES -->
+
+                                <td class="text-center">
+
+                                    <span class="badge bg-primary">
+
+                                        {{ estadistica.inspecciones }}
+
+                                    </span>
+
+                                </td>
+
+
+                                <!-- NOVEDADES -->
+
+                                <td class="text-center">
+
+                                    {% if estadistica.novedades > 0 %}
+
+                                        <span class="badge bg-danger">
+
+                                            {{ estadistica.novedades }}
+
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="badge bg-success">
+
+                                            0
+
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <!-- MANTENIMIENTOS -->
+
+                                <td class="text-center">
+
+                                    <span class="badge bg-success">
+
+                                        {{ estadistica.mantenimientos }}
+
+                                    </span>
+
+                                </td>
+
+                            </tr>
+
+
+                            {% empty %}
+
+                            <tr>
+
+                                <td
+                                    colspan="4"
+                                    class="text-center text-muted py-4"
+                                >
+
+                                    No hay estadísticas disponibles.
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
 
             </div>
 
@@ -631,6 +787,280 @@
     </div>
 
 
+    <!-- ====================================================== -->
+    <!-- DATOS PARA CHART.JS -->
+    <!-- ====================================================== -->
+
+    {{ etiquetas_grafico|json_script:"etiquetas-grafico" }}
+
+    {{ inspecciones_grafico|json_script:"inspecciones-grafico" }}
+
+    {{ novedades_grafico|json_script:"novedades-grafico" }}
+
+    {{ mantenimientos_grafico|json_script:"mantenimientos-grafico" }}
+
+
+    <!-- ====================================================== -->
+    <!-- CHART.JS -->
+    <!-- ====================================================== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+    <script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+
+        /* ======================================================
+        BUSCAR CANVAS
+        ====================================================== */
+
+        const canvas = document.getElementById(
+            "estadisticasSeisMeses"
+        );
+
+
+        if (!canvas) {
+
+            return;
+
+        }
+
+
+        /* ======================================================
+        OBTENER DATOS GENERADOS POR DJANGO
+        ====================================================== */
+
+        const etiquetasElemento = document.getElementById(
+            "etiquetas-grafico"
+        );
+
+
+        const inspeccionesElemento = document.getElementById(
+            "inspecciones-grafico"
+        );
+
+
+        const novedadesElemento = document.getElementById(
+            "novedades-grafico"
+        );
+
+
+        const mantenimientosElemento = document.getElementById(
+            "mantenimientos-grafico"
+        );
+
+
+        if (
+            !etiquetasElemento ||
+            !inspeccionesElemento ||
+            !novedadesElemento ||
+            !mantenimientosElemento
+        ) {
+
+            return;
+
+        }
+
+
+        /* ======================================================
+        CONVERTIR JSON
+        ====================================================== */
+
+        const etiquetas = JSON.parse(
+            etiquetasElemento.textContent
+        );
+
+
+        const inspecciones = JSON.parse(
+            inspeccionesElemento.textContent
+        );
+
+
+        const novedades = JSON.parse(
+            novedadesElemento.textContent
+        );
+
+
+        const mantenimientos = JSON.parse(
+            mantenimientosElemento.textContent
+        );
+
+
+        /* ======================================================
+        CREAR GRÁFICO
+        ====================================================== */
+
+        new Chart(canvas, {
+
+            type: "line",
+
+
+            data: {
+
+                labels: etiquetas,
+
+
+                datasets: [
+
+                    /* ==========================================
+                    INSPECCIONES
+                    ========================================== */
+
+                    {
+
+                        label: "Inspecciones",
+
+                        data: inspecciones,
+
+                        borderWidth: 3,
+
+                        tension: 0.35,
+
+                        fill: false,
+
+                        pointRadius: 5,
+
+                        pointHoverRadius: 8
+
+                    },
+
+
+                    /* ==========================================
+                    NOVEDADES
+                    ========================================== */
+
+                    {
+
+                        label: "Novedades",
+
+                        data: novedades,
+
+                        borderWidth: 3,
+
+                        tension: 0.35,
+
+                        fill: false,
+
+                        pointRadius: 5,
+
+                        pointHoverRadius: 8
+
+                    },
+
+
+                    /* ==========================================
+                    MANTENIMIENTOS
+                    ========================================== */
+
+                    {
+
+                        label: "Mantenimientos",
+
+                        data: mantenimientos,
+
+                        borderWidth: 3,
+
+                        tension: 0.35,
+
+                        fill: false,
+
+                        pointRadius: 5,
+
+                        pointHoverRadius: 8
+
+                    }
+
+                ]
+
+            },
+
+
+            /* ==================================================
+            CONFIGURACIÓN
+            ================================================== */
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+
+                interaction: {
+
+                    intersect: false,
+
+                    mode: "index"
+
+                },
+
+
+                plugins: {
+
+                    legend: {
+
+                        position: "top",
+
+                        labels: {
+
+                            usePointStyle: true,
+
+                            padding: 20
+
+                        }
+
+                    },
+
+
+                    tooltip: {
+
+                        mode: "index",
+
+                        intersect: false,
+
+                        padding: 12
+
+                    }
+
+                },
+
+
+                scales: {
+
+                    y: {
+
+                        beginAtZero: true,
+
+                        ticks: {
+
+                            precision: 0
+
+                        }
+
+                    },
+
+
+                    x: {
+
+                        grid: {
+
+                            display: false
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        });
+
+    });
+
+    </script>
     <!-- ====================================================== -->
     <!-- ÚLTIMAS INSPECCIONES -->
     <!-- ====================================================== -->
