@@ -26,15 +26,19 @@
 
         </div>
 
-        <a
-            href="{% url 'lista_mantenimientos' %}"
+        {% if orden %}
+            <a href="{% url 'detalle_orden_trabajo' orden.id %}"
             class="btn btn-secondary">
-
-            <i class="bi bi-arrow-left"></i>
-
-            Volver
-
-        </a>
+                <i class="bi bi-arrow-left"></i>
+                Volver
+            </a>
+        {% else %}
+            <a href="{% url 'lista_mantenimientos' %}"
+            class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Volver
+            </a>
+        {% endif %}
 
     </div>
 

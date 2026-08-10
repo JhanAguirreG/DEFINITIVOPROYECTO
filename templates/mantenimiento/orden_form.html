@@ -1,0 +1,476 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ titulo }} | SIGHI
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- ====================================================== -->
+    <!-- ENCABEZADO -->
+    <!-- ====================================================== -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="fw-bold mb-1">
+
+                <i class="bi bi-clipboard2-check"></i>
+
+                {{ titulo }}
+
+            </h2>
+
+            <p class="text-muted mb-0">
+
+                Cree una Orden de Trabajo para agrupar
+                varios mantenimientos realizados durante
+                una misma visita al servicio.
+
+            </p>
+
+        </div>
+
+        <div>
+
+            <a href="{% url 'lista_ordenes_trabajo' %}"
+               class="btn btn-secondary">
+
+                <i class="bi bi-arrow-left"></i>
+
+                Volver
+
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- ====================================================== -->
+    <!-- FORMULARIO -->
+    <!-- ====================================================== -->
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-primary text-white">
+
+            <h5 class="mb-0">
+
+                <i class="bi bi-file-earmark-text"></i>
+
+                Información de la Orden de Trabajo
+
+            </h5>
+
+        </div>
+
+
+        <div class="card-body">
+
+            <form method="POST">
+
+                {% csrf_token %}
+
+
+                <!-- ================================================== -->
+                <!-- ERRORES GENERALES -->
+                <!-- ================================================== -->
+
+                {% if form.non_field_errors %}
+
+                    <div class="alert alert-danger">
+
+                        {% for error in form.non_field_errors %}
+
+                            <div>
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+
+                <!-- ================================================== -->
+                <!-- INFORMACIÓN BÁSICA -->
+                <!-- ================================================== -->
+
+                <div class="row g-3">
+
+
+                    <!-- NÚMERO DE ORDEN -->
+
+                    <div class="col-md-4">
+
+                        <label for="{{ form.numero.id_for_label }}"
+                               class="form-label fw-bold">
+
+                            Número de orden
+
+                        </label>
+
+                        {{ form.numero }}
+
+                        {% if form.numero.errors %}
+
+                            <div class="text-danger small mt-1">
+
+                                {{ form.numero.errors }}
+
+                            </div>
+
+                        {% endif %}
+
+                        <div class="form-text">
+
+                            Ejemplo: OT-2026-001
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- FECHA -->
+
+                    <div class="col-md-4">
+
+                        <label for="{{ form.fecha.id_for_label }}"
+                               class="form-label fw-bold">
+
+                            Fecha
+
+                        </label>
+
+                        {{ form.fecha }}
+
+                        {% if form.fecha.errors %}
+
+                            <div class="text-danger small mt-1">
+
+                                {{ form.fecha.errors }}
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- SERVICIO -->
+
+                    <div class="col-md-4">
+
+                        <label for="{{ form.servicio.id_for_label }}"
+                               class="form-label fw-bold">
+
+                            Servicio
+
+                        </label>
+
+                        {{ form.servicio }}
+
+                        {% if form.servicio.errors %}
+
+                            <div class="text-danger small mt-1">
+
+                                {{ form.servicio.errors }}
+
+                            </div>
+
+                        {% endif %}
+
+                        <div class="form-text">
+
+                            Servicio donde se realizará la visita.
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <hr class="my-4">
+
+
+                <!-- ================================================== -->
+                <!-- RESPONSABLE TÉCNICO -->
+                <!-- ================================================== -->
+
+                <h5 class="fw-bold mb-3">
+
+                    <i class="bi bi-person-gear"></i>
+
+                    Responsable técnico
+
+                </h5>
+
+
+                <div class="row g-3">
+
+
+                    <!-- INGENIERO -->
+
+                    <div class="col-md-6">
+
+                        <label for="{{ form.ingeniero.id_for_label }}"
+                               class="form-label fw-bold">
+
+                            Ingeniero / Biomédico
+
+                        </label>
+
+                        {{ form.ingeniero }}
+
+                        {% if form.ingeniero.errors %}
+
+                            <div class="text-danger small mt-1">
+
+                                {{ form.ingeniero.errors }}
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- EMPRESA -->
+
+                    <div class="col-md-6">
+
+                        <label for="{{ form.empresa.id_for_label }}"
+                               class="form-label fw-bold">
+
+                            Empresa
+
+                        </label>
+
+                        {{ form.empresa }}
+
+                        {% if form.empresa.errors %}
+
+                            <div class="text-danger small mt-1">
+
+                                {{ form.empresa.errors }}
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                </div>
+
+
+                <hr class="my-4">
+
+
+                <!-- ================================================== -->
+                <!-- DESCRIPCIÓN -->
+                <!-- ================================================== -->
+
+                <h5 class="fw-bold mb-3">
+
+                    <i class="bi bi-card-text"></i>
+
+                    Descripción general
+
+                </h5>
+
+
+                <div class="mb-3">
+
+                    <label for="{{ form.descripcion.id_for_label }}"
+                           class="form-label fw-bold">
+
+                        Descripción de la visita
+
+                    </label>
+
+                    {{ form.descripcion }}
+
+                    {% if form.descripcion.errors %}
+
+                        <div class="text-danger small mt-1">
+
+                            {{ form.descripcion.errors }}
+
+                        </div>
+
+                    {% endif %}
+
+                    <div class="form-text">
+
+                        Describa brevemente el motivo de la visita
+                        o las actividades generales programadas.
+
+                    </div>
+
+                </div>
+
+
+                <hr class="my-4">
+
+
+                <!-- ================================================== -->
+                <!-- RESPONSABLE DEL SERVICIO -->
+                <!-- ================================================== -->
+
+                <h5 class="fw-bold mb-3">
+
+                    <i class="bi bi-person-badge"></i>
+
+                    Responsable del servicio
+
+                </h5>
+
+
+                <div class="row g-3">
+
+
+                    <!-- NOMBRE -->
+
+                    <div class="col-md-6">
+
+                        <label for="{{ form.responsable_nombre.id_for_label }}"
+                               class="form-label fw-bold">
+
+                            Nombre del responsable
+
+                        </label>
+
+                        {{ form.responsable_nombre }}
+
+                        {% if form.responsable_nombre.errors %}
+
+                            <div class="text-danger small mt-1">
+
+                                {{ form.responsable_nombre.errors }}
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- CARGO -->
+
+                    <div class="col-md-6">
+
+                        <label for="{{ form.responsable_cargo.id_for_label }}"
+                               class="form-label fw-bold">
+
+                            Cargo
+
+                        </label>
+
+                        {{ form.responsable_cargo }}
+
+                        {% if form.responsable_cargo.errors %}
+
+                            <div class="text-danger small mt-1">
+
+                                {{ form.responsable_cargo.errors }}
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- ================================================== -->
+                <!-- INFORMACIÓN SOBRE FIRMAS -->
+                <!-- ================================================== -->
+
+                <div class="alert alert-info mt-4">
+
+                    <div class="d-flex">
+
+                        <div class="me-3">
+
+                            <i class="bi bi-pen fs-4"></i>
+
+                        </div>
+
+                        <div>
+
+                            <strong>Firmas de la Orden de Trabajo</strong>
+
+                            <p class="mb-0 mt-1">
+
+                                Las firmas se realizarán posteriormente
+                                en la Orden de Trabajo.
+
+                                El responsable del servicio firmará
+                                una sola vez y esta firma quedará
+                                asociada a todos los equipos incluidos
+                                en esta orden.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================================================== -->
+                <!-- BOTONES -->
+                <!-- ================================================== -->
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+
+                    <a href="{% url 'lista_ordenes_trabajo' %}"
+                       class="btn btn-secondary">
+
+                        <i class="bi bi-x-circle"></i>
+
+                        Cancelar
+
+                    </a>
+
+
+                    <button type="submit"
+                            class="btn btn-primary">
+
+                        <i class="bi bi-check-circle"></i>
+
+                        {% if editar %}
+
+                            Guardar cambios
+
+                        {% else %}
+
+                            Crear Orden de Trabajo
+
+                        {% endif %}
+
+                    </button>
+
+                </div>
+
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

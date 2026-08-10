@@ -1,6 +1,94 @@
 from django.db import models
 
 
+class OrdenTrabajo(models.Model):
+    """
+    Orden general de trabajo.
+
+    Una orden puede contener varios mantenimientos/equipos.
+    La firma del responsable se realiza una sola vez
+    y queda asociada a toda la orden.
+    """
+
+    numero = models.CharField(
+        max_length=30,
+        unique=True,
+        verbose_name="Número de orden",
+    )
+
+    fecha = models.DateField(
+        verbose_name="Fecha",
+    )
+
+    servicio = models.ForeignKey(
+        "servicios.Servicio",
+        on_delete=models.CASCADE,
+        related_name="ordenes_trabajo",
+        verbose_name="Servicio",
+    )
+
+    ingeniero = models.ForeignKey(
+        "usuarios.Usuario",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="ordenes_trabajo",
+        verbose_name="Ingeniero / Biomédico",
+    )
+
+    empresa = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name="Empresa",
+    )
+
+    descripcion = models.TextField(
+        blank=True,
+        verbose_name="Descripción general",
+    )
+
+    responsable_nombre = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name="Nombre del responsable",
+    )
+
+    responsable_cargo = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name="Cargo del responsable",
+    )
+
+    firma_biomedico = models.TextField(
+        blank=True,
+        verbose_name="Firma del biomédico",
+    )
+
+    firma_responsable = models.TextField(
+        blank=True,
+        verbose_name="Firma del responsable",
+    )
+
+    creado = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    actualizado = models.DateTimeField(
+        auto_now=True,
+    )
+
+    class Meta:
+        verbose_name = "Orden de Trabajo"
+        verbose_name_plural = "Órdenes de Trabajo"
+        ordering = [
+            "-fecha",
+            "-id",
+        ]
+
+    def __str__(self):
+        return self.numero
+
+
 class Mantenimiento(models.Model):
 
     class Tipo(models.TextChoices):
@@ -12,11 +100,33 @@ class Mantenimiento(models.Model):
         EN_PROCESO = "EN_PROCESO", "En proceso"
         FINALIZADO = "FINALIZADO", "Finalizado"
 
+    # ==========================================================
+    # ORDEN DE TRABAJO
+    # ==========================================================
+
+    orden_trabajo = models.ForeignKey(
+        "mantenimiento.OrdenTrabajo",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="mantenimientos",
+        verbose_name="Orden de Trabajo",
+    )
+
+    # ==========================================================
+    # EQUIPO
+    # ==========================================================
+
     hoja_vida = models.ForeignKey(
         "hojas_vida.HojaVida",
         on_delete=models.CASCADE,
         related_name="mantenimientos",
+        verbose_name="Hoja de vida",
     )
+
+    # ==========================================================
+    # INFORMACIÓN DEL MANTENIMIENTO
+    # ==========================================================
 
     tipo = models.CharField(
         max_length=20,
@@ -46,6 +156,7 @@ class Mantenimiento(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
+        related_name="mantenimientos",
     )
 
     empresa = models.CharField(
@@ -86,15 +197,22 @@ class Mantenimiento(models.Model):
     actualizado = models.DateTimeField(
         auto_now=True,
     )
+    firma_biomedico = models.TextField(
+        blank=True,
+        verbose_name="Firma del biomédico",
+    )   
+
+    firma_responsable = models.TextField(
+        blank=True,
+        verbose_name="Firma del responsable",
+    )
 
     class Meta:
-
         ordering = [
             "-fecha_programada",
         ]
 
         verbose_name = "Mantenimiento"
-
         verbose_name_plural = "Mantenimientos"
 
     def __str__(self):

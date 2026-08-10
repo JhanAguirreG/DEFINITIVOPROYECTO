@@ -8,49 +8,118 @@ Detalle del Mantenimiento | SIGHI
 
 <div class="container-fluid">
 
-    <!-- Encabezado -->
+    <!-- ENCABEZADO -->
 
     <div class="d-flex justify-content-between align-items-center mb-4">
 
         <div>
-
             <h2 class="fw-bold">
-
                 Orden de Trabajo
-
             </h2>
 
-            <p class="text-muted">
-
-                Información completa del mantenimiento realizado.
-
+            <p class="text-muted mb-0">
+                Orden {{ orden.numero }}
             </p>
-
         </div>
 
-        <div>
-
+        <div class="d-flex gap-2">
             {% if user.es_superadmin or user.es_admin %}
 
-            <a href="{% url 'editar_mantenimiento' mantenimiento.id %}"
-               class="btn btn-warning">
+                    <a href="{% url 'editar_mantenimiento' mantenimiento.id %}"
+                    class="btn btn-warning">
 
-                <i class="bi bi-pencil"></i>
+                        <i class="bi bi-pencil"></i>
+                        Editar
 
-                Editar
+                    </a>
 
-            </a>
+                    <form method="post"
+                        action="{% url 'eliminar_mantenimiento' mantenimiento.id %}"
+                        onsubmit="return confirm('¿Está seguro de eliminar este mantenimiento? Esta acción no se puede deshacer.');"
+                        style="display:inline;">
+
+                        {% csrf_token %}
+
+                        <button type="submit"
+                                class="btn btn-danger">
+
+                            <i class="bi bi-trash"></i>
+                            Eliminar
+
+                        </button>
+
+                    </form>
+
+                {% endif %}
+            <!-- SI EL MANTENIMIENTO PERTENECE A UNA OT -->
+
+            {% if mantenimiento.orden_trabajo %}
+
+                <a href="{% url 'detalle_orden_trabajo' mantenimiento.orden_trabajo.id %}"
+                class="btn btn-primary">
+
+                    <i class="bi bi-file-earmark-text"></i>
+                    Ver Orden de Trabajo
+
+                </a>
+
+            {% endif %}    
+            <!-- FIRMAR -->
+
+            {% if mantenimiento.orden_trabajo %}
+
+                {% if user.es_superadmin or user.es_admin or user.es_biomedico %}
+
+                    <a href="{% url 'firmar_orden_trabajo' mantenimiento.orden_trabajo.id %}"
+                    class="btn btn-success">
+
+                        <i class="bi bi-pen"></i>
+                        Firmar Orden
+
+                    </a>
+
+                {% endif %}
 
             {% endif %}
 
-            <a href="{% url 'lista_mantenimientos' %}"
-               class="btn btn-secondary">
 
-                <i class="bi bi-arrow-left"></i>
+            <!-- PDF -->
 
-                Volver
+            {% if mantenimiento.orden_trabajo %}
 
-            </a>
+                <a href="{% url 'pdf_orden_trabajo' mantenimiento.orden_trabajo.id %}"
+                target="_blank"
+                class="btn btn-danger">
+
+                    <i class="bi bi-file-earmark-pdf"></i>
+                    Generar PDF de la OT
+
+                </a>
+
+            {% endif %}   
+
+
+            {% if volver_a_ordenes %}
+
+                <a href="{% url 'detalle_orden_trabajo' mantenimiento.orden_trabajo.id %}"
+                class="btn btn-secondary">
+
+                    <i class="bi bi-arrow-left"></i>
+                    Volver
+
+                </a>
+
+            {% else %}
+
+                <a href="{% url 'lista_mantenimientos' %}"
+                class="btn btn-secondary">
+
+                    <i class="bi bi-arrow-left"></i>
+                    Volver
+
+                </a>
+
+            {% endif %}
 
         </div>
 
@@ -282,9 +351,11 @@ Detalle del Mantenimiento | SIGHI
 
     </div>
 
-    <!-- Firmas -->
+    <!-- ==========================================================
+        FIRMAS
+    ========================================================== -->
 
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border-0 mt-4">
 
         <div class="card-header bg-dark text-white">
 
@@ -296,27 +367,98 @@ Detalle del Mantenimiento | SIGHI
 
             <div class="row text-center">
 
+                <!-- FIRMA BIOMÉDICO -->
+
                 <div class="col-md-6">
 
-                    <br><br><br>
+                    <h6 class="fw-bold mb-3">
+                        Biomédico / Ingeniero
+                    </h6>
 
-                    _______________________________
+                    {% if mantenimiento.firma_biomedico %}
 
-                    <br>
+                        <div class="border rounded p-3 bg-light">
 
-                    Biomédico / Ingeniero
+                            <img
+                                src="{{ mantenimiento.firma_biomedico }}"
+                                alt="Firma del biomédico"
+                                style="
+                                    max-width: 100%;
+                                    height: 120px;
+                                    object-fit: contain;
+                                "
+                            >
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="text-muted border rounded p-4">
+
+                            Firma no registrada.
+
+                        </div>
+
+                    {% endif %}
 
                 </div>
 
+
+                <!-- FIRMA RESPONSABLE -->
+
                 <div class="col-md-6">
 
-                    <br><br><br>
+                    <h6 class="fw-bold mb-3">
+                        Responsable del Servicio
+                    </h6>
 
-                    _______________________________
+                    {% if mantenimiento.firma_responsable %}
 
-                    <br>
+                        <div class="border rounded p-3 bg-light">
 
-                    Responsable del Servicio
+                            <img
+                                src="{{ mantenimiento.firma_responsable }}"
+                                alt="Firma del responsable"
+                                style="
+                                    max-width: 100%;
+                                    height: 120px;
+                                    object-fit: contain;
+                                "
+                            >
+
+                        </div>
+
+                        {% if mantenimiento.orden_trabajo %}
+
+                            <div class="mt-2">
+
+                                <strong>
+                                    {{ mantenimiento.orden_trabajo.responsable_nombre }}
+                                </strong>
+
+                                {% if mantenimiento.orden_trabajo.responsable_cargo %}
+
+                                    <br>
+
+                                    <small class="text-muted">
+                                        {{ mantenimiento.orden_trabajo.responsable_cargo }}
+                                    </small>
+
+                                {% endif %}
+
+                            </div>
+
+                        {% endif %}
+
+                    {% else %}
+
+                        <div class="text-muted border rounded p-4">
+
+                            Firma no registrada.
+
+                        </div>
+
+                    {% endif %}
 
                 </div>
 

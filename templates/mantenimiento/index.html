@@ -32,14 +32,26 @@ Mantenimientos | SIGHI
 
         {% if user.es_superadmin or user.es_admin %}
 
-        <a href="{% url 'crear_mantenimiento' %}"
-           class="btn btn-primary">
+            <div class="d-flex gap-2">
 
-            <i class="bi bi-plus-circle"></i>
+                <a href="{% url 'crear_mantenimiento' %}"
+                class="btn btn-primary">
 
-            Nuevo mantenimiento
+                    <i class="bi bi-plus-circle"></i>
+                    Agregar mantenimiento
 
-        </a>
+                </a>
+
+                <a href="{% url 'lista_ordenes_trabajo' %}"
+                class="btn btn-secondary">
+
+                    <i class="bi bi-clipboard-check"></i>
+                    Órdenes de trabajo
+
+                </a>
+
+            </div>
+
 
         {% endif %}
 
