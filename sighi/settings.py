@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = 'jhanprueba'
 
-DEBUG = True
+DEBUG = false
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
