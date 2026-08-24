@@ -433,7 +433,7 @@ FICHA TÉCNICA
 
                         <strong>Clasificación de Riesgo</strong><br>
 
-                        {{ hoja.equipo.get_riesgo_display }}
+                        {{ hoja.equipo.catalogo.get_riesgo_display }}
 
                     </div>
 
@@ -449,103 +449,265 @@ FICHA TÉCNICA
 
     <!-- DOCUMENTOS -->
 
-    <div class="col-lg-4">
 
-        <div class="card shadow-sm border-0 mb-4">
+</div>
+<!--======================================================
+CARACTERÍSTICAS TÉCNICAS
+=======================================================-->
 
-            <div class="card-header bg-info text-white">
+<div class="card shadow-sm border-0 mb-4">
 
-                <i class="bi bi-folder2-open"></i>
+    <div class="card-header bg-dark text-white">
 
-                Documentación
+        <i class="bi bi-sliders"></i>
 
-            </div>
+        Características Técnicas
 
-            <div class="card-body">
+    </div>
 
-                {% if hoja.manual_operacion %}
+    <div class="card-body">
 
-                    <a href="{{ hoja.manual_operacion.url }}"
-                       target="_blank"
-                       class="btn btn-outline-primary w-100 mb-2">
+        {% if valores_tecnicos %}
 
-                        <i class="bi bi-file-earmark-pdf"></i>
+        <div class="row">
 
-                        Manual de Operación
+            {% for valor in valores_tecnicos %}
 
-                    </a>
+            <div class="col-md-6 mb-3">
 
-                {% else %}
+                <div class="border rounded p-3 h-100">
 
-                    <button class="btn btn-outline-secondary w-100 mb-2"
-                            disabled>
+                    <strong>
+                        {{ valor.campo.nombre }}
+                    </strong>
 
-                        Manual de Operación
+                    <div class="mt-1">
 
-                    </button>
+                        {% if valor.valor %}
 
-                {% endif %}
+                            {{ valor.valor }}
 
+                            {% if valor.campo.unidad %}
+                                {{ valor.campo.unidad }}
+                            {% endif %}
 
+                        {% else %}
 
-                {% if hoja.manual_servicio %}
+                            <span class="text-muted">
+                                No registrado
+                            </span>
 
-                    <a href="{{ hoja.manual_servicio.url }}"
-                       target="_blank"
-                       class="btn btn-outline-success w-100 mb-2">
-
-                        <i class="bi bi-file-earmark-medical"></i>
-
-                        Manual de Servicio
-
-                    </a>
-
-                {% else %}
-
-                    <button class="btn btn-outline-secondary w-100 mb-2"
-                            disabled>
-
-                        Manual de Servicio
-
-                    </button>
-
-                {% endif %}
-
-
-
-                {% if hoja.fotografia %}
-
-                    <hr>
-
-                    <img src="{{ hoja.fotografia.url }}"
-                         class="img-fluid rounded shadow-sm">
-
-                {% else %}
-
-                    <div class="text-center text-muted mt-4">
-
-                        <i class="bi bi-camera"
-                           style="font-size:70px;"></i>
-
-                        <p class="mt-2">
-
-                            Sin fotografía
-
-                        </p>
+                        {% endif %}
 
                     </div>
 
-                {% endif %}
+                </div>
 
             </div>
 
+            {% endfor %}
+
         </div>
+
+        {% else %}
+
+        <div class="text-center text-muted py-4">
+
+            <i class="bi bi-sliders fs-1"></i>
+
+            <p class="mt-2 mb-0">
+                No hay características técnicas registradas.
+            </p>
+
+        </div>
+
+        {% endif %}
 
     </div>
 
 </div>
+<!--======================================================
+DOCUMENTACIÓN TÉCNICA
+=======================================================-->
 
+<div class="card shadow-sm border-0 mb-4">
 
+    <div class="card-header bg-info text-white">
+
+        <i class="bi bi-folder2-open"></i>
+
+        Documentación Técnica
+
+    </div>
+
+    <div class="card-body">
+
+        {% if documentos %}
+
+        <div class="row">
+
+            {% for documento in documentos %}
+
+            <div class="col-md-6 mb-3">
+
+                <div class="border rounded p-3">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+
+                            <strong>
+                                {{ documento.get_tipo_display }}
+                            </strong>
+
+                            {% if documento.nombre %}
+
+                            <div class="text-muted small">
+
+                                {{ documento.nombre }}
+
+                            </div>
+
+                            {% endif %}
+
+                        </div>
+
+                        <a href="{{ documento.archivo.url }}"
+                           target="_blank"
+                           class="btn btn-outline-primary btn-sm">
+
+                            <i class="bi bi-eye"></i>
+
+                            Ver
+
+                        </a>
+
+                    </div>
+
+                    {% if documento.observaciones %}
+
+                    <div class="mt-2 small text-muted">
+
+                        {{ documento.observaciones }}
+
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% else %}
+
+        <div class="text-center py-4 text-muted">
+
+            <i class="bi bi-folder-x fs-1"></i>
+
+            <p class="mt-2">
+                No hay documentación cargada.
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+<!--======================================================
+ACCESORIOS
+=======================================================-->
+
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-warning">
+
+        <i class="bi bi-box-seam"></i>
+
+        Accesorios y Componentes
+
+    </div>
+
+    <div class="card-body">
+
+        {% if accesorios %}
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle">
+
+                <thead class="table-light">
+
+                    <tr>
+
+                        <th>Cantidad</th>
+
+                        <th>Accesorio / Componente</th>
+
+                        <th>Observaciones</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for accesorio in accesorios %}
+
+                    <tr>
+
+                        <td>
+
+                            {{ accesorio.cantidad }}
+
+                        </td>
+
+                        <td>
+
+                            {{ accesorio.nombre }}
+
+                        </td>
+
+                        <td>
+
+                            {{ accesorio.observaciones|default:"-" }}
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="text-center text-muted py-4">
+
+            <i class="bi bi-box fs-1"></i>
+
+            <p class="mt-2 mb-0">
+
+                No hay accesorios registrados.
+
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
 
 <!--======================================================
 OBSERVACIONES
