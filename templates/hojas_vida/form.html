@@ -184,54 +184,15 @@
                     </div>
 
                 </div>
-                {% if form_tecnico.fields %}
+                <!-- ======================================================
+                CARACTERÍSTICAS TÉCNICAS
+                ======================================================= -->
 
-                <div class="card mt-4">
+                <div id="contenedor-campos-tecnicos">
 
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            Características técnicas
-                        </h5>
-                    </div>
-
-                    <div class="card-body">
-
-                        <div class="row">
-
-                            {% for field in form_tecnico %}
-
-                                <div class="col-md-6 mb-3">
-
-                                    <label
-                                        for="{{ field.id_for_label }}"
-                                        class="form-label"
-                                    >
-                                        {{ field.label }}
-
-                                        {% if field.field.required %}
-                                            <span class="text-danger">*</span>
-                                        {% endif %}
-                                    </label>
-
-                                    {{ field }}
-
-                                    {% if field.errors %}
-                                        <div class="text-danger small">
-                                            {{ field.errors }}
-                                        </div>
-                                    {% endif %}
-
-                                </div>
-
-                            {% endfor %}
-
-                        </div>
-
-                    </div>
+                    {% include "hojas_vida/_campos_tecnicos.html" %}
 
                 </div>
-
-                {% endif %}
 
                 <hr>
 
@@ -245,31 +206,6 @@
                 </h5>
 
                 <div class="row">
-
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-
-                            Manual de Operación
-
-                        </label>
-
-                        {{ form.manual_operacion }}
-
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-
-                            Manual de Servicio
-
-                        </label>
-
-                        {{ form.manual_servicio }}
-
-                    </div>
-
                     <div class="col-md-4 mb-3">
 
                         <label class="form-label">
@@ -331,5 +267,84 @@
     </form>
 
 </div>
+<script>
 
+document.addEventListener("DOMContentLoaded", function () {
+
+    const equipoSelect = document.getElementById("id_equipo");
+
+    const contenedor = document.getElementById(
+        "contenedor-campos-tecnicos"
+    );
+
+    if (!equipoSelect) {
+        return;
+    }
+
+    equipoSelect.addEventListener("change", function () {
+
+        const equipoId = this.value;
+
+        if (!equipoId) {
+
+            contenedor.innerHTML = "";
+
+            return;
+        }
+
+        contenedor.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary"></div>
+                <p class="mt-2 text-muted">
+                    Cargando características técnicas...
+                </p>
+            </div>
+        `;
+
+        fetch(
+            "{% url 'campos_tecnicos_equipo' %}?equipo="
+            + equipoId
+        )
+
+        .then(response => {
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Error al cargar los campos técnicos."
+                );
+
+            }
+
+            return response.text();
+
+        })
+
+        .then(html => {
+
+            contenedor.innerHTML = html;
+
+        })
+
+        .catch(error => {
+
+            console.error(error);
+
+            contenedor.innerHTML = `
+                <div class="alert alert-danger">
+
+                    <i class="bi bi-exclamation-triangle"></i>
+
+                    No fue posible cargar las características técnicas.
+
+                </div>
+            `;
+
+        });
+
+    });
+
+});
+
+</script>
 {% endblock %}

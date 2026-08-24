@@ -4,9 +4,32 @@ from .models import (
     CatalogoEquipo,
     PlantillaInspeccion,
     ItemPlantilla,
+    CampoTecnico,
+    GuiaMantenimiento,
+    ActividadMantenimiento,
 )
+# ==========================================================
+# INLINE - CARACTERÍSTICAS TÉCNICAS
+# ==========================================================
 
+class CampoTecnicoInline(admin.TabularInline):
+    model = CampoTecnico
 
+    extra = 1
+
+    fields = (
+        "nombre",
+        "tipo_dato",
+        "unidad",
+        "obligatorio",
+        "orden",
+        "activo",
+    )
+
+    ordering = (
+        "orden",
+        "nombre",
+    )
 # ==========================================================
 # INLINE ITEMS
 # ==========================================================
@@ -27,6 +50,24 @@ class ItemPlantillaInline(admin.TabularInline):
         "obligatorio",
     )
 
+# ==========================================================
+# INLINE - ACTIVIDADES DE MANTENIMIENTO
+# ==========================================================
+
+class ActividadMantenimientoInline(admin.TabularInline):
+    model = ActividadMantenimiento
+
+    extra = 1
+
+    fields = (
+        "descripcion",
+        "obligatorio",
+        "orden",
+    )
+
+    ordering = (
+        "orden",
+    )
 
 # ==========================================================
 # CATALOGO
@@ -143,5 +184,91 @@ class ItemPlantillaAdmin(admin.ModelAdmin):
 
     ordering = (
         "plantilla",
+        "orden",
+    )
+
+@admin.register(CampoTecnico)
+class CampoTecnicoAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "nombre",
+        "catalogo",
+        "tipo_dato",
+        "unidad",
+        "obligatorio",
+        "orden",
+        "activo",
+    )
+
+    list_filter = (
+        "tipo_dato",
+        "obligatorio",
+        "activo",
+        "catalogo",
+    )
+
+    search_fields = (
+        "nombre",
+        "catalogo__nombre",
+    )
+
+    ordering = (
+        "catalogo",
+        "orden",
+        "nombre",
+    )
+
+# ==========================================================
+# GUÍA DE MANTENIMIENTO
+# ==========================================================
+
+@admin.register(GuiaMantenimiento)
+class GuiaMantenimientoAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "nombre",
+        "catalogo",
+        "activa",
+    )
+
+    list_filter = (
+        "activa",
+    )
+
+    search_fields = (
+        "nombre",
+        "catalogo__nombre",
+    )
+
+    inlines = [
+        ActividadMantenimientoInline,
+    ]
+
+
+# ==========================================================
+# ACTIVIDADES DE MANTENIMIENTO
+# ==========================================================
+
+@admin.register(ActividadMantenimiento)
+class ActividadMantenimientoAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "descripcion",
+        "guia",
+        "obligatorio",
+        "orden",
+    )
+
+    list_filter = (
+        "obligatorio",
+    )
+
+    search_fields = (
+        "descripcion",
+        "guia__nombre",
+    )
+
+    ordering = (
+        "guia",
         "orden",
     )

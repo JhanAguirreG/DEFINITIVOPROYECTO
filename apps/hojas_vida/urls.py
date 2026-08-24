@@ -32,5 +32,10 @@ urlpatterns = [
         views.detalle_hoja_vida,
         name="detalle_hoja_vida",
     ),
+    path(
+        "campos-tecnicos/",
+        views.campos_tecnicos_equipo,
+        name="campos_tecnicos_equipo",
+    ),
 
 ]

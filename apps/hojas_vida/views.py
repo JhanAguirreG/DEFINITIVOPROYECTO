@@ -19,8 +19,55 @@ from .models import (
     DocumentacionHojaVida,
     AccesorioHojaVida,
 )
+from apps.equipos.models import Equipo
 
+# ==========================================================
+# CAMPOS TÉCNICOS DINÁMICOS
+# ==========================================================
 
+@login_required
+@rol_requerido(["SUPERADMIN", "ADMIN", "BIOMEDICO"])
+def campos_tecnicos_equipo(request):
+
+    equipo_id = request.GET.get("equipo")
+
+    if not equipo_id:
+        return render(
+            request,
+            "hojas_vida/_campos_tecnicos.html",
+            {
+                "form_tecnico": None,
+            },
+        )
+
+    equipo = get_object_or_404(
+        Equipo.objects.select_related("catalogo"),
+        id=equipo_id,
+    )
+
+    catalogo = equipo.catalogo
+
+    if not catalogo:
+        return render(
+            request,
+            "hojas_vida/_campos_tecnicos.html",
+            {
+                "form_tecnico": None,
+                "mensaje": "Este equipo no tiene un catálogo asociado.",
+            },
+        )
+
+    form_tecnico = CamposTecnicosForm(
+        catalogo=catalogo,
+    )
+
+    return render(
+        request,
+        "hojas_vida/_campos_tecnicos.html",
+        {
+            "form_tecnico": form_tecnico,
+        },
+    )
 # ==========================================================
 # FUNCIÓN AUXILIAR
 # ==========================================================
@@ -97,18 +144,13 @@ def lista_hojas_vida(request):
             "hojas": hojas,
         },
     )
-
-
 # ==========================================================
 # CREAR
 # ==========================================================
+
 @login_required
 @rol_requerido(["SUPERADMIN", "ADMIN"])
 def crear_hoja_vida(request):
-
-    # ======================================================
-    # POST
-    # ======================================================
 
     if request.method == "POST":
 
@@ -117,91 +159,50 @@ def crear_hoja_vida(request):
             request.FILES,
         )
 
-        # --------------------------------------------------
-        # Determinar catálogo según equipo seleccionado
-        # --------------------------------------------------
-
+        equipo = None
         catalogo = None
 
-        equipo_id = request.POST.get("equipo")
-
-        if equipo_id:
-
-            from apps.equipos.models import Equipo
+        if request.POST.get("equipo"):
 
             equipo = get_object_or_404(
-                Equipo.objects.select_related(
-                    "catalogo"
-                ),
-                id=equipo_id,
+                Equipo.objects.select_related("catalogo"),
+                id=request.POST.get("equipo"),
             )
 
             catalogo = equipo.catalogo
-
-        # --------------------------------------------------
-        # Formulario técnico
-        # --------------------------------------------------
 
         form_tecnico = CamposTecnicosForm(
             request.POST,
             catalogo=catalogo,
         )
 
-        # --------------------------------------------------
-        # Validar ambos formularios
-        # --------------------------------------------------
-
         if form.is_valid() and form_tecnico.is_valid():
 
-            equipo = form.cleaned_data["equipo"]
+            hoja = form.save()
 
-            # --------------------------------------------------
-            # Verificar que no exista Hoja de Vida
-            # --------------------------------------------------
+            # ==================================================
+            # GUARDAR CAMPOS TÉCNICOS
+            # ==================================================
 
-            if hasattr(equipo, "hoja_vida"):
+            for nombre, campo_form in form_tecnico.fields.items():
 
-                messages.warning(
-                    request,
-                    "El equipo seleccionado ya tiene una Hoja de Vida.",
+                if not hasattr(campo_form, "campo_tecnico"):
+                    continue
+
+                campo_tecnico = campo_form.campo_tecnico
+
+                valor = form_tecnico.cleaned_data.get(
+                    nombre,
+                    "",
                 )
 
-                return redirect(
-                    "detalle_hoja_vida",
-                    equipo.hoja_vida.id,
+                ValorCampoTecnico.objects.update_or_create(
+                    hoja_vida=hoja,
+                    campo=campo_tecnico,
+                    defaults={
+                        "valor": valor or "",
+                    },
                 )
-
-            # --------------------------------------------------
-            # Guardar todo
-            # --------------------------------------------------
-
-            with transaction.atomic():
-
-                hoja = form.save()
-
-                for nombre, campo_form in (
-                    form_tecnico.fields.items()
-                ):
-
-                    campo_tecnico = getattr(
-                        campo_form,
-                        "campo_tecnico",
-                        None,
-                    )
-
-                    if not campo_tecnico:
-                        continue
-
-                    valor = form_tecnico.cleaned_data.get(
-                        nombre,
-                        "",
-                    )
-
-                    ValorCampoTecnico.objects.create(
-                        hoja_vida=hoja,
-                        campo=campo_tecnico,
-                        valor=valor or "",
-                    )
 
             messages.success(
                 request,
@@ -213,19 +214,11 @@ def crear_hoja_vida(request):
                 hoja.id,
             )
 
-    # ======================================================
-    # GET
-    # ======================================================
-
     else:
 
         form = HojaVidaForm()
 
         form_tecnico = CamposTecnicosForm()
-
-    # ======================================================
-    # RENDER
-    # ======================================================
 
     return render(
         request,
@@ -237,8 +230,12 @@ def crear_hoja_vida(request):
         },
     )
 # ==========================================================
+# EDITAR HOJA DE VIDA
+# ==========================================================
+# ==========================================================
 # EDITAR
 # ==========================================================
+
 @login_required
 @rol_requerido(["SUPERADMIN", "ADMIN"])
 def editar_hoja_vida(request, id):
@@ -246,38 +243,12 @@ def editar_hoja_vida(request, id):
     hoja = get_object_or_404(
         HojaVida.objects.select_related(
             "equipo",
-            "equipo__institucion",
-            "equipo__servicio",
             "equipo__catalogo",
         ),
         id=id,
     )
 
-    # ======================================================
-    # SEGURIDAD
-    # ======================================================
-
-    if request.user.es_admin:
-
-        if (
-            hoja.equipo.institucion
-            != request.user.institucion
-        ):
-
-            messages.error(
-                request,
-                "No tiene permisos para editar esta Hoja de Vida.",
-            )
-
-            return redirect(
-                "lista_hojas_vida"
-            )
-
     catalogo = hoja.equipo.catalogo
-
-    # ======================================================
-    # POST
-    # ======================================================
 
     if request.method == "POST":
 
@@ -293,48 +264,33 @@ def editar_hoja_vida(request, id):
             hoja_vida=hoja,
         )
 
-        # --------------------------------------------------
-        # Validar
-        # --------------------------------------------------
-
         if form.is_valid() and form_tecnico.is_valid():
 
-            with transaction.atomic():
+            hoja = form.save()
 
-                hoja = form.save()
+            # ==================================================
+            # ACTUALIZAR CAMPOS TÉCNICOS
+            # ==================================================
 
-                # ------------------------------------------
-                # Guardar características técnicas
-                # ------------------------------------------
+            for nombre, campo_form in form_tecnico.fields.items():
 
-                for nombre, campo_form in (
-                    form_tecnico.fields.items()
-                ):
+                if not hasattr(campo_form, "campo_tecnico"):
+                    continue
 
-                    campo_tecnico = getattr(
-                        campo_form,
-                        "campo_tecnico",
-                        None,
-                    )
+                campo_tecnico = campo_form.campo_tecnico
 
-                    if not campo_tecnico:
-                        continue
+                valor = form_tecnico.cleaned_data.get(
+                    nombre,
+                    "",
+                )
 
-                    valor = form_tecnico.cleaned_data.get(
-                        nombre,
-                        "",
-                    )
-
-                    ValorCampoTecnico.objects.update_or_create(
-
-                        hoja_vida=hoja,
-
-                        campo=campo_tecnico,
-
-                        defaults={
-                            "valor": valor or "",
-                        },
-                    )
+                ValorCampoTecnico.objects.update_or_create(
+                    hoja_vida=hoja,
+                    campo=campo_tecnico,
+                    defaults={
+                        "valor": valor or "",
+                    },
+                )
 
             messages.success(
                 request,
@@ -345,10 +301,6 @@ def editar_hoja_vida(request, id):
                 "detalle_hoja_vida",
                 hoja.id,
             )
-
-    # ======================================================
-    # GET
-    # ======================================================
 
     else:
 
@@ -361,10 +313,6 @@ def editar_hoja_vida(request, id):
             hoja_vida=hoja,
         )
 
-    # ======================================================
-    # RENDER
-    # ======================================================
-
     return render(
         request,
         "hojas_vida/form.html",
@@ -373,10 +321,8 @@ def editar_hoja_vida(request, id):
             "form_tecnico": form_tecnico,
             "titulo": "Editar Hoja de Vida",
             "editar": True,
-            "hoja": hoja,
         },
     )
-
 # ==========================================================
 # DETALLE
 # ==========================================================
