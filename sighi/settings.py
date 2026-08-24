@@ -10,10 +10,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = 'jhanprueba'
 
-DEBUG = false
+DEBUG = False
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+import os
 
+ALLOWED_HOSTS = os.environ.get(
+    "ALLOWED_HOSTS",
+    "127.0.0.1,localhost"
+).split(",")
 # --------------------------------------------------
 # APLICACIONES
 # --------------------------------------------------
