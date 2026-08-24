@@ -1,1 +1,1 @@
-web: gunicorn sighi.wsgi
+web: gunicorn sighi.wsgi:application
