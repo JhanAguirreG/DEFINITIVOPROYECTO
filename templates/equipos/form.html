@@ -187,16 +187,109 @@
                         </div>
 
                         <!-- INFORMACIÓN TÉCNICA -->
-
                         <h5 class="border-bottom pb-2 mt-4 mb-3">
 
                             Información Técnica
 
                         </h5>
 
+                        <!-- CATÁLOGO -->
+
+                        <div
+                            id="catalogo-alerta"
+                            class="alert d-none"
+                            role="alert">
+                        </div>
+
+                        <div
+                            id="catalogo-info"
+                            class="card border-primary mb-4 d-none">
+
+                            <div class="card-header bg-primary text-white">
+
+                                <strong>
+
+                                    <i class="bi bi-journal-medical"></i>
+
+                                    Información del catálogo
+
+                                </strong>
+
+                            </div>
+
+                            <div class="card-body">
+
+                                <div class="row">
+
+                                    <div class="col-md-4 mb-3">
+
+                                        <label class="form-label">
+
+                                            {{ form.riesgo_catalogo.label }}
+
+                                        </label>
+
+                                        {{ form.riesgo_catalogo }}
+
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+
+                                        <label class="form-label">
+
+                                            {{ form.tecnologia_catalogo.label }}
+
+                                        </label>
+
+                                        {{ form.tecnologia_catalogo }}
+
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+
+                                        <label class="form-label">
+
+                                            {{ form.frecuencia_catalogo.label }}
+
+                                        </label>
+
+                                        {{ form.frecuencia_catalogo }}
+
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+
+                                        <label class="form-label">
+
+                                            {{ form.calibracion_catalogo.label }}
+
+                                        </label>
+
+                                        {{ form.calibracion_catalogo }}
+
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+
+                                        <label class="form-label">
+
+                                            {{ form.mantenimiento_catalogo.label }}
+
+                                        </label>
+
+                                        {{ form.mantenimiento_catalogo }}
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
                         <div class="row">
 
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-6 mb-3">
 
                                 <label class="form-label">
 
@@ -208,31 +301,7 @@
 
                             </div>
 
-                            <div class="col-md-4 mb-3">
-
-                                <label class="form-label">
-
-                                    {{ form.riesgo.label }}
-
-                                </label>
-
-                                {{ form.riesgo }}
-
-                            </div>
-
-                            <div class="col-md-4 mb-3">
-
-                                <label class="form-label">
-
-                                    {{ form.tecnologia.label }}
-
-                                </label>
-
-                                {{ form.tecnologia }}
-
-                            </div>
-
-                            <div class="col-md-12 mb-3">
+                            <div class="col-md-6 mb-3">
 
                                 <label class="form-label">
 
@@ -246,53 +315,7 @@
 
                         </div>
 
-                        <!-- MANTENIMIENTO -->
-
-                        <h5 class="border-bottom pb-2 mt-4 mb-3">
-
-                            Mantenimiento
-
-                        </h5>
-
-                        <div class="row">
-
-                            <div class="col-md-4 mb-3">
-
-                                <label class="form-label">
-
-                                    {{ form.frecuencia_mantenimiento.label }}
-
-                                </label>
-
-                                {{ form.frecuencia_mantenimiento }}
-
-                            </div>
-
-                            <div class="col-md-4 mb-3">
-
-                                <label class="form-label">
-
-                                    {{ form.fecha_ultimo_mantenimiento.label }}
-
-                                </label>
-
-                                {{ form.fecha_ultimo_mantenimiento }}
-
-                            </div>
-
-                            <div class="col-md-4 mb-3">
-
-                                <label class="form-label">
-
-                                    {{ form.fecha_proximo_mantenimiento.label }}
-
-                                </label>
-
-                                {{ form.fecha_proximo_mantenimiento }}
-
-                            </div>
-
-                        </div>
+                        
 
                         <!-- OBSERVACIONES -->
 
@@ -353,5 +376,225 @@
     </div>
 
 </div>
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const nombreInput = document.getElementById(
+        "id_nombre"
+    );
+
+    const catalogoInput = document.getElementById(
+        "id_catalogo"
+    );
+
+    const catalogoInfo = document.getElementById(
+        "catalogo-info"
+    );
+
+    const catalogoAlerta = document.getElementById(
+        "catalogo-alerta"
+    );
+
+    const riesgo = document.getElementById(
+        "id_riesgo_catalogo"
+    );
+
+    const tecnologia = document.getElementById(
+        "id_tecnologia_catalogo"
+    );
+
+    const frecuencia = document.getElementById(
+        "id_frecuencia_catalogo"
+    );
+
+    const calibracion = document.getElementById(
+        "id_calibracion_catalogo"
+    );
+
+    const mantenimiento = document.getElementById(
+        "id_mantenimiento_catalogo"
+    );
+
+
+    let temporizador = null;
+
+
+    function limpiarCatalogo() {
+
+        catalogoInput.value = "";
+
+        catalogoInfo.classList.add("d-none");
+
+        catalogoAlerta.className =
+            "alert d-none";
+
+        riesgo.value = "";
+        tecnologia.value = "";
+        frecuencia.value = "";
+        calibracion.value = "";
+        mantenimiento.value = "";
+    }
+
+
+    function buscarCatalogo() {
+
+        const nombre = nombreInput.value.trim();
+
+        if (!nombre) {
+
+            limpiarCatalogo();
+
+            return;
+        }
+
+
+        fetch(
+            "{% url 'buscar_catalogo' %}" +
+            "?nombre=" +
+            encodeURIComponent(nombre),
+            {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            }
+        )
+
+        .then(response => {
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Error al consultar el catálogo."
+                );
+
+            }
+
+            return response.json();
+
+        })
+
+        .then(data => {
+
+            if (data.encontrado) {
+
+                catalogoInput.value = data.id;
+
+                riesgo.value =
+                    data.riesgo;
+
+                tecnologia.value =
+                    data.tecnologia;
+
+                frecuencia.value =
+                    data.frecuencia;
+
+                calibracion.value =
+                    data.requiere_calibracion;
+
+                mantenimiento.value =
+                    data.requiere_mantenimiento;
+
+
+                catalogoInfo.classList.remove(
+                    "d-none"
+                );
+
+
+                catalogoAlerta.className =
+                    "alert alert-success";
+
+                catalogoAlerta.innerHTML =
+                    "<strong>✓ Catálogo encontrado:</strong> " +
+                    data.nombre;
+
+
+            } else {
+
+                limpiarCatalogo();
+
+
+                catalogoAlerta.className =
+                    "alert alert-warning";
+
+
+                catalogoAlerta.innerHTML =
+
+                    "<strong>⚠ Catálogo no encontrado.</strong><br>" +
+
+                    "No existe un catálogo activo para " +
+
+                    "<strong>" +
+
+                    nombre +
+
+                    "</strong>.<br><br>" +
+
+                    "Se recomienda crear un catálogo para " +
+
+                    "configurar sus características técnicas, " +
+
+                    "mantenimiento, calibración e inspecciones." +
+
+                    "<br><br>" +
+
+                    "<a href=\"{% url 'admin:catalogo_catalogoequipo_add' %}\" " +
+
+                    "target=\"_blank\" " +
+
+                    "class=\"btn btn-sm btn-primary\">" +
+
+                    "Crear catálogo" +
+
+                    "</a>";
+
+
+                catalogoAlerta.classList.remove(
+                    "d-none"
+                );
+            }
+
+        })
+
+        .catch(error => {
+
+            console.error(error);
+
+        });
+
+    }
+
+
+    nombreInput.addEventListener(
+        "input",
+        function () {
+
+            clearTimeout(
+                temporizador
+            );
+
+            temporizador = setTimeout(
+                buscarCatalogo,
+                500
+            );
+
+        }
+    );
+
+
+    /*
+     * Si estamos editando un equipo,
+     * hacemos una búsqueda inicial.
+     */
+
+    if (nombreInput.value.trim()) {
+
+        buscarCatalogo();
+
+    }
+
+});
+
+</script>
 
 {% endblock %}

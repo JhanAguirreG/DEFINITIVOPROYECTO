@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = 'jhanprueba'
 
-DEBUG = False
+DEBUG = True
 
 import os
 

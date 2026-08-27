@@ -3,6 +3,7 @@ from django import forms
 from .models import HojaVida, ValorCampoTecnico
 
 
+
 class HojaVidaForm(forms.ModelForm):
     """
     Formulario principal de la Hoja de Vida.
@@ -26,6 +27,7 @@ class HojaVidaForm(forms.ModelForm):
             "proveedor",
             "proveedor_telefono",
             "proveedor_ciudad_pais",
+            "fabricante",
             "fabricante_telefono",
             "fabricante_ciudad_pais",
             "riesgo_electrico",

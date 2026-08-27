@@ -184,6 +184,177 @@
                     </div>
 
                 </div>
+                <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Riesgo eléctrico
+                        {% if form.riesgo_electrico.field.required %}
+                            <span class="text-danger">*</span>
+                        {% endif %}
+                    </label>
+
+                    {{ form.riesgo_electrico }}
+
+                    {% if form.riesgo_electrico.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.riesgo_electrico.errors }}
+                        </div>
+                    {% endif %}
+
+                </div>
+
+            </div>
+                <!-- ======================================================
+                INFORMACIÓN DEL CATÁLOGO
+                ====================================================== -->
+
+                <div id="contenedor-informacion-catalogo">
+
+                    {% if form.instance.equipo and form.instance.equipo.catalogo %}
+
+                        {% with catalogo=form.instance.equipo.catalogo %}
+
+                        <div class="card shadow-sm border-0 mb-4">
+
+                            <div class="card-header bg-primary text-white">
+
+                                <i class="bi bi-bookmark-check"></i>
+
+                                Información del Catálogo
+
+                            </div>
+
+                            <div class="card-body">
+
+                                <div class="row">
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label fw-semibold">
+                                            Tipo de equipo
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            class="form-control bg-light"
+                                            value="{{ catalogo.nombre }}"
+                                            readonly
+                                        >
+
+                                    </div>
+
+
+                                    <div class="col-md-3 mb-3">
+
+                                        <label class="form-label fw-semibold">
+                                            Riesgo INVIMA
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            class="form-control bg-light"
+                                            value="{{ catalogo.get_riesgo_display }}"
+                                            readonly
+                                        >
+
+                                    </div>
+
+
+                                    <div class="col-md-3 mb-3">
+
+                                        <label class="form-label fw-semibold">
+                                            Tecnología
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            class="form-control bg-light"
+                                            value="{{ catalogo.get_tecnologia_display }}"
+                                            readonly
+                                        >
+
+                                    </div>
+
+
+                                    <div class="col-md-4 mb-3">
+
+                                        <label class="form-label fw-semibold">
+                                            Mantenimiento
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            class="form-control bg-light"
+                                            value="{% if catalogo.requiere_mantenimiento %}Sí{% else %}No{% endif %}"
+                                            readonly
+                                        >
+
+                                    </div>
+
+
+                                    <div class="col-md-4 mb-3">
+
+                                        <label class="form-label fw-semibold">
+                                            Frecuencia
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            class="form-control bg-light"
+                                            value="{{ catalogo.frecuencia_mantenimiento }} meses"
+                                            readonly
+                                        >
+
+                                    </div>
+
+
+                                    <div class="col-md-4 mb-3">
+
+                                        <label class="form-label fw-semibold">
+                                            Calibración
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            class="form-control bg-light"
+                                            value="{% if catalogo.requiere_calibracion %}Sí{% else %}No{% endif %}"
+                                            readonly
+                                        >
+
+                                    </div>
+
+
+                                    {% if catalogo.descripcion %}
+
+                                    <div class="col-md-12">
+
+                                        <label class="form-label fw-semibold">
+                                            Descripción
+                                        </label>
+
+                                        <textarea
+                                            class="form-control bg-light"
+                                            rows="3"
+                                            readonly
+                                        >{{ catalogo.descripcion }}</textarea>
+
+                                    </div>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        {% endwith %}
+
+                    {% endif %}
+
+                </div>
                 <!-- ======================================================
                 CARACTERÍSTICAS TÉCNICAS
                 ======================================================= -->

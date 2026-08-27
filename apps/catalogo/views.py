@@ -7,7 +7,7 @@ from apps.usuarios.decorators import rol_requerido
 from .forms import CatalogoEquipoForm
 from .models import CatalogoEquipo
 
-
+from apps.equipos.models import Equipo
 # ==========================================================
 # LISTADO
 # ==========================================================
@@ -30,10 +30,50 @@ def lista_catalogo(request):
 # ==========================================================
 # CREAR
 # ==========================================================
+# ==========================================================
+# CREAR
+# ==========================================================
 
 @login_required
 @rol_requerido(["SUPERADMIN", "ADMIN"])
 def crear_catalogo(request):
+
+    # ======================================================
+    # EQUIPO QUE SOLICITÓ CREAR EL CATÁLOGO
+    # ======================================================
+
+    equipo_id = (
+        request.POST.get("equipo_id")
+        or request.GET.get("equipo_id")
+    )
+
+    equipo = None
+
+    if equipo_id:
+
+        equipo = get_object_or_404(
+            Equipo.objects.select_related("institucion"),
+            id=equipo_id,
+        )
+
+        # ==============================================
+        # SEGURIDAD PARA ADMIN
+        # ==============================================
+
+        if request.user.es_admin:
+
+            if equipo.institucion != request.user.institucion:
+
+                messages.error(
+                    request,
+                    "No tiene permisos para asociar un catálogo a este equipo.",
+                )
+
+                return redirect("lista_catalogo")
+
+    # ======================================================
+    # POST
+    # ======================================================
 
     if request.method == "POST":
 
@@ -41,18 +81,48 @@ def crear_catalogo(request):
 
         if form.is_valid():
 
-            form.save()
+            catalogo = form.save()
 
-            messages.success(
-                request,
-                "Equipo agregado al catálogo correctamente.",
-            )
+            # ==============================================
+            # ASOCIAR AUTOMÁTICAMENTE AL EQUIPO
+            # ==============================================
+
+            if equipo:
+
+                equipo.catalogo = catalogo
+                equipo.save(
+                    update_fields=["catalogo"]
+                )
+
+                messages.success(
+                    request,
+                    (
+                        f"Catálogo '{catalogo.nombre}' creado "
+                        f"y asociado correctamente al equipo "
+                        f"'{equipo.nombre}'."
+                    ),
+                )
+
+            else:
+
+                messages.success(
+                    request,
+                    "Equipo agregado al catálogo correctamente.",
+                )
 
             return redirect("lista_catalogo")
 
+    # ======================================================
+    # GET
+    # ======================================================
+
     else:
 
-        form = CatalogoEquipoForm()
+        form = CatalogoEquipoForm(
+            initial={
+                "nombre": equipo.nombre if equipo else "",
+            }
+        )
 
     return render(
         request,
@@ -60,10 +130,9 @@ def crear_catalogo(request):
         {
             "form": form,
             "titulo": "Nuevo Equipo del Catálogo",
+            "equipo": equipo,
         },
     )
-
-
 # ==========================================================
 # EDITAR
 # ==========================================================

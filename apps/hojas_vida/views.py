@@ -4,6 +4,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
+from apps import hojas_vida
 from apps.mantenimiento.models import Mantenimiento
 from apps.usuarios.decorators import rol_requerido
 
@@ -24,7 +25,6 @@ from apps.equipos.models import Equipo
 # ==========================================================
 # CAMPOS TÉCNICOS DINÁMICOS
 # ==========================================================
-
 @login_required
 @rol_requerido(["SUPERADMIN", "ADMIN", "BIOMEDICO"])
 def campos_tecnicos_equipo(request):
@@ -32,11 +32,13 @@ def campos_tecnicos_equipo(request):
     equipo_id = request.GET.get("equipo")
 
     if not equipo_id:
+
         return render(
             request,
             "hojas_vida/_campos_tecnicos.html",
             {
                 "form_tecnico": None,
+                "catalogo": None,
             },
         )
 
@@ -47,15 +49,29 @@ def campos_tecnicos_equipo(request):
 
     catalogo = equipo.catalogo
 
+    # ======================================================
+    # EQUIPO SIN CATÁLOGO
+    # ======================================================
+
     if not catalogo:
+
         return render(
             request,
             "hojas_vida/_campos_tecnicos.html",
             {
                 "form_tecnico": None,
-                "mensaje": "Este equipo no tiene un catálogo asociado.",
+                "catalogo": None,
+                "mensaje": (
+                    "Este equipo no tiene un catálogo asociado. "
+                    "Se recomienda crear un catálogo para este "
+                    "tipo de equipo, pero no es obligatorio."
+                ),
             },
         )
+
+    # ======================================================
+    # FORMULARIO TÉCNICO
+    # ======================================================
 
     form_tecnico = CamposTecnicosForm(
         catalogo=catalogo,
@@ -66,6 +82,7 @@ def campos_tecnicos_equipo(request):
         "hojas_vida/_campos_tecnicos.html",
         {
             "form_tecnico": form_tecnico,
+            "catalogo": catalogo,
         },
     )
 # ==========================================================
@@ -147,10 +164,15 @@ def lista_hojas_vida(request):
 # ==========================================================
 # CREAR
 # ==========================================================
-
+# ==========================================================
+# CREAR HOJA DE VIDA
+# ==========================================================
 @login_required
 @rol_requerido(["SUPERADMIN", "ADMIN"])
 def crear_hoja_vida(request):
+
+    equipo = None
+    catalogo = None
 
     if request.method == "POST":
 
@@ -159,26 +181,55 @@ def crear_hoja_vida(request):
             request.FILES,
         )
 
-        equipo = None
-        catalogo = None
+        # ======================================================
+        # OBTENER EQUIPO
+        # ======================================================
 
-        if request.POST.get("equipo"):
+        equipo_id = request.POST.get("equipo")
+
+        if equipo_id:
 
             equipo = get_object_or_404(
                 Equipo.objects.select_related("catalogo"),
-                id=request.POST.get("equipo"),
+                id=equipo_id,
             )
 
             catalogo = equipo.catalogo
+
+        # ======================================================
+        # FORMULARIO DE CAMPOS TÉCNICOS
+        # ======================================================
 
         form_tecnico = CamposTecnicosForm(
             request.POST,
             catalogo=catalogo,
         )
 
+        # ======================================================
+        # VALIDAR
+        # ======================================================
+
         if form.is_valid() and form_tecnico.is_valid():
 
-            hoja = form.save()
+            # --------------------------------------------------
+            # CREAR HOJA DE VIDA
+            # --------------------------------------------------
+
+            hoja = form.save(commit=False)
+
+            # --------------------------------------------------
+            # SINCRONIZAR CATÁLOGO
+            # --------------------------------------------------
+
+            if equipo and catalogo:
+
+                hoja.sincronizar_catalogo()
+
+            # --------------------------------------------------
+            # GUARDAR
+            # --------------------------------------------------
+
+            hoja.save()
 
             # ==================================================
             # GUARDAR CAMPOS TÉCNICOS
@@ -186,14 +237,21 @@ def crear_hoja_vida(request):
 
             for nombre, campo_form in form_tecnico.fields.items():
 
-                if not hasattr(campo_form, "campo_tecnico"):
+                if not hasattr(
+                    campo_form,
+                    "campo_tecnico",
+                ):
                     continue
 
-                campo_tecnico = campo_form.campo_tecnico
+                campo_tecnico = (
+                    campo_form.campo_tecnico
+                )
 
-                valor = form_tecnico.cleaned_data.get(
-                    nombre,
-                    "",
+                valor = (
+                    form_tecnico.cleaned_data.get(
+                        nombre,
+                        "",
+                    )
                 )
 
                 ValorCampoTecnico.objects.update_or_create(
@@ -204,10 +262,25 @@ def crear_hoja_vida(request):
                     },
                 )
 
-            messages.success(
-                request,
-                "Hoja de vida creada correctamente.",
-            )
+            # ==================================================
+            # MENSAJE
+            # ==================================================
+
+            if catalogo:
+
+                messages.success(
+                    request,
+                    "Hoja de vida creada correctamente y "
+                    "la información del catálogo fue incorporada."
+                )
+
+            else:
+
+                messages.warning(
+                    request,
+                    "Hoja de vida creada correctamente. "
+                    "Este equipo no tiene un catálogo asociado."
+                )
 
             return redirect(
                 "detalle_hoja_vida",
@@ -220,6 +293,10 @@ def crear_hoja_vida(request):
 
         form_tecnico = CamposTecnicosForm()
 
+    # ==========================================================
+    # CONTEXTO
+    # ==========================================================
+
     return render(
         request,
         "hojas_vida/form.html",
@@ -227,15 +304,15 @@ def crear_hoja_vida(request):
             "form": form,
             "form_tecnico": form_tecnico,
             "titulo": "Nueva Hoja de Vida",
+            "equipo": equipo,
+            "catalogo": catalogo,
         },
     )
+
+
 # ==========================================================
 # EDITAR HOJA DE VIDA
 # ==========================================================
-# ==========================================================
-# EDITAR
-# ==========================================================
-
 @login_required
 @rol_requerido(["SUPERADMIN", "ADMIN"])
 def editar_hoja_vida(request, id):
@@ -250,6 +327,10 @@ def editar_hoja_vida(request, id):
 
     catalogo = hoja.equipo.catalogo
 
+    # ==========================================================
+    # POST
+    # ==========================================================
+
     if request.method == "POST":
 
         form = HojaVidaForm(
@@ -264,6 +345,10 @@ def editar_hoja_vida(request, id):
             hoja_vida=hoja,
         )
 
+        # ======================================================
+        # VALIDACIÓN
+        # ======================================================
+
         if form.is_valid() and form_tecnico.is_valid():
 
             hoja = form.save()
@@ -274,14 +359,21 @@ def editar_hoja_vida(request, id):
 
             for nombre, campo_form in form_tecnico.fields.items():
 
-                if not hasattr(campo_form, "campo_tecnico"):
+                if not hasattr(
+                    campo_form,
+                    "campo_tecnico",
+                ):
                     continue
 
-                campo_tecnico = campo_form.campo_tecnico
+                campo_tecnico = (
+                    campo_form.campo_tecnico
+                )
 
-                valor = form_tecnico.cleaned_data.get(
-                    nombre,
-                    "",
+                valor = (
+                    form_tecnico.cleaned_data.get(
+                        nombre,
+                        "",
+                    )
                 )
 
                 ValorCampoTecnico.objects.update_or_create(
@@ -292,6 +384,10 @@ def editar_hoja_vida(request, id):
                     },
                 )
 
+            # ==================================================
+            # MENSAJE
+            # ==================================================
+
             messages.success(
                 request,
                 "Hoja de vida actualizada correctamente.",
@@ -301,6 +397,10 @@ def editar_hoja_vida(request, id):
                 "detalle_hoja_vida",
                 hoja.id,
             )
+
+    # ==========================================================
+    # GET
+    # ==========================================================
 
     else:
 
@@ -313,6 +413,10 @@ def editar_hoja_vida(request, id):
             hoja_vida=hoja,
         )
 
+    # ==========================================================
+    # CONTEXTO
+    # ==========================================================
+
     return render(
         request,
         "hojas_vida/form.html",
@@ -321,6 +425,8 @@ def editar_hoja_vida(request, id):
             "form_tecnico": form_tecnico,
             "titulo": "Editar Hoja de Vida",
             "editar": True,
+            "hoja": hoja,
+            "catalogo": catalogo,
         },
     )
 # ==========================================================

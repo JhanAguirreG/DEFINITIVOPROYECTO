@@ -9,6 +9,72 @@ from .models import Equipo
 
 class EquipoForm(forms.ModelForm):
 
+    # ==========================================================
+    # INFORMACIÓN DEL CATÁLOGO
+    # Estos campos son solamente informativos.
+    # No se almacenan en Equipo.
+    # ==========================================================
+
+    riesgo_catalogo = forms.CharField(
+        label="Riesgo INVIMA",
+        required=False,
+        disabled=True,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "readonly": "readonly",
+            }
+        ),
+    )
+
+    tecnologia_catalogo = forms.CharField(
+        label="Tipo de tecnología",
+        required=False,
+        disabled=True,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "readonly": "readonly",
+            }
+        ),
+    )
+
+    frecuencia_catalogo = forms.CharField(
+        label="Frecuencia de mantenimiento",
+        required=False,
+        disabled=True,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "readonly": "readonly",
+            }
+        ),
+    )
+
+    calibracion_catalogo = forms.CharField(
+        label="Requiere calibración",
+        required=False,
+        disabled=True,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "readonly": "readonly",
+            }
+        ),
+    )
+
+    mantenimiento_catalogo = forms.CharField(
+        label="Requiere mantenimiento",
+        required=False,
+        disabled=True,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "readonly": "readonly",
+            }
+        ),
+    )
+
     class Meta:
 
         model = Equipo
@@ -18,6 +84,8 @@ class EquipoForm(forms.ModelForm):
             "institucion",
             "servicio",
 
+            # Se mantiene para guardar la relación,
+            # pero no se mostrará como selector.
             "catalogo",
 
             "codigo",
@@ -41,7 +109,6 @@ class EquipoForm(forms.ModelForm):
             "observaciones",
 
             "activo",
-
         ]
 
         widgets = {
@@ -58,11 +125,7 @@ class EquipoForm(forms.ModelForm):
                 }
             ),
 
-            "catalogo": forms.Select(
-                attrs={
-                    "class": "form-select",
-                }
-            ),
+            "catalogo": forms.HiddenInput(),
 
             "codigo": forms.TextInput(
                 attrs={
@@ -79,6 +142,7 @@ class EquipoForm(forms.ModelForm):
             "nombre": forms.TextInput(
                 attrs={
                     "class": "form-control",
+                    "autocomplete": "off",
                 }
             ),
 
@@ -150,7 +214,6 @@ class EquipoForm(forms.ModelForm):
                     "class": "form-check-input",
                 }
             ),
-
         }
 
     def __init__(self, *args, **kwargs):
@@ -173,10 +236,45 @@ class EquipoForm(forms.ModelForm):
 
         self.fields["inventario"].label = "Número de inventario"
 
-        self.fields["catalogo"].label = "Tipo de equipo"
-
         self.fields["registro_invima"].label = "Registro INVIMA"
 
-        self.fields["fecha_ultimo_mantenimiento"].label = "Último mantenimiento"
+        self.fields["fecha_ultimo_mantenimiento"].label = (
+            "Último mantenimiento"
+        )
 
-        self.fields["fecha_proximo_mantenimiento"].label = "Próximo mantenimiento"
+        self.fields["fecha_proximo_mantenimiento"].label = (
+            "Próximo mantenimiento"
+        )
+
+        # ======================================================
+        # CARGAR INFORMACIÓN DEL CATÁLOGO EXISTENTE
+        # Esto es especialmente importante al EDITAR.
+        # ======================================================
+
+        catalogo = self.instance.catalogo if self.instance.pk else None
+
+        if catalogo:
+
+            self.fields["riesgo_catalogo"].initial = (
+                catalogo.get_riesgo_display()
+            )
+
+            self.fields["tecnologia_catalogo"].initial = (
+                catalogo.get_tecnologia_display()
+            )
+
+            self.fields["frecuencia_catalogo"].initial = (
+                f"Cada {catalogo.frecuencia_mantenimiento} meses"
+            )
+
+            self.fields["calibracion_catalogo"].initial = (
+                "Sí"
+                if catalogo.requiere_calibracion
+                else "No"
+            )
+
+            self.fields["mantenimiento_catalogo"].initial = (
+                "Sí"
+                if catalogo.requiere_mantenimiento
+                else "No"
+            )

@@ -26,7 +26,7 @@ urlpatterns = [
 
     # ==========================================
     # EDITAR
-    # ==========================================
+    # ========================================= =
 
     path(
         "editar/<int:id>/",
@@ -42,6 +42,12 @@ urlpatterns = [
         "cambiar-estado/<int:id>/",
         views.cambiar_estado_equipo,
         name="cambiar_estado_equipo",
+    ),
+
+    path(
+        "buscar-catalogo/",
+        views.buscar_catalogo,
+        name="buscar_catalogo",
     ),
 
 ]

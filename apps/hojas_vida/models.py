@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class HojaVida(models.Model):
@@ -6,7 +7,14 @@ class HojaVida(models.Model):
     Hoja de vida técnica y documental de un equipo biomédico.
 
     Cada equipo tiene una única hoja de vida.
+
+    La información del catálogo se copia a esta hoja de vida
+    como información histórica en el momento de sincronización.
     """
+
+    # ==========================================================
+    # OPCIONES
+    # ==========================================================
 
     class FormaAdquisicion(models.TextChoices):
         COMPRA = "COMPRA", "Compra"
@@ -36,10 +44,56 @@ class HojaVida(models.Model):
         CLASE_II = "CLASE_II", "Clase II"
         CLASE_III = "CLASE_III", "Clase III"
 
+    # ==========================================================
+    # RELACIÓN CON EL EQUIPO
+    # ==========================================================
+
     equipo = models.OneToOneField(
         "equipos.Equipo",
         on_delete=models.CASCADE,
         related_name="hoja_vida",
+    )
+
+    # ==========================================================
+    # INFORMACIÓN HEREDADA DEL CATÁLOGO
+    # ==========================================================
+
+    nombre_catalogo = models.CharField(
+        max_length=200,
+        blank=True,
+    )
+
+    descripcion_catalogo = models.TextField(
+        blank=True,
+    )
+
+    riesgo_invima = models.CharField(
+        max_length=5,
+        blank=True,
+    )
+
+    tecnologia_catalogo = models.CharField(
+        max_length=20,
+        blank=True,
+    )
+
+    requiere_calibracion_catalogo = models.BooleanField(
+        default=False,
+    )
+
+    requiere_mantenimiento_catalogo = models.BooleanField(
+        default=True,
+    )
+
+    frecuencia_mantenimiento_catalogo = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Frecuencia definida por el catálogo, en meses",
+    )
+
+    fecha_sincronizacion_catalogo = models.DateTimeField(
+        null=True,
+        blank=True,
     )
 
     # ==========================================================
@@ -125,7 +179,11 @@ class HojaVida(models.Model):
     # ==========================================================
     # FABRICANTE
     # ==========================================================
-
+    fabricante = models.CharField(
+        max_length=200,
+        blank=True,
+    )
+    
     fabricante_telefono = models.CharField(
         max_length=50,
         blank=True,
@@ -216,7 +274,7 @@ class HojaVida(models.Model):
     )
 
     # ==========================================================
-    # UBICACIÓN Y DOCUMENTACIÓN GENERAL
+    # UBICACIÓN Y DOCUMENTACIÓN
     # ==========================================================
 
     ubicacion_detallada = models.CharField(
@@ -254,6 +312,73 @@ class HojaVida(models.Model):
         auto_now=True,
     )
 
+    # ==========================================================
+    # MÉTODO DE SINCRONIZACIÓN DEL CATÁLOGO
+    # ==========================================================
+
+    def sincronizar_catalogo(self):
+        """
+        Copia la información actual del catálogo asociado
+        a los campos históricos de la Hoja de Vida.
+
+        La información queda almacenada en la Hoja de Vida,
+        por lo que posteriormente un cambio en el catálogo
+        NO modifica automáticamente esta hoja de vida.
+
+        Retorna:
+            True  -> si existe catálogo y se sincronizó.
+            False -> si el equipo no tiene catálogo.
+        """
+
+        catalogo = self.equipo.catalogo
+
+        if not catalogo:
+            return False
+
+        # ------------------------------------------------------
+        # INFORMACIÓN BÁSICA
+        # ------------------------------------------------------
+
+        self.nombre_catalogo = catalogo.nombre
+
+        self.descripcion_catalogo = catalogo.descripcion
+
+        # ------------------------------------------------------
+        # CLASIFICACIÓN
+        # ------------------------------------------------------
+
+        self.riesgo_invima = catalogo.riesgo
+
+        self.tecnologia_catalogo = catalogo.tecnologia
+
+        # ------------------------------------------------------
+        # MANTENIMIENTO
+        # ------------------------------------------------------
+
+        self.requiere_calibracion_catalogo = (
+            catalogo.requiere_calibracion
+        )
+
+        self.requiere_mantenimiento_catalogo = (
+            catalogo.requiere_mantenimiento
+        )
+
+        self.frecuencia_mantenimiento_catalogo = (
+            catalogo.frecuencia_mantenimiento
+        )
+
+        # ------------------------------------------------------
+        # FECHA DE SINCRONIZACIÓN
+        # ------------------------------------------------------
+
+        self.fecha_sincronizacion_catalogo = timezone.now()
+
+        return True
+
+    # ==========================================================
+    # META
+    # ==========================================================
+
     class Meta:
         verbose_name = "Hoja de Vida"
         verbose_name_plural = "Hojas de Vida"
@@ -272,8 +397,8 @@ class ValorCampoTecnico(models.Model):
     Guarda el valor de una característica técnica para
     una hoja de vida específica.
 
-    El nombre del campo viene del catálogo y el valor
-    pertenece al equipo concreto.
+    El campo técnico viene del catálogo y el valor pertenece
+    al equipo concreto.
     """
 
     hoja_vida = models.ForeignKey(
@@ -340,9 +465,7 @@ class AccesorioHojaVida(models.Model):
     )
 
     class Meta:
-        ordering = [
-            "nombre",
-        ]
+        ordering = ["nombre"]
 
         verbose_name = "Accesorio de Hoja de Vida"
         verbose_name_plural = "Accesorios de Hoja de Vida"

@@ -2,13 +2,265 @@
 
 <div class="alert alert-warning">
 
-    <i class="bi bi-exclamation-triangle"></i>
+    <div class="d-flex align-items-start">
 
-    {{ mensaje }}
+        <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+
+        <div>
+
+            <strong>Catálogo no asociado</strong>
+
+            <div class="mt-1">
+
+                {{ mensaje }}
+
+            </div>
+
+            <div class="mt-2 small">
+
+                Puede continuar creando la Hoja de Vida.
+                El catálogo no es obligatorio.
+
+            </div>
+                <a
+                    href="{% url 'crear_catalogo' %}"
+                    class="btn btn-primary"
+                    target="_blank"
+                >
+                    <i class="bi bi-plus-circle"></i>
+                    Crear catálogo
+                </a>
+
+        </div>
+
+    </div>
 
 </div>
 
-{% elif form_tecnico %}
+{% elif catalogo %}
+
+<!-- ======================================================
+     INFORMACIÓN DEL CATÁLOGO
+====================================================== -->
+
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-primary text-white">
+
+        <div class="d-flex align-items-center">
+
+            <i class="bi bi-database me-2"></i>
+
+            <strong>
+                Información del Catálogo
+            </strong>
+
+        </div>
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="row">
+
+            <!-- NOMBRE -->
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label fw-semibold">
+                    Tipo de equipo
+                </label>
+
+                <div class="form-control bg-light">
+
+                    {{ catalogo.nombre }}
+
+                </div>
+
+            </div>
+
+
+            <!-- RIESGO -->
+
+            <div class="col-md-3 mb-3">
+
+                <label class="form-label fw-semibold">
+                    Riesgo INVIMA
+                </label>
+
+                <div class="form-control bg-light">
+
+                    {{ catalogo.get_riesgo_display }}
+
+                </div>
+
+            </div>
+
+
+            <!-- TECNOLOGÍA -->
+
+            <div class="col-md-3 mb-3">
+
+                <label class="form-label fw-semibold">
+                    Tipo de tecnología
+                </label>
+
+                <div class="form-control bg-light">
+
+                    {{ catalogo.get_tecnologia_display }}
+
+                </div>
+
+            </div>
+
+
+            <!-- DESCRIPCIÓN -->
+
+            <div class="col-md-12 mb-3">
+
+                <label class="form-label fw-semibold">
+                    Descripción
+                </label>
+
+                <div class="form-control bg-light"
+                     style="min-height: 80px; height: auto;">
+
+                    {% if catalogo.descripcion %}
+
+                        {{ catalogo.descripcion }}
+
+                    {% else %}
+
+                        <span class="text-muted">
+                            Sin descripción registrada.
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- MANTENIMIENTO -->
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label fw-semibold">
+                    Requiere mantenimiento
+                </label>
+
+                <div class="form-control bg-light">
+
+                    {% if catalogo.requiere_mantenimiento %}
+
+                        <span class="text-success">
+                            <i class="bi bi-check-circle-fill"></i>
+                            Sí
+                        </span>
+
+                    {% else %}
+
+                        <span class="text-secondary">
+                            <i class="bi bi-dash-circle-fill"></i>
+                            No
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- FRECUENCIA -->
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label fw-semibold">
+                    Frecuencia de mantenimiento
+                </label>
+
+                <div class="form-control bg-light">
+
+                    {% if catalogo.requiere_mantenimiento %}
+
+                        Cada {{ catalogo.frecuencia_mantenimiento }}
+                        meses
+
+                    {% else %}
+
+                        <span class="text-muted">
+                            No aplica
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- CALIBRACIÓN -->
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label fw-semibold">
+                    Requiere calibración
+                </label>
+
+                <div class="form-control bg-light">
+
+                    {% if catalogo.requiere_calibracion %}
+
+                        <span class="text-success">
+
+                            <i class="bi bi-check-circle-fill"></i>
+
+                            Sí
+
+                        </span>
+
+                    {% else %}
+
+                        <span class="text-secondary">
+
+                            <i class="bi bi-dash-circle-fill"></i>
+
+                            No
+
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- AVISO HISTÓRICO -->
+
+        <div class="alert alert-info mb-0 mt-2">
+
+            <i class="bi bi-info-circle me-2"></i>
+
+            Esta información proviene del catálogo del equipo
+            y será almacenada en la Hoja de Vida como información
+            histórica al guardar el registro.
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ======================================================
+     CARACTERÍSTICAS TÉCNICAS
+====================================================== -->
+
+{% if form_tecnico %}
 
     {% if form_tecnico.fields %}
 
@@ -16,7 +268,7 @@
 
             <div class="card-header bg-dark text-white">
 
-                <i class="bi bi-sliders"></i>
+                <i class="bi bi-sliders me-2"></i>
 
                 Características Técnicas
 
@@ -70,5 +322,7 @@
         </div>
 
     {% endif %}
+
+{% endif %}
 
 {% endif %}
