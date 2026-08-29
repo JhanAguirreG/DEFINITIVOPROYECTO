@@ -8,436 +8,803 @@
 
 <div class="container-fluid">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+```
+<!-- ======================================================
+CABECERA
+======================================================= -->
 
-        <div>
+<div class="d-flex justify-content-between align-items-center mb-4">
 
-            <h2 class="fw-bold">
+    <div>
 
-                {{ titulo }}
+        <h2 class="fw-bold">
+            {{ titulo }}
+        </h2>
 
-            </h2>
-
-            <p class="text-muted">
-
-                Información técnica y documental del equipo biomédico.
-
-            </p>
-
-        </div>
-
-        <a href="{% url 'lista_hojas_vida' %}"
-           class="btn btn-secondary">
-
-            <i class="bi bi-arrow-left"></i>
-
-            Volver
-
-        </a>
+        <p class="text-muted">
+            Información técnica y documental del equipo biomédico.
+        </p>
 
     </div>
 
+    <a href="{% url 'lista_hojas_vida' %}"
+       class="btn btn-secondary">
 
-    <form
-        method="POST"
-        enctype="multipart/form-data">
+        <i class="bi bi-arrow-left"></i>
+        Volver
 
-        {% csrf_token %}
+    </a>
 
-        <div class="card shadow-sm border-0">
+</div>
 
-            <div class="card-body">
+
+<form method="POST"
+      enctype="multipart/form-data">
+
+    {% csrf_token %}
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-body">
+
+            <!-- ==================================================
+            ERRORES
+            =================================================== -->
+
+            {% if form.errors or form_tecnico.errors %}
+
+            <div class="alert alert-danger">
+
+                <strong>
+                    Corrija los siguientes errores:
+                </strong>
+
+                <hr>
 
                 {% if form.errors %}
-
-                <div class="alert alert-danger">
-
-                    <strong>
-
-                        Corrija los siguientes errores:
-
-                    </strong>
-
-                    <hr>
-
                     {{ form.errors }}
-
-                </div>
-
                 {% endif %}
 
+                {% if form_tecnico.errors %}
+                    {{ form_tecnico.errors }}
+                {% endif %}
 
-                <!-- DATOS GENERALES -->
+            </div>
 
-                <h5 class="fw-bold mb-3">
-
-                    Datos Generales
-
-                </h5>
-
-                <div class="row">
-
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-
-                            Equipo
-
-                        </label>
-
-                        {{ form.equipo }}
-
-                    </div>
-
-                    <div class="col-md-3 mb-3">
-
-                        <label class="form-label">
-
-                            Fecha compra
-
-                        </label>
-
-                        {{ form.fecha_compra }}
-
-                    </div>
-
-                    <div class="col-md-3 mb-3">
-
-                        <label class="form-label">
-
-                            Fecha instalación
-
-                        </label>
-
-                        {{ form.fecha_instalacion }}
-
-                    </div>
-
-                </div>
+            {% endif %}
 
 
-                <div class="row">
+            <!-- ==================================================
+            DATOS GENERALES
+            =================================================== -->
 
-                    <div class="col-md-6 mb-3">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-cpu"></i>
+                Datos Generales
+            </h5>
 
-                        <label class="form-label">
-
-                            Proveedor
-
-                        </label>
-
-                        {{ form.proveedor }}
-
-                    </div>
-
-                    <div class="col-md-3 mb-3">
-
-                        <label class="form-label">
-
-                            Vida útil (años)
-
-                        </label>
-
-                        {{ form.vida_util }}
-
-                    </div>
-
-                    <div class="col-md-3 mb-3">
-
-                        <label class="form-label">
-
-                            Garantía hasta
-
-                        </label>
-
-                        {{ form.garantia_hasta }}
-
-                    </div>
-
-                </div>
-
-
-                <div class="row">
-
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-
-                            Costo adquisición
-
-                        </label>
-
-                        {{ form.costo_adquisicion }}
-
-                    </div>
-
-                    <div class="col-md-8 mb-3">
-
-                        <label class="form-label">
-
-                            Ubicación detallada
-
-                        </label>
-
-                        {{ form.ubicacion_detallada }}
-
-                    </div>
-
-                </div>
-                <div class="row">
+            <div class="row">
 
                 <div class="col-md-6 mb-3">
 
-                    <label class="form-label">
+                    <label class="form-label fw-semibold">
+                        Equipo
+                    </label>
+
+                    {{ form.equipo }}
+
+                </div>
+
+                <div class="col-md-3 mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Fecha de compra
+                    </label>
+
+                    {{ form.fecha_compra }}
+
+                </div>
+
+                <div class="col-md-3 mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Fecha de instalación
+                    </label>
+
+                    {{ form.fecha_instalacion }}
+
+                </div>
+
+            </div>
+
+
+            <div class="row">
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Fecha de fabricación
+                    </label>
+
+                    {{ form.fecha_fabricacion }}
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Forma de adquisición
+                    </label>
+
+                    {{ form.forma_adquisicion }}
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Número de factura
+                    </label>
+
+                    {{ form.numero_factura }}
+
+                </div>
+
+            </div>
+
+
+            <!-- ==================================================
+            GARANTÍA Y COSTOS
+            =================================================== -->
+
+            <hr>
+
+            <h5 class="fw-bold mb-3">
+
+                <i class="bi bi-cash-stack"></i>
+                Garantía y Adquisición
+
+            </h5>
+
+            <div class="row">
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Garantía hasta
+                    </label>
+
+                    {{ form.garantia_hasta }}
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Garantía (años)
+                    </label>
+
+                    {{ form.garantia_anios }}
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Vida útil (años)
+                    </label>
+
+                    {{ form.vida_util }}
+
+                </div>
+
+            </div>
+
+
+            <div class="row">
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Costo de adquisición
+                    </label>
+
+                    {{ form.costo_adquisicion }}
+
+                </div>
+
+            </div>
+
+
+            <!-- ==================================================
+            PROVEEDOR
+            =================================================== -->
+
+            <hr>
+
+            <h5 class="fw-bold mb-3">
+
+                <i class="bi bi-building"></i>
+                Información del Proveedor
+
+            </h5>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Proveedor
+                    </label>
+
+                    {{ form.proveedor }}
+
+                </div>
+
+                <div class="col-md-3 mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Teléfono
+                    </label>
+
+                    {{ form.proveedor_telefono }}
+
+                </div>
+
+                <div class="col-md-3 mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Ciudad / País
+                    </label>
+
+                    {{ form.proveedor_ciudad_pais }}
+
+                </div>
+
+            </div>
+
+
+            <!-- ==================================================
+            FABRICANTE
+            =================================================== -->
+
+            <hr>
+
+            <h5 class="fw-bold mb-3">
+
+                <i class="bi bi-gear-wide-connected"></i>
+                Información del Fabricante
+
+            </h5>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Fabricante
+                    </label>
+
+                    {{ form.fabricante }}
+
+                </div>
+
+                <div class="col-md-3 mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Teléfono del fabricante
+                    </label>
+
+                    {{ form.fabricante_telefono }}
+
+                </div>
+
+                <div class="col-md-3 mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Ciudad / País
+                    </label>
+
+                    {{ form.fabricante_ciudad_pais }}
+
+                </div>
+
+            </div>
+
+
+            <!-- ==================================================
+            INFORMACIÓN REGULATORIA
+            =================================================== -->
+
+            <hr>
+
+            <h5 class="fw-bold mb-3">
+
+                <i class="bi bi-shield-check"></i>
+                Información Regulatoria
+
+            </h5>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Registro de importación
+                    </label>
+
+                    {{ form.registro_importacion }}
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label fw-semibold">
                         Riesgo eléctrico
-                        {% if form.riesgo_electrico.field.required %}
-                            <span class="text-danger">*</span>
-                        {% endif %}
                     </label>
 
                     {{ form.riesgo_electrico }}
 
                     {% if form.riesgo_electrico.errors %}
-                        <div class="text-danger small mt-1">
-                            {{ form.riesgo_electrico.errors }}
-                        </div>
+
+                    <div class="text-danger small mt-1">
+                        {{ form.riesgo_electrico.errors }}
+                    </div>
+
                     {% endif %}
 
                 </div>
 
             </div>
-                <!-- ======================================================
-                INFORMACIÓN DEL CATÁLOGO
-                ====================================================== -->
-
-                <div id="contenedor-informacion-catalogo">
-
-                    {% if form.instance.equipo and form.instance.equipo.catalogo %}
-
-                        {% with catalogo=form.instance.equipo.catalogo %}
-
-                        <div class="card shadow-sm border-0 mb-4">
-
-                            <div class="card-header bg-primary text-white">
-
-                                <i class="bi bi-bookmark-check"></i>
-
-                                Información del Catálogo
-
-                            </div>
-
-                            <div class="card-body">
-
-                                <div class="row">
-
-                                    <div class="col-md-6 mb-3">
-
-                                        <label class="form-label fw-semibold">
-                                            Tipo de equipo
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            class="form-control bg-light"
-                                            value="{{ catalogo.nombre }}"
-                                            readonly
-                                        >
-
-                                    </div>
 
 
-                                    <div class="col-md-3 mb-3">
+            <!-- ==================================================
+            INFORMACIÓN DEL CATÁLOGO
+            =================================================== -->
 
-                                        <label class="form-label fw-semibold">
-                                            Riesgo INVIMA
-                                        </label>
+            <div id="contenedor-informacion-catalogo">
 
-                                        <input
-                                            type="text"
-                                            class="form-control bg-light"
-                                            value="{{ catalogo.get_riesgo_display }}"
-                                            readonly
-                                        >
+                {% if form.instance.equipo and form.instance.equipo.catalogo %}
 
-                                    </div>
+                    {% with catalogo=form.instance.equipo.catalogo %}
 
+                    <div class="card shadow-sm border-0 mb-4">
 
-                                    <div class="col-md-3 mb-3">
+                        <div class="card-header bg-primary text-white">
 
-                                        <label class="form-label fw-semibold">
-                                            Tecnología
-                                        </label>
+                            <i class="bi bi-bookmark-check"></i>
+                            Información del Catálogo
 
-                                        <input
-                                            type="text"
-                                            class="form-control bg-light"
-                                            value="{{ catalogo.get_tecnologia_display }}"
-                                            readonly
-                                        >
+                        </div>
 
-                                    </div>
+                        <div class="card-body">
 
+                            <div class="row">
 
-                                    <div class="col-md-4 mb-3">
+                                <div class="col-md-6 mb-3">
 
-                                        <label class="form-label fw-semibold">
-                                            Mantenimiento
-                                        </label>
+                                    <label class="form-label fw-semibold">
+                                        Tipo de equipo
+                                    </label>
 
-                                        <input
-                                            type="text"
-                                            class="form-control bg-light"
-                                            value="{% if catalogo.requiere_mantenimiento %}Sí{% else %}No{% endif %}"
-                                            readonly
-                                        >
-
-                                    </div>
-
-
-                                    <div class="col-md-4 mb-3">
-
-                                        <label class="form-label fw-semibold">
-                                            Frecuencia
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            class="form-control bg-light"
-                                            value="{{ catalogo.frecuencia_mantenimiento }} meses"
-                                            readonly
-                                        >
-
-                                    </div>
-
-
-                                    <div class="col-md-4 mb-3">
-
-                                        <label class="form-label fw-semibold">
-                                            Calibración
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            class="form-control bg-light"
-                                            value="{% if catalogo.requiere_calibracion %}Sí{% else %}No{% endif %}"
-                                            readonly
-                                        >
-
-                                    </div>
-
-
-                                    {% if catalogo.descripcion %}
-
-                                    <div class="col-md-12">
-
-                                        <label class="form-label fw-semibold">
-                                            Descripción
-                                        </label>
-
-                                        <textarea
-                                            class="form-control bg-light"
-                                            rows="3"
-                                            readonly
-                                        >{{ catalogo.descripcion }}</textarea>
-
-                                    </div>
-
-                                    {% endif %}
+                                    <input type="text"
+                                           class="form-control bg-light"
+                                           value="{{ catalogo.nombre }}"
+                                           readonly>
 
                                 </div>
 
+                                <div class="col-md-3 mb-3">
+
+                                    <label class="form-label fw-semibold">
+                                        Riesgo INVIMA
+                                    </label>
+
+                                    <input type="text"
+                                           class="form-control bg-light"
+                                           value="{{ catalogo.get_riesgo_display }}"
+                                           readonly>
+
+                                </div>
+
+                                <div class="col-md-3 mb-3">
+
+                                    <label class="form-label fw-semibold">
+                                        Tecnología
+                                    </label>
+
+                                    <input type="text"
+                                           class="form-control bg-light"
+                                           value="{{ catalogo.get_tecnologia_display }}"
+                                           readonly>
+
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+
+                                    <label class="form-label fw-semibold">
+                                        Mantenimiento
+                                    </label>
+
+                                    <input type="text"
+                                           class="form-control bg-light"
+                                           value="{% if catalogo.requiere_mantenimiento %}Sí{% else %}No{% endif %}"
+                                           readonly>
+
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+
+                                    <label class="form-label fw-semibold">
+                                        Frecuencia
+                                    </label>
+
+                                    <input type="text"
+                                           class="form-control bg-light"
+                                           value="{{ catalogo.frecuencia_mantenimiento }} meses"
+                                           readonly>
+
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+
+                                    <label class="form-label fw-semibold">
+                                        Calibración
+                                    </label>
+
+                                    <input type="text"
+                                           class="form-control bg-light"
+                                           value="{% if catalogo.requiere_calibracion %}Sí{% else %}No{% endif %}"
+                                           readonly>
+
+                                </div>
+
+                                {% if catalogo.descripcion %}
+
+                                <div class="col-md-12">
+
+                                    <label class="form-label fw-semibold">
+                                        Descripción
+                                    </label>
+
+                                    <textarea class="form-control bg-light"
+                                              rows="3"
+                                              readonly>{{ catalogo.descripcion }}</textarea>
+
+                                </div>
+
+                                {% endif %}
+
                             </div>
 
                         </div>
 
-                        {% endwith %}
-
-                    {% endif %}
-
-                </div>
-                <!-- ======================================================
-                CARACTERÍSTICAS TÉCNICAS
-                ======================================================= -->
-
-                <div id="contenedor-campos-tecnicos">
-
-                    {% include "hojas_vida/_campos_tecnicos.html" %}
-
-                </div>
-
-                <hr>
-
-
-                <!-- DOCUMENTOS -->
-
-                <h5 class="fw-bold mb-3">
-
-                    Documentación
-
-                </h5>
-
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-
-                            Fotografía
-
-                        </label>
-
-                        {{ form.fotografia }}
-
                     </div>
 
+                    {% endwith %}
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- ==================================================
+            ALIMENTACIÓN
+            =================================================== -->
+
+            <hr>
+
+            <h5 class="fw-bold mb-3">
+
+                <i class="bi bi-lightning-charge"></i>
+                Alimentación y Servicios Requeridos
+
+            </h5>
+
+            <div class="row">
+
+                <div class="col-md-3 mb-3">
+                    <div class="form-check">
+                        {{ form.alimentacion_electricidad }}
+                        <label class="form-check-label">
+                            Electricidad
+                        </label>
+                    </div>
                 </div>
 
+                <div class="col-md-3 mb-3">
+                    <div class="form-check">
+                        {{ form.alimentacion_emergencia }}
+                        <label class="form-check-label">
+                            Emergencia
+                        </label>
+                    </div>
+                </div>
 
-                <hr>
+                <div class="col-md-3 mb-3">
+                    <div class="form-check">
+                        {{ form.alimentacion_vapor }}
+                        <label class="form-check-label">
+                            Vapor
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="form-check">
+                        {{ form.alimentacion_vacio }}
+                        <label class="form-check-label">
+                            Vacío
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="form-check">
+                        {{ form.alimentacion_regulada }}
+                        <label class="form-check-label">
+                            Alimentación regulada
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="form-check">
+                        {{ form.alimentacion_baterias }}
+                        <label class="form-check-label">
+                            Baterías
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="form-check">
+                        {{ form.alimentacion_oxigeno }}
+                        <label class="form-check-label">
+                            Oxígeno
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="form-check">
+                        {{ form.alimentacion_agua }}
+                        <label class="form-check-label">
+                            Agua
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="form-check">
+                        {{ form.alimentacion_estandar }}
+                        <label class="form-check-label">
+                            Estándar
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="form-check">
+                        {{ form.alimentacion_servicio }}
+                        <label class="form-check-label">
+                            Servicio
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="form-check">
+                        {{ form.alimentacion_aire }}
+                        <label class="form-check-label">
+                            Aire
+                        </label>
+                    </div>
+                </div>
+
+            </div>
 
 
-                <!-- OBSERVACIONES -->
+            <!-- ==================================================
+            TECNOLOGÍA Y MANTENIMIENTO
+            =================================================== -->
 
-                <h5 class="fw-bold mb-3">
+            <hr>
 
-                    Observaciones
+            <h5 class="fw-bold mb-3">
 
-                </h5>
+                <i class="bi bi-tools"></i>
+                Tecnología y Mantenimiento
 
-                <div class="mb-3">
+            </h5>
 
-                    {{ form.observaciones }}
+            <div class="row">
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Tecnología predominante
+                    </label>
+
+                    {{ form.tecnologia_predominante }}
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Periodicidad de mantenimiento
+                    </label>
+
+                    {{ form.periodicidad_mantenimiento }}
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Periodicidad de calibración
+                    </label>
+
+                    {{ form.periodicidad_calibracion }}
 
                 </div>
 
             </div>
 
 
-            <div class="card-footer bg-white text-end">
+            <!-- ==================================================
+            UBICACIÓN
+            =================================================== -->
 
-                <a href="{% url 'lista_hojas_vida' %}"
-                   class="btn btn-secondary">
+            <hr>
 
-                    Cancelar
+            <h5 class="fw-bold mb-3">
 
-                </a>
+                <i class="bi bi-geo-alt"></i>
+                Ubicación
 
-                <button
-                    type="submit"
-                    class="btn btn-primary">
+            </h5>
 
-                    <i class="bi bi-save"></i>
+            <div class="mb-3">
 
-                    Guardar
+                <label class="form-label fw-semibold">
+                    Ubicación detallada
+                </label>
 
-                </button>
+                {{ form.ubicacion_detallada }}
+
+            </div>
+
+
+            <!-- ==================================================
+            CARACTERÍSTICAS TÉCNICAS
+            =================================================== -->
+
+            <hr>
+
+            <div id="contenedor-campos-tecnicos">
+
+                {% include "hojas_vida/_campos_tecnicos.html" %}
+
+            </div>
+
+
+            <!-- ==================================================
+            FOTOGRAFÍA
+            =================================================== -->
+
+            <hr>
+
+            <h5 class="fw-bold mb-3">
+
+                <i class="bi bi-camera"></i>
+                Fotografía del Equipo
+
+            </h5>
+
+            <div class="mb-3">
+
+                {{ form.fotografia }}
+
+                {% if form.instance.fotografia %}
+
+                <div class="mt-2">
+
+                    <small class="text-muted">
+                        Fotografía actual:
+                    </small>
+
+                    <br>
+
+                    <img src="{{ form.instance.fotografia.url }}"
+                         class="img-thumbnail mt-2"
+                         style="max-width: 250px;">
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- ==================================================
+            RECOMENDACIONES
+            =================================================== -->
+
+            <hr>
+
+            <h5 class="fw-bold mb-3">
+
+                <i class="bi bi-info-circle"></i>
+                Recomendaciones del Fabricante
+
+            </h5>
+
+            <div class="mb-3">
+
+                {{ form.recomendaciones_fabricante }}
+
+            </div>
+
+
+            <!-- ==================================================
+            OBSERVACIONES
+            =================================================== -->
+
+            <hr>
+
+            <h5 class="fw-bold mb-3">
+
+                <i class="bi bi-chat-left-text"></i>
+                Observaciones
+
+            </h5>
+
+            <div class="mb-3">
+
+                {{ form.observaciones }}
 
             </div>
 
         </div>
 
-    </form>
+
+        <!-- ======================================================
+        BOTONES
+        ======================================================= -->
+
+        <div class="card-footer bg-white text-end">
+
+            <a href="{% url 'lista_hojas_vida' %}"
+               class="btn btn-secondary">
+
+                <i class="bi bi-x-circle"></i>
+                Cancelar
+
+            </a>
+
+            <button type="submit"
+                    class="btn btn-primary">
+
+                <i class="bi bi-save"></i>
+                Guardar Hoja de Vida
+
+            </button>
+
+        </div>
+
+    </div>
+
+</form>
+```
 
 </div>
+
+<!-- ==========================================================
+JAVASCRIPT
+=========================================================== -->
+
 <script>
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -448,7 +815,7 @@ document.addEventListener("DOMContentLoaded", function () {
         "contenedor-campos-tecnicos"
     );
 
-    if (!equipoSelect) {
+    if (!equipoSelect || !contenedor) {
         return;
     }
 
@@ -461,14 +828,18 @@ document.addEventListener("DOMContentLoaded", function () {
             contenedor.innerHTML = "";
 
             return;
+
         }
 
         contenedor.innerHTML = `
             <div class="text-center py-4">
+
                 <div class="spinner-border text-primary"></div>
+
                 <p class="mt-2 text-muted">
                     Cargando características técnicas...
                 </p>
+
             </div>
         `;
 
@@ -502,6 +873,7 @@ document.addEventListener("DOMContentLoaded", function () {
             console.error(error);
 
             contenedor.innerHTML = `
+
                 <div class="alert alert-danger">
 
                     <i class="bi bi-exclamation-triangle"></i>
@@ -509,6 +881,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     No fue posible cargar las características técnicas.
 
                 </div>
+
             `;
 
         });
@@ -518,4 +891,5 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 </script>
+
 {% endblock %}

@@ -1,0 +1,413 @@
+    /* ==========================================================
+       PALETA SIGHI
+       ========================================================== */
+
+    :root {
+        --sighi-primary: #F25C05;
+        --sighi-secondary: #F28749;
+        --sighi-light: #F2B8A2;
+        --sighi-background: #F2F2F2;
+        --sighi-dark: #595959;
+        --sighi-white: #FFFFFF;
+        --sighi-border: #E0E0E0;
+    }
+
+
+    /* ==========================================================
+       CONFIGURACIÓN GENERAL
+       ========================================================== */
+
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: var(--sighi-background);
+        color: var(--sighi-dark);
+        min-height: 100vh;
+        font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+
+    /* ==========================================================
+       SIDEBAR
+       ========================================================== */
+
+    .sidebar {
+        width: 260px;
+        height: 100vh;
+
+        position: fixed;
+        left: 0;
+        top: 0;
+
+        background: var(--sighi-primary);
+
+        padding: 24px 18px;
+
+        color: var(--sighi-white);
+
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.08);
+
+        overflow-y: auto;
+        z-index: 1000;
+    }
+
+
+    /* ==========================================================
+       LOGO
+       ========================================================== */
+
+    .sidebar h3 {
+        margin-bottom: 35px;
+
+        padding: 0 10px;
+
+        font-weight: 700;
+
+        font-size: 1.5rem;
+
+        letter-spacing: 0.5px;
+
+        color: var(--sighi-white);
+    }
+
+
+    .sidebar h3 i {
+        margin-right: 8px;
+    }
+
+
+    /* ==========================================================
+       ENLACES DEL MENÚ
+       ========================================================== */
+
+    .sidebar a {
+        display: flex;
+        align-items: center;
+
+        color: var(--sighi-white);
+
+        text-decoration: none;
+
+        padding: 12px 14px;
+
+        border-radius: 10px;
+
+        margin-bottom: 7px;
+
+        font-size: 0.95rem;
+
+        font-weight: 500;
+
+        transition:
+            background-color 0.2s ease,
+            transform 0.2s ease;
+    }
+
+
+    .sidebar a i {
+        width: 24px;
+
+        margin-right: 10px;
+
+        font-size: 1.05rem;
+    }
+
+
+    .sidebar a:hover {
+        background-color: rgba(255, 255, 255, 0.18);
+
+        transform: translateX(3px);
+    }
+
+
+    /* ==========================================================
+       SEPARADOR
+       ========================================================== */
+
+    .sidebar hr {
+        border: 0;
+
+        border-top: 1px solid rgba(255, 255, 255, 0.30);
+
+        margin: 25px 5px;
+    }
+
+
+    /* ==========================================================
+       CONTENIDO PRINCIPAL
+       ========================================================== */
+
+    .main-content {
+        margin-left: 260px;
+
+        padding: 30px;
+
+        min-height: 100vh;
+
+        background-color: var(--sighi-background);
+    }
+
+
+    /* ==========================================================
+       TARJETAS
+       ========================================================== */
+
+    .card {
+        border: 1px solid var(--sighi-border);
+
+        border-radius: 14px;
+
+        background-color: var(--sighi-white);
+
+        box-shadow:
+            0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+
+    .card-header {
+        border-radius: 14px 14px 0 0 !important;
+
+        font-weight: 600;
+    }
+
+
+    /* ==========================================================
+       BOTONES PRINCIPALES
+       ========================================================== */
+
+    .btn-primary {
+        background-color: var(--sighi-primary);
+
+        border-color: var(--sighi-primary);
+    }
+
+
+    .btn-primary:hover,
+    .btn-primary:focus {
+        background-color: #D94F04;
+
+        border-color: #D94F04;
+    }
+
+
+    /* ==========================================================
+       BOTONES SECUNDARIOS
+       ========================================================== */
+
+    .btn-secondary {
+        background-color: var(--sighi-dark);
+
+        border-color: var(--sighi-dark);
+    }
+
+
+    .btn-secondary:hover,
+    .btn-secondary:focus {
+        background-color: #464646;
+
+        border-color: #464646;
+    }
+
+
+    /* ==========================================================
+       BOTONES OUTLINE
+       ========================================================== */
+
+    .btn-outline-primary {
+        color: var(--sighi-primary);
+
+        border-color: var(--sighi-primary);
+    }
+
+
+    .btn-outline-primary:hover {
+        background-color: var(--sighi-primary);
+
+        border-color: var(--sighi-primary);
+
+        color: var(--sighi-white);
+    }
+
+
+    /* ==========================================================
+       FORMULARIOS
+       ========================================================== */
+
+    .form-control,
+    .form-select {
+        border: 1px solid var(--sighi-border);
+
+        border-radius: 8px;
+
+        padding: 10px 12px;
+    }
+
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--sighi-secondary);
+
+        box-shadow:
+            0 0 0 0.2rem rgba(242, 135, 73, 0.20);
+    }
+
+
+    .form-label {
+        color: var(--sighi-dark);
+
+        font-weight: 600;
+
+        margin-bottom: 6px;
+    }
+
+
+    /* ==========================================================
+       TABLAS
+       ========================================================== */
+
+    .table {
+        color: var(--sighi-dark);
+    }
+
+
+    .table thead th {
+        background-color: var(--sighi-primary);
+
+        color: var(--sighi-white);
+
+        border: none;
+
+        font-weight: 600;
+    }
+
+
+    .table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+
+    .table tbody tr:hover {
+        background-color: rgba(242, 135, 73, 0.08);
+    }
+
+
+    /* ==========================================================
+       BADGES
+       ========================================================== */
+
+    .badge.bg-primary {
+        background-color: var(--sighi-primary) !important;
+    }
+
+
+    .badge.bg-secondary {
+        background-color: var(--sighi-dark) !important;
+    }
+
+
+    /* ==========================================================
+       ALERTAS
+       ========================================================== */
+
+    .alert-primary {
+        background-color: rgba(242, 92, 5, 0.10);
+
+        border-color: var(--sighi-primary);
+
+        color: var(--sighi-dark);
+    }
+
+
+    /* ==========================================================
+       TITULOS
+       ========================================================== */
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        color: var(--sighi-dark);
+    }
+
+
+    /* ==========================================================
+       LINKS
+       ========================================================== */
+
+    a {
+        color: var(--sighi-primary);
+    }
+
+
+    a:hover {
+        color: #D94F04;
+    }
+
+
+    /* ==========================================================
+       SCROLLBAR SIDEBAR
+       ========================================================== */
+
+    .sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+
+    .sidebar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+
+    .sidebar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.30);
+
+        border-radius: 10px;
+    }
+
+
+    /* ==========================================================
+       RESPONSIVE
+       ========================================================== */
+
+    @media (max-width: 992px) {
+
+        .sidebar {
+            width: 220px;
+        }
+
+        .main-content {
+            margin-left: 220px;
+
+            padding: 20px;
+        }
+
+    }
+
+
+    @media (max-width: 768px) {
+
+        .sidebar {
+            width: 100%;
+
+            height: auto;
+
+            position: relative;
+
+            padding: 15px;
+        }
+
+
+        .sidebar h3 {
+            margin-bottom: 20px;
+        }
+
+
+        .main-content {
+            margin-left: 0;
+
+            padding: 15px;
+        }
+
+    }
