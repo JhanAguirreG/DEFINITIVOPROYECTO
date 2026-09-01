@@ -1,7 +1,11 @@
 from django import forms
+from django.forms import inlineformset_factory
 
-from .models import HojaVida, ValorCampoTecnico
-
+from .models import (
+    HojaVida,
+    ValorCampoTecnico,
+    DocumentacionHojaVida,
+)
 
 
 class HojaVidaForm(forms.ModelForm):
@@ -300,8 +304,6 @@ class DocumentacionHojaVidaForm(forms.ModelForm):
 
     class Meta:
 
-        from .models import DocumentacionHojaVida
-
         model = DocumentacionHojaVida
 
         fields = (
@@ -312,9 +314,39 @@ class DocumentacionHojaVidaForm(forms.ModelForm):
         )
 
         widgets = {
+
+            "tipo": forms.Select(
+                attrs={
+                    "class": "form-select",
+                }
+            ),
+
+            "nombre": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Ej. Manual de usuario Mindray",
+                }
+            ),
+
+            "archivo": forms.ClearableFileInput(
+                attrs={
+                    "class": "form-control",
+                }
+            ),
+
             "observaciones": forms.Textarea(
                 attrs={
-                    "rows": 3,
+                    "class": "form-control",
+                    "rows": 2,
+                    "placeholder": "Observaciones opcionales",
                 }
             ),
         }
+
+DocumentacionHojaVidaFormSet = inlineformset_factory(
+    HojaVida,
+    DocumentacionHojaVida,
+    form=DocumentacionHojaVidaForm,
+    extra=2,
+    can_delete=True,
+)

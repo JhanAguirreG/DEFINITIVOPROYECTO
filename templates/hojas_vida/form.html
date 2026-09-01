@@ -726,6 +726,211 @@ CABECERA
                 {% endif %}
 
             </div>
+            <!-- ======================================================
+            DOCUMENTACIÓN TÉCNICA
+            ======================================================= -->
+
+            <hr>
+
+            <h5 class="fw-bold mb-3">
+
+                <i class="bi bi-folder2-open me-2"></i>
+
+                Documentación Técnica
+
+            </h5>
+
+            <p class="text-muted mb-4">
+
+                Adjunte los documentos técnicos disponibles para este equipo,
+                como manuales de operación, manuales de servicio, planos y
+                diagramas.
+
+            </p>
+
+
+            {{ formset_documentos.management_form }}
+
+
+            {% if formset_documentos.non_form_errors %}
+
+            <div class="alert alert-danger">
+
+                {{ formset_documentos.non_form_errors }}
+
+            </div>
+
+            {% endif %}
+
+
+            <div class="row">
+
+                {% for documento_form in formset_documentos %}
+
+                <div class="col-lg-6 mb-4">
+
+                    <div class="card h-100 border-0 shadow-sm">
+
+                        <div
+                            class="card-header"
+                            style="
+                                background-color:#F2F2F2;
+                                color:#595959;
+                            "
+                        >
+
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <strong>
+
+                                    <i
+                                        class="bi bi-file-earmark-text me-1"
+                                        style="color:#F25C05;">
+                                    </i>
+
+                                    Documento técnico
+
+                                </strong>
+
+                                {% if documento_form.instance.pk %}
+
+                                    <span
+                                        class="badge"
+                                        style="
+                                            background:#F2B8A2;
+                                            color:#595959;
+                                        "
+                                    >
+                                        Registrado
+                                    </span>
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+                            {{ documento_form.id }}
+
+                            <!-- TIPO -->
+
+                            <div class="mb-3">
+
+                                <label class="form-label fw-semibold">
+
+                                    Tipo de documento
+
+                                </label>
+
+                                {{ documento_form.tipo }}
+
+                                {% if documento_form.tipo.errors %}
+
+                                    <div class="text-danger small mt-1">
+
+                                        {{ documento_form.tipo.errors }}
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <!-- NOMBRE -->
+
+                            <div class="mb-3">
+
+                                <label class="form-label fw-semibold">
+
+                                    Nombre
+
+                                </label>
+
+                                {{ documento_form.nombre }}
+
+                            </div>
+
+
+                            <!-- ARCHIVO -->
+
+                            <div class="mb-3">
+
+                                <label class="form-label fw-semibold">
+
+                                    Archivo
+
+                                </label>
+
+                                {{ documento_form.archivo }}
+
+                                {% if documento_form.archivo.errors %}
+
+                                    <div class="text-danger small mt-1">
+
+                                        {{ documento_form.archivo.errors }}
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <!-- OBSERVACIONES -->
+
+                            <div class="mb-3">
+
+                                <label class="form-label fw-semibold">
+
+                                    Observaciones
+
+                                </label>
+
+                                {{ documento_form.observaciones }}
+
+                            </div>
+
+
+                            <!-- ELIMINAR -->
+
+                            {% if documento_form.instance.pk %}
+
+                            <div
+                                class="p-2 rounded"
+                                style="
+                                    background:#F2F2F2;
+                                "
+                            >
+
+                                <div class="form-check mb-0">
+
+                                    {{ documento_form.DELETE }}
+
+                                    <label class="form-check-label">
+
+                                        Eliminar este documento
+
+                                    </label>
+
+                                </div>
+
+                            </div>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
 
 
             <!-- ==================================================

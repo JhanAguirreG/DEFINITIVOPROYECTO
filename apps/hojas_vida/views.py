@@ -11,6 +11,7 @@ from apps.usuarios.decorators import rol_requerido
 from .forms import (
     AccesorioHojaVidaForm,
     DocumentacionHojaVidaForm,
+    DocumentacionHojaVidaFormSet,
     HojaVidaForm,
     CamposTecnicosForm,
 )
@@ -174,6 +175,10 @@ def crear_hoja_vida(request):
     equipo = None
     catalogo = None
 
+    # ==========================================================
+    # POST
+    # ==========================================================
+
     if request.method == "POST":
 
         form = HojaVidaForm(
@@ -182,7 +187,7 @@ def crear_hoja_vida(request):
         )
 
         # ======================================================
-        # OBTENER EQUIPO
+        # EQUIPO Y CATÁLOGO
         # ======================================================
 
         equipo_id = request.POST.get("equipo")
@@ -197,7 +202,7 @@ def crear_hoja_vida(request):
             catalogo = equipo.catalogo
 
         # ======================================================
-        # FORMULARIO DE CAMPOS TÉCNICOS
+        # CAMPOS TÉCNICOS
         # ======================================================
 
         form_tecnico = CamposTecnicosForm(
@@ -206,72 +211,86 @@ def crear_hoja_vida(request):
         )
 
         # ======================================================
-        # VALIDAR
+        # DOCUMENTACIÓN
         # ======================================================
 
-        if form.is_valid() and form_tecnico.is_valid():
+        formset_documentos = DocumentacionHojaVidaFormSet(
+            request.POST,
+            request.FILES,
+            instance=form.instance,
+            prefix="documentos",
+        )
 
-            # --------------------------------------------------
-            # CREAR HOJA DE VIDA
-            # --------------------------------------------------
+        # ======================================================
+        # VALIDACIÓN
+        # ======================================================
 
-            hoja = form.save(commit=False)
+        if (
+            form.is_valid()
+            and form_tecnico.is_valid()
+            and formset_documentos.is_valid()
+        ):
 
-            # --------------------------------------------------
-            # SINCRONIZAR CATÁLOGO
-            # --------------------------------------------------
+            with transaction.atomic():
 
-            if equipo and catalogo:
+                hoja = form.save(commit=False)
 
-                hoja.sincronizar_catalogo()
+                # ==============================================
+                # SINCRONIZAR CATÁLOGO
+                # ==============================================
 
-            # --------------------------------------------------
-            # GUARDAR
-            # --------------------------------------------------
+                if equipo and catalogo:
 
-            hoja.save()
+                    hoja.sincronizar_catalogo()
 
-            # ==================================================
-            # GUARDAR CAMPOS TÉCNICOS
-            # ==================================================
+                hoja.save()
 
-            for nombre, campo_form in form_tecnico.fields.items():
+                # ==============================================
+                # GUARDAR DOCUMENTOS
+                # ==============================================
 
-                if not hasattr(
-                    campo_form,
-                    "campo_tecnico",
-                ):
-                    continue
+                formset_documentos.instance = hoja
 
-                campo_tecnico = (
-                    campo_form.campo_tecnico
-                )
+                formset_documentos.save()
 
-                valor = (
-                    form_tecnico.cleaned_data.get(
-                        nombre,
-                        "",
+                # ==============================================
+                # GUARDAR CAMPOS TÉCNICOS
+                # ==============================================
+
+                for nombre, campo_form in form_tecnico.fields.items():
+
+                    if not hasattr(
+                        campo_form,
+                        "campo_tecnico",
+                    ):
+                        continue
+
+                    campo_tecnico = (
+                        campo_form.campo_tecnico
                     )
-                )
 
-                ValorCampoTecnico.objects.update_or_create(
-                    hoja_vida=hoja,
-                    campo=campo_tecnico,
-                    defaults={
-                        "valor": valor or "",
-                    },
-                )
+                    valor = (
+                        form_tecnico.cleaned_data.get(
+                            nombre,
+                            "",
+                        )
+                    )
 
-            # ==================================================
-            # MENSAJE
-            # ==================================================
+                    ValorCampoTecnico.objects.update_or_create(
+                        hoja_vida=hoja,
+                        campo=campo_tecnico,
+                        defaults={
+                            "valor": valor or "",
+                        },
+                    )
 
             if catalogo:
 
                 messages.success(
                     request,
-                    "Hoja de vida creada correctamente y "
-                    "la información del catálogo fue incorporada."
+                    "Hoja de vida creada correctamente. "
+                    "La información del catálogo y la documentación "
+                    "técnica fueron incorporadas.",
                 )
 
             else:
@@ -279,7 +298,7 @@ def crear_hoja_vida(request):
                 messages.warning(
                     request,
                     "Hoja de vida creada correctamente. "
-                    "Este equipo no tiene un catálogo asociado."
+                    "Este equipo no tiene un catálogo asociado.",
                 )
 
             return redirect(
@@ -287,15 +306,20 @@ def crear_hoja_vida(request):
                 hoja.id,
             )
 
+    # ==========================================================
+    # GET
+    # ==========================================================
+
     else:
 
         form = HojaVidaForm()
 
         form_tecnico = CamposTecnicosForm()
 
-    # ==========================================================
-    # CONTEXTO
-    # ==========================================================
+        formset_documentos = DocumentacionHojaVidaFormSet(
+            instance=form.instance,
+            prefix="documentos",
+        )
 
     return render(
         request,
@@ -303,6 +327,7 @@ def crear_hoja_vida(request):
         {
             "form": form,
             "form_tecnico": form_tecnico,
+            "formset_documentos": formset_documentos,
             "titulo": "Nueva Hoja de Vida",
             "equipo": equipo,
             "catalogo": catalogo,
@@ -345,48 +370,63 @@ def editar_hoja_vida(request, id):
             hoja_vida=hoja,
         )
 
-        # ======================================================
-        # VALIDACIÓN
-        # ======================================================
+        formset_documentos = DocumentacionHojaVidaFormSet(
+            request.POST,
+            request.FILES,
+            instance=hoja,
+            prefix="documentos",
+        )
 
-        if form.is_valid() and form_tecnico.is_valid():
+        if (
+            form.is_valid()
+            and form_tecnico.is_valid()
+            and formset_documentos.is_valid()
+        ):
 
-            hoja = form.save()
+            with transaction.atomic():
 
-            # ==================================================
-            # ACTUALIZAR CAMPOS TÉCNICOS
-            # ==================================================
+                hoja = form.save()
 
-            for nombre, campo_form in form_tecnico.fields.items():
+                # IMPORTANTE:
+                # No resincronizamos automáticamente el catálogo,
+                # para conservar la información histórica.
 
-                if not hasattr(
-                    campo_form,
-                    "campo_tecnico",
-                ):
-                    continue
+                # ==============================================
+                # DOCUMENTACIÓN
+                # ==============================================
 
-                campo_tecnico = (
-                    campo_form.campo_tecnico
-                )
+                formset_documentos.save()
 
-                valor = (
-                    form_tecnico.cleaned_data.get(
-                        nombre,
-                        "",
+                # ==============================================
+                # CAMPOS TÉCNICOS
+                # ==============================================
+
+                for nombre, campo_form in form_tecnico.fields.items():
+
+                    if not hasattr(
+                        campo_form,
+                        "campo_tecnico",
+                    ):
+                        continue
+
+                    campo_tecnico = (
+                        campo_form.campo_tecnico
                     )
-                )
 
-                ValorCampoTecnico.objects.update_or_create(
-                    hoja_vida=hoja,
-                    campo=campo_tecnico,
-                    defaults={
-                        "valor": valor or "",
-                    },
-                )
+                    valor = (
+                        form_tecnico.cleaned_data.get(
+                            nombre,
+                            "",
+                        )
+                    )
 
-            # ==================================================
-            # MENSAJE
-            # ==================================================
+                    ValorCampoTecnico.objects.update_or_create(
+                        hoja_vida=hoja,
+                        campo=campo_tecnico,
+                        defaults={
+                            "valor": valor or "",
+                        },
+                    )
 
             messages.success(
                 request,
@@ -413,9 +453,10 @@ def editar_hoja_vida(request, id):
             hoja_vida=hoja,
         )
 
-    # ==========================================================
-    # CONTEXTO
-    # ==========================================================
+        formset_documentos = DocumentacionHojaVidaFormSet(
+            instance=hoja,
+            prefix="documentos",
+        )
 
     return render(
         request,
@@ -423,6 +464,7 @@ def editar_hoja_vida(request, id):
         {
             "form": form,
             "form_tecnico": form_tecnico,
+            "formset_documentos": formset_documentos,
             "titulo": "Editar Hoja de Vida",
             "editar": True,
             "hoja": hoja,
