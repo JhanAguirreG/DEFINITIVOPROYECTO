@@ -729,95 +729,123 @@ CABECERA
             <!-- ======================================================
             DOCUMENTACIÓN TÉCNICA
             ======================================================= -->
+            <!-- ======================================================
+            DOCUMENTACIÓN TÉCNICA
+            ======================================================= -->
 
-            <hr>
+            <hr class="my-4">
 
-            <h5 class="fw-bold mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
 
-                <i class="bi bi-folder2-open me-2"></i>
+            ```
+            <div>
 
-                Documentación Técnica
+                <h5 class="fw-bold mb-1">
 
-            </h5>
+                    <i
+                        class="bi bi-folder2-open me-2"
+                        style="color:#F25C05;">
+                    </i>
 
-            <p class="text-muted mb-4">
+                    Documentación Técnica
 
-                Adjunte los documentos técnicos disponibles para este equipo,
-                como manuales de operación, manuales de servicio, planos y
-                diagramas.
+                </h5>
 
-            </p>
+                <p class="text-muted mb-0">
 
+                    Adjunte manuales, planos, diagramas, certificados
+                    y demás documentación relacionada con el equipo.
+
+                </p>
+
+            </div>
+
+            <button
+                type="button"
+                id="agregar-documento"
+                class="btn"
+                style="
+                    background-color:#F25C05;
+                    color:white;
+                    border:none;
+                "
+            >
+
+                <i class="bi bi-plus-circle me-1"></i>
+
+                Agregar documento
+
+            </button>
+            ```
+
+            </div>
 
             {{ formset_documentos.management_form }}
-
 
             {% if formset_documentos.non_form_errors %}
 
             <div class="alert alert-danger">
 
-                {{ formset_documentos.non_form_errors }}
+            ```
+            {{ formset_documentos.non_form_errors }}
+            ```
 
             </div>
 
             {% endif %}
 
+            <div id="contenedor-documentos">
 
-            <div class="row">
+            ```
+            {% for documento_form in formset_documentos %}
 
-                {% for documento_form in formset_documentos %}
+            <div class="documento-item col-12 mb-4">
 
-                <div class="col-lg-6 mb-4">
+                <div class="card border-0 shadow-sm">
 
-                    <div class="card h-100 border-0 shadow-sm">
+                    <div
+                        class="card-header d-flex justify-content-between align-items-center"
+                        style="
+                            background-color:#F2F2F2;
+                            color:#595959;
+                        "
+                    >
 
-                        <div
-                            class="card-header"
-                            style="
-                                background-color:#F2F2F2;
-                                color:#595959;
-                            "
+                        <strong>
+
+                            <i
+                                class="bi bi-file-earmark-text me-2"
+                                style="color:#F25C05;">
+                            </i>
+
+                            Documento técnico
+
+                        </strong>
+
+
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-outline-danger eliminar-documento"
                         >
 
-                            <div class="d-flex justify-content-between align-items-center">
+                            <i class="bi bi-trash"></i>
 
-                                <strong>
+                            Quitar
 
-                                    <i
-                                        class="bi bi-file-earmark-text me-1"
-                                        style="color:#F25C05;">
-                                    </i>
+                        </button>
 
-                                    Documento técnico
-
-                                </strong>
-
-                                {% if documento_form.instance.pk %}
-
-                                    <span
-                                        class="badge"
-                                        style="
-                                            background:#F2B8A2;
-                                            color:#595959;
-                                        "
-                                    >
-                                        Registrado
-                                    </span>
-
-                                {% endif %}
-
-                            </div>
-
-                        </div>
+                    </div>
 
 
-                        <div class="card-body">
+                    <div class="card-body">
 
-                            {{ documento_form.id }}
+                        {{ documento_form.id }}
 
-                            <!-- TIPO -->
+                        <!-- TIPO -->
 
-                            <div class="mb-3">
+                        <div class="row">
+
+                            <div class="col-md-4 mb-3">
 
                                 <label class="form-label fw-semibold">
 
@@ -829,11 +857,11 @@ CABECERA
 
                                 {% if documento_form.tipo.errors %}
 
-                                    <div class="text-danger small mt-1">
+                                <div class="text-danger small">
 
-                                        {{ documento_form.tipo.errors }}
+                                    {{ documento_form.tipo.errors }}
 
-                                    </div>
+                                </div>
 
                                 {% endif %}
 
@@ -842,11 +870,11 @@ CABECERA
 
                             <!-- NOMBRE -->
 
-                            <div class="mb-3">
+                            <div class="col-md-8 mb-3">
 
                                 <label class="form-label fw-semibold">
 
-                                    Nombre
+                                    Nombre del documento
 
                                 </label>
 
@@ -854,69 +882,52 @@ CABECERA
 
                             </div>
 
+                        </div>
 
-                            <!-- ARCHIVO -->
 
-                            <div class="mb-3">
+                        <!-- ARCHIVO -->
 
-                                <label class="form-label fw-semibold">
+                        <div class="mb-3">
 
-                                    Archivo
+                            <label class="form-label fw-semibold">
 
-                                </label>
+                                Archivo
 
-                                {{ documento_form.archivo }}
+                            </label>
 
-                                {% if documento_form.archivo.errors %}
+                            {{ documento_form.archivo }}
 
-                                    <div class="text-danger small mt-1">
+                            {% if documento_form.instance.pk and documento_form.instance.archivo %}
 
-                                        {{ documento_form.archivo.errors }}
+                            <div class="mt-2">
 
-                                    </div>
+                                <small class="text-muted">
 
-                                {% endif %}
+                                    Archivo actual:
+
+                                </small>
+
+                                <a
+                                    href="{{ documento_form.instance.archivo.url }}"
+                                    target="_blank"
+                                    class="btn btn-sm btn-outline-primary ms-2"
+                                >
+
+                                    <i class="bi bi-eye"></i>
+
+                                    Ver archivo
+
+                                </a>
 
                             </div>
 
+                            {% endif %}
 
-                            <!-- OBSERVACIONES -->
+                            {% if documento_form.archivo.errors %}
 
-                            <div class="mb-3">
+                            <div class="text-danger small mt-1">
 
-                                <label class="form-label fw-semibold">
-
-                                    Observaciones
-
-                                </label>
-
-                                {{ documento_form.observaciones }}
-
-                            </div>
-
-
-                            <!-- ELIMINAR -->
-
-                            {% if documento_form.instance.pk %}
-
-                            <div
-                                class="p-2 rounded"
-                                style="
-                                    background:#F2F2F2;
-                                "
-                            >
-
-                                <div class="form-check mb-0">
-
-                                    {{ documento_form.DELETE }}
-
-                                    <label class="form-check-label">
-
-                                        Eliminar este documento
-
-                                    </label>
-
-                                </div>
+                                {{ documento_form.archivo.errors }}
 
                             </div>
 
@@ -924,15 +935,318 @@ CABECERA
 
                         </div>
 
+
+                        <!-- OBSERVACIONES -->
+
+                        <div class="mb-2">
+
+                            <label class="form-label fw-semibold">
+
+                                Observaciones
+
+                            </label>
+
+                            {{ documento_form.observaciones }}
+
+                        </div>
+
+
+                        <!-- DELETE REAL DEL FORMMSET -->
+
+                        <div class="d-none delete-field">
+
+                            {{ documento_form.DELETE }}
+
+                        </div>
+
                     </div>
 
                 </div>
 
-                {% endfor %}
+            </div>
+
+            {% endfor %}
+            ```
 
             </div>
 
+            <!-- ======================================================
+            PLANTILLA PARA NUEVOS DOCUMENTOS
+            ======================================================= -->
 
+            <template id="plantilla-documento">
+
+            ```
+            <div class="documento-item col-12 mb-4">
+
+                <div class="card border-0 shadow-sm">
+
+                    <div
+                        class="card-header d-flex justify-content-between align-items-center"
+                        style="
+                            background-color:#F2F2F2;
+                            color:#595959;
+                        "
+                    >
+
+                        <strong>
+
+                            <i
+                                class="bi bi-file-earmark-plus me-2"
+                                style="color:#F25C05;">
+                            </i>
+
+                            Nuevo documento
+
+                        </strong>
+
+
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-outline-danger eliminar-documento"
+                        >
+
+                            <i class="bi bi-trash"></i>
+
+                            Quitar
+
+                        </button>
+
+                    </div>
+
+
+                    <div class="card-body">
+
+                        <div class="row">
+
+                            <div class="col-md-4 mb-3">
+
+                                <label class="form-label fw-semibold">
+
+                                    Tipo de documento
+
+                                </label>
+
+                                <select
+                                    name="documentos-__prefix__-tipo"
+                                    class="form-select"
+                                >
+
+                                    <option value="">
+                                        Seleccione
+                                    </option>
+
+                                    {% for value, label in formset_documentos.empty_form.fields.tipo.choices %}
+
+                                        <option value="{{ value }}">
+                                            {{ label }}
+                                        </option>
+
+                                    {% endfor %}
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="col-md-8 mb-3">
+
+                                <label class="form-label fw-semibold">
+
+                                    Nombre del documento
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="documentos-__prefix__-nombre"
+                                    class="form-control"
+                                    placeholder="Ej. Manual de operación"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="mb-3">
+
+                            <label class="form-label fw-semibold">
+
+                                Archivo
+
+                            </label>
+
+                            <input
+                                type="file"
+                                name="documentos-__prefix__-archivo"
+                                class="form-control"
+                            >
+
+                        </div>
+
+
+                        <div class="mb-2">
+
+                            <label class="form-label fw-semibold">
+
+                                Observaciones
+
+                            </label>
+
+                            <textarea
+                                name="documentos-__prefix__-observaciones"
+                                class="form-control"
+                                rows="2"
+                                placeholder="Observaciones opcionales"
+                            ></textarea>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+            ```
+
+            </template>
+
+            <script>
+
+            document.addEventListener("DOMContentLoaded", function () {
+
+                const botonAgregar =
+                    document.getElementById("agregar-documento");
+
+                const contenedor =
+                    document.getElementById("contenedor-documentos");
+
+                const plantilla =
+                    document.getElementById("plantilla-documento");
+
+                const totalForms =
+                    document.getElementById(
+                        "id_documentos-TOTAL_FORMS"
+                    );
+
+
+                if (
+                    !botonAgregar ||
+                    !contenedor ||
+                    !plantilla ||
+                    !totalForms
+                ) {
+
+                    return;
+
+                }
+
+
+                // ======================================================
+                // AGREGAR DOCUMENTO
+                // ======================================================
+
+                botonAgregar.addEventListener(
+                    "click",
+                    function () {
+
+                        const indice =
+                            parseInt(totalForms.value);
+
+
+                        const html =
+                            plantilla.innerHTML.replace(
+                                /__prefix__/g,
+                                indice
+                            );
+
+
+                        contenedor.insertAdjacentHTML(
+                            "beforeend",
+                            html
+                        );
+
+
+                        totalForms.value =
+                            indice + 1;
+
+
+                        actualizarBotones();
+
+                    }
+                );
+
+
+                // ======================================================
+                // QUITAR DOCUMENTO
+                // ======================================================
+
+                contenedor.addEventListener(
+                    "click",
+                    function (event) {
+
+                        const boton =
+                            event.target.closest(
+                                ".eliminar-documento"
+                            );
+
+
+                        if (!boton) {
+                            return;
+                        }
+
+
+                        const documento =
+                            boton.closest(
+                                ".documento-item"
+                            );
+
+
+                        if (!documento) {
+                            return;
+                        }
+
+
+                        const deleteInput =
+                            documento.querySelector(
+                                'input[name$="-DELETE"]'
+                            );
+
+
+                        // Documento existente
+                        if (deleteInput) {
+
+                            deleteInput.checked = true;
+
+                            documento.style.display = "none";
+
+                        }
+
+                        // Documento nuevo
+                        else {
+
+                            documento.remove();
+
+                        }
+
+                    }
+                );
+
+
+                function actualizarBotones() {
+
+                    const documentos =
+                        contenedor.querySelectorAll(
+                            ".documento-item"
+                        );
+
+                }
+
+
+            });
+
+            </script>
             <!-- ==================================================
             RECOMENDACIONES
             =================================================== -->
