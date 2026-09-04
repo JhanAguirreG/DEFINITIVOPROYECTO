@@ -2721,13 +2721,8 @@ def calendario_mantenimientos(request):
     Calendario mensual de mantenimientos.
 
     Permite visualizar los mantenimientos programados
-    por fecha y filtrarlos por servicio, estado y tipo.
-
-    SUPERADMIN:
-        Puede visualizar todos los mantenimientos.
-
-    ADMIN / BIOMEDICO:
-        Solo pueden visualizar mantenimientos de su institución.
+    por fecha y filtrarlos por servicio, estado, tipo
+    y únicamente vencidos.
     """
 
     hoy = timezone.localdate()
@@ -2737,9 +2732,22 @@ def calendario_mantenimientos(request):
     # ==========================================================
 
     try:
-        year = int(request.GET.get("year", hoy.year))
-        month = int(request.GET.get("month", hoy.month))
+        year = int(
+            request.GET.get(
+                "year",
+                hoy.year,
+            )
+        )
+
+        month = int(
+            request.GET.get(
+                "month",
+                hoy.month,
+            )
+        )
+
     except (TypeError, ValueError):
+
         year = hoy.year
         month = hoy.month
 
@@ -2758,6 +2766,7 @@ def calendario_mantenimientos(request):
     )
 
     if request.user.es_admin or request.user.es_biomedico:
+
         servicios = servicios.filter(
             institucion=request.user.institucion
         )
@@ -2787,6 +2796,7 @@ def calendario_mantenimientos(request):
     # ==========================================================
 
     if request.user.es_admin or request.user.es_biomedico:
+
         mantenimientos = mantenimientos.filter(
             hoja_vida__equipo__institucion=request.user.institucion
         )
@@ -2797,18 +2807,23 @@ def calendario_mantenimientos(request):
 
     servicio_id = request.GET.get(
         "servicio",
-        ""
+        "",
     ).strip()
 
     estado = request.GET.get(
         "estado",
-        ""
+        "",
     ).strip()
 
     tipo = request.GET.get(
         "tipo",
-        ""
+        "",
     ).strip()
+
+    solo_vencidos = request.GET.get(
+        "vencidos",
+        "",
+    ).strip() == "1"
 
     # ==========================================================
     # FILTRO POR SERVICIO
@@ -2841,6 +2856,18 @@ def calendario_mantenimientos(request):
         )
 
     # ==========================================================
+    # FILTRO SOLO VENCIDOS
+    # ==========================================================
+
+    if solo_vencidos:
+
+        mantenimientos = mantenimientos.filter(
+            fecha_programada__lt=hoy
+        ).exclude(
+            estado=Mantenimiento.Estado.FINALIZADO
+        )
+
+    # ==========================================================
     # ORDEN
     # ==========================================================
 
@@ -2851,16 +2878,46 @@ def calendario_mantenimientos(request):
     )
 
     # ==========================================================
-    # ORGANIZAR MANTENIMIENTOS POR DÍA
+    # DETERMINAR ESTADO VISUAL
     # ==========================================================
 
     mantenimientos_por_fecha = {}
 
     for mantenimiento in mantenimientos:
 
+        mantenimiento.vencido = (
+            mantenimiento.estado != Mantenimiento.Estado.FINALIZADO
+            and mantenimiento.fecha_programada < hoy
+        )
+
+        mantenimiento.es_hoy = (
+            mantenimiento.fecha_programada == hoy
+        )
+
+        if mantenimiento.vencido:
+
+            mantenimiento.clase_calendario = "vencido"
+
+        elif mantenimiento.es_hoy:
+
+            mantenimiento.clase_calendario = "hoy"
+
+        elif mantenimiento.estado == Mantenimiento.Estado.FINALIZADO:
+
+            mantenimiento.clase_calendario = "finalizado"
+
+        elif mantenimiento.estado == Mantenimiento.Estado.EN_PROCESO:
+
+            mantenimiento.clase_calendario = "en-proceso"
+
+        else:
+
+            mantenimiento.clase_calendario = "programado"
+
         dia = mantenimiento.fecha_programada.day
 
         if dia not in mantenimientos_por_fecha:
+
             mantenimientos_por_fecha[dia] = []
 
         mantenimientos_por_fecha[dia].append(
@@ -2877,10 +2934,6 @@ def calendario_mantenimientos(request):
         year,
         month,
     )
-
-    # ==========================================================
-    # PREPARAR SEMANAS PARA EL TEMPLATE
-    # ==========================================================
 
     semanas = []
 
@@ -2904,7 +2957,7 @@ def calendario_mantenimientos(request):
                     "mantenimientos": (
                         mantenimientos_por_fecha.get(
                             dia,
-                            []
+                            [],
                         )
                     ),
                 })
@@ -2964,10 +3017,29 @@ def calendario_mantenimientos(request):
     nombre_mes = nombres_meses[month]
 
     # ==========================================================
+    # CONTADORES
+    # ==========================================================
+
+    total_mantenimientos = mantenimientos.count()
+
+    vencidos_mes = sum(
+        1
+        for mantenimiento in mantenimientos
+        if mantenimiento.vencido
+    )
+
+    hoy_mes = sum(
+        1
+        for mantenimiento in mantenimientos
+        if mantenimiento.es_hoy
+    )
+
+    # ==========================================================
     # CONTEXTO
     # ==========================================================
 
     contexto = {
+
         "semanas": semanas,
 
         "year": year,
@@ -2989,10 +3061,16 @@ def calendario_mantenimientos(request):
         "estado_seleccionado": estado,
         "tipo_seleccionado": tipo,
 
+        "solo_vencidos": solo_vencidos,
+
         "estados": Mantenimiento.Estado.choices,
         "tipos": Mantenimiento.Tipo.choices,
 
-        "total_mantenimientos": mantenimientos.count(),
+        "total_mantenimientos": total_mantenimientos,
+
+        "vencidos_mes": vencidos_mes,
+
+        "hoy_mes": hoy_mes,
     }
 
     return render(

@@ -114,7 +114,7 @@ Calendario de Mantenimientos | SIGHI
                     </div>
 
 
-                    <div class="col-md-3">
+                    <div class="col-md-2">
 
                         <label class="form-label fw-bold">
                             Estado
@@ -147,7 +147,7 @@ Calendario de Mantenimientos | SIGHI
                     </div>
 
 
-                    <div class="col-md-3">
+                    <div class="col-md-2">
 
                         <label class="form-label fw-bold">
                             Tipo
@@ -176,6 +176,33 @@ Calendario de Mantenimientos | SIGHI
                             {% endfor %}
 
                         </select>
+
+                    </div>
+                    <div class="col-md-2">
+
+                        <label class="form-label fw-bold">
+                            Vencidos
+                        </label>
+
+                        <div class="form-check mt-2">
+
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                name="vencidos"
+                                value="1"
+                                id="soloVencidos"
+                                {% if solo_vencidos %}checked{% endif %}
+                            >
+
+                            <label
+                                class="form-check-label text-danger fw-bold"
+                                for="soloVencidos"
+                            >
+                                Solo vencidos
+                            </label>
+
+                        </div>
 
                     </div>
 
@@ -212,7 +239,7 @@ Calendario de Mantenimientos | SIGHI
             <div class="d-flex justify-content-between align-items-center">
 
                 <a
-                    href="?year={{ anio_anterior }}&month={{ mes_anterior }}{% if servicio_seleccionado %}&servicio={{ servicio_seleccionado }}{% endif %}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}{% if tipo_seleccionado %}&tipo={{ tipo_seleccionado }}{% endif %}"
+                    href="?year={{ anio_anterior }}&month={{ mes_anterior }}{% if servicio_seleccionado %}&servicio={{ servicio_seleccionado }}{% endif %}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}{% if tipo_seleccionado %}&tipo={{ tipo_seleccionado }}{% endif %}{% if solo_vencidos %}&vencidos=1{% endif %}"
                     class="btn btn-outline-primary"
                 >
                     <i class="bi bi-chevron-left"></i>
@@ -231,6 +258,33 @@ Calendario de Mantenimientos | SIGHI
                         {{ total_mantenimientos }}
                         mantenimiento{{ total_mantenimientos|pluralize }}
 
+                        {% if vencidos_mes > 0 %}
+
+                            ·
+
+                            <span class="text-danger fw-bold">
+
+                                {{ vencidos_mes }}
+                                vencido{{ vencidos_mes|pluralize }}
+
+                            </span>
+
+                        {% endif %}
+
+
+                        {% if hoy_mes > 0 %}
+
+                            ·
+
+                            <span class="text-warning fw-bold">
+
+                                {{ hoy_mes }}
+                                para hoy
+
+                            </span>
+
+                        {% endif %}
+
                     </small>
 
                 </div>
@@ -246,7 +300,7 @@ Calendario de Mantenimientos | SIGHI
                     </a>
 
                     <a
-                        href="?year={{ anio_siguiente }}&month={{ mes_siguiente }}{% if servicio_seleccionado %}&servicio={{ servicio_seleccionado }}{% endif %}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}{% if tipo_seleccionado %}&tipo={{ tipo_seleccionado }}{% endif %}"
+                        href="?year={{ anio_siguiente }}&month={{ mes_siguiente }}{% if servicio_seleccionado %}&servicio={{ servicio_seleccionado }}{% endif %}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}{% if tipo_seleccionado %}&tipo={{ tipo_seleccionado }}{% endif %}{% if solo_vencidos %}&vencidos=1{% endif %}"
                         class="btn btn-outline-primary"
                     >
                         Siguiente
@@ -349,9 +403,19 @@ Calendario de Mantenimientos | SIGHI
                                                     href="{% url 'detalle_mantenimiento' mantenimiento.id %}"
                                                     class="text-decoration-none"
                                                 >
-
                                                     <div
-                                                        class="border rounded p-2 mb-2 small bg-white shadow-sm"
+                                                        class="border rounded p-2 mb-2 small shadow-sm
+                                                        {% if mantenimiento.clase_calendario == 'vencido' %}
+                                                            border-danger bg-danger-subtle
+                                                        {% elif mantenimiento.clase_calendario == 'hoy' %}
+                                                            border-warning bg-warning-subtle
+                                                        {% elif mantenimiento.clase_calendario == 'finalizado' %}
+                                                            border-success bg-success-subtle
+                                                        {% elif mantenimiento.clase_calendario == 'en-proceso' %}
+                                                            border-primary bg-primary-subtle
+                                                        {% else %}
+                                                            bg-white
+                                                        {% endif %}"
                                                     >
 
                                                         <div class="fw-bold text-dark">
@@ -377,6 +441,27 @@ Calendario de Mantenimientos | SIGHI
 
 
                                                         <div class="mt-1">
+
+                                                            {% if mantenimiento.vencido %}
+
+                                                                <span class="badge bg-danger">
+
+                                                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                                                    Vencido
+
+                                                                </span>
+
+                                                            {% elif mantenimiento.es_hoy %}
+
+                                                                <span class="badge bg-warning text-dark">
+
+                                                                    <i class="bi bi-calendar-event"></i>
+                                                                    Hoy
+
+                                                                </span>
+
+                                                            {% endif %}
+
 
                                                             {% if mantenimiento.tipo == "PREVENTIVO" %}
 
