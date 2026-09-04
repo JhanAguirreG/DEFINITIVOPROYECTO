@@ -8,70 +8,106 @@ Detalle del Mantenimiento | SIGHI
 
 <div class="container-fluid">
 
-    <!-- ENCABEZADO -->
+    <!-- ======================================================
+         ENCABEZADO
+    ======================================================= -->
 
     <div class="d-flex justify-content-between align-items-center mb-4">
 
         <div>
-            <h2 class="fw-bold">
-                Orden de Trabajo
+
+            <h2 class="fw-bold mb-1">
+                Detalle del Mantenimiento
             </h2>
 
             <p class="text-muted mb-0">
-                Orden {{ orden.numero }}
-            </p>
-        </div>
 
-        <div class="d-flex gap-2">
-            {% if user.es_superadmin or user.es_admin %}
+                {% if mantenimiento.orden_trabajo %}
 
-                    <a href="{% url 'editar_mantenimiento' mantenimiento.id %}"
-                    class="btn btn-warning">
+                    Orden de Trabajo:
+                    <strong>
+                        {{ mantenimiento.orden_trabajo.numero }}
+                    </strong>
 
-                        <i class="bi bi-pencil"></i>
-                        Editar
+                {% else %}
 
-                    </a>
-
-                    <form method="post"
-                        action="{% url 'eliminar_mantenimiento' mantenimiento.id %}"
-                        onsubmit="return confirm('¿Está seguro de eliminar este mantenimiento? Esta acción no se puede deshacer.');"
-                        style="display:inline;">
-
-                        {% csrf_token %}
-
-                        <button type="submit"
-                                class="btn btn-danger">
-
-                            <i class="bi bi-trash"></i>
-                            Eliminar
-
-                        </button>
-
-                    </form>
+                    Mantenimiento independiente
 
                 {% endif %}
-            <!-- SI EL MANTENIMIENTO PERTENECE A UNA OT -->
+
+            </p>
+
+        </div>
+
+
+        <div class="d-flex gap-2 flex-wrap">
+
+            <!-- EDITAR / ELIMINAR -->
+
+            {% if user.es_superadmin or user.es_admin %}
+
+                <a
+                    href="{% url 'editar_mantenimiento' mantenimiento.id %}"
+                    class="btn btn-warning"
+                >
+
+                    <i class="bi bi-pencil"></i>
+                    Editar
+
+                </a>
+
+
+                <form
+                    method="post"
+                    action="{% url 'eliminar_mantenimiento' mantenimiento.id %}"
+                    onsubmit="return confirm('¿Está seguro de eliminar este mantenimiento? Esta acción no se puede deshacer.');"
+                    style="display:inline;"
+                >
+
+                    {% csrf_token %}
+
+                    <button
+                        type="submit"
+                        class="btn btn-danger"
+                    >
+
+                        <i class="bi bi-trash"></i>
+                        Eliminar
+
+                    </button>
+
+                </form>
+
+            {% endif %}
+
+
+            <!-- VER OT -->
 
             {% if mantenimiento.orden_trabajo %}
 
-                <a href="{% url 'detalle_orden_trabajo' mantenimiento.orden_trabajo.id %}"
-                class="btn btn-primary">
+                <a
+                    href="{% url 'detalle_orden_trabajo' mantenimiento.orden_trabajo.id %}"
+                    class="btn btn-primary"
+                >
 
                     <i class="bi bi-file-earmark-text"></i>
                     Ver Orden de Trabajo
 
                 </a>
 
-            {% endif %}    
-            <!-- FIRMAR -->
+            {% endif %}
+
+
+            <!-- FIRMAR OT -->
 
             {% if mantenimiento.orden_trabajo %}
 
                 {% if user.es_superadmin or user.es_admin or user.es_biomedico %}
 
-                    <a href="{% url 'firmar_orden_trabajo' mantenimiento.orden_trabajo.id %}"
-                    class="btn btn-success">
+                    <a
+                        href="{% url 'firmar_orden_trabajo' mantenimiento.orden_trabajo.id %}"
+                        class="btn btn-success"
+                    >
 
                         <i class="bi bi-pen"></i>
                         Firmar Orden
@@ -87,22 +123,28 @@ Detalle del Mantenimiento | SIGHI
 
             {% if mantenimiento.orden_trabajo %}
 
-                <a href="{% url 'pdf_orden_trabajo' mantenimiento.orden_trabajo.id %}"
-                target="_blank"
-                class="btn btn-danger">
+                <a
+                    href="{% url 'pdf_orden_trabajo' mantenimiento.orden_trabajo.id %}"
+                    target="_blank"
+                    class="btn btn-danger"
+                >
 
                     <i class="bi bi-file-earmark-pdf"></i>
                     Generar PDF de la OT
 
                 </a>
 
-            {% endif %}   
+            {% endif %}
 
+
+            <!-- VOLVER -->
 
             {% if volver_a_ordenes %}
 
-                <a href="{% url 'detalle_orden_trabajo' mantenimiento.orden_trabajo.id %}"
-                class="btn btn-secondary">
+                <a
+                    href="{% url 'detalle_orden_trabajo' mantenimiento.orden_trabajo.id %}"
+                    class="btn btn-secondary"
+                >
 
                     <i class="bi bi-arrow-left"></i>
                     Volver
@@ -111,8 +153,10 @@ Detalle del Mantenimiento | SIGHI
 
             {% else %}
 
-                <a href="{% url 'lista_mantenimientos' %}"
-                class="btn btn-secondary">
+                <a
+                    href="{% url 'lista_mantenimientos' %}"
+                    class="btn btn-secondary"
+                >
 
                     <i class="bi bi-arrow-left"></i>
                     Volver
@@ -125,19 +169,24 @@ Detalle del Mantenimiento | SIGHI
 
     </div>
 
-    <!-- Información General -->
+
+    <!-- ======================================================
+         INFORMACIÓN DEL EQUIPO
+    ======================================================= -->
 
     <div class="card shadow-sm border-0 mb-4">
 
         <div class="card-header bg-primary text-white">
 
-            Información General
+            <i class="bi bi-cpu"></i>
+            Información del Equipo
 
         </div>
 
+
         <div class="card-body">
 
-            <div class="row">
+            <div class="row g-4">
 
                 <div class="col-md-4">
 
@@ -147,13 +196,42 @@ Detalle del Mantenimiento | SIGHI
 
                 </div>
 
+
                 <div class="col-md-4">
 
                     <strong>Código</strong><br>
 
-                    {{ mantenimiento.hoja_vida.equipo.codigo }}
+                    {{ mantenimiento.hoja_vida.equipo.codigo|default:"Sin código" }}
 
                 </div>
+
+
+                <div class="col-md-4">
+
+                    <strong>Serial</strong><br>
+
+                    {{ mantenimiento.hoja_vida.equipo.serie|default:"Sin serial" }}
+
+                </div>
+
+
+                <div class="col-md-4">
+
+                    <strong>Marca</strong><br>
+
+                    {{ mantenimiento.hoja_vida.equipo.marca|default:"No registrada" }}
+
+                </div>
+
+
+                <div class="col-md-4">
+
+                    <strong>Modelo</strong><br>
+
+                    {{ mantenimiento.hoja_vida.equipo.modelo|default:"No registrado" }}
+
+                </div>
+
 
                 <div class="col-md-4">
 
@@ -163,13 +241,8 @@ Detalle del Mantenimiento | SIGHI
 
                 </div>
 
-            </div>
 
-            <hr>
-
-            <div class="row">
-
-                <div class="col-md-4">
+                <div class="col-md-6">
 
                     <strong>Institución</strong><br>
 
@@ -177,19 +250,22 @@ Detalle del Mantenimiento | SIGHI
 
                 </div>
 
-                <div class="col-md-4">
 
-                    <strong>Marca</strong><br>
+                <div class="col-md-6">
 
-                    {{ mantenimiento.hoja_vida.equipo.marca }}
+                    <strong>Catálogo</strong><br>
 
-                </div>
+                    {% if mantenimiento.hoja_vida.equipo.catalogo %}
 
-                <div class="col-md-4">
+                        {{ mantenimiento.hoja_vida.equipo.catalogo.nombre }}
 
-                    <strong>Modelo</strong><br>
+                    {% else %}
 
-                    {{ mantenimiento.hoja_vida.equipo.modelo }}
+                        <span class="text-muted">
+                            Sin catálogo asociado
+                        </span>
+
+                    {% endif %}
 
                 </div>
 
@@ -199,53 +275,81 @@ Detalle del Mantenimiento | SIGHI
 
     </div>
 
-    <!-- Datos del mantenimiento -->
+
+    <!-- ======================================================
+         INFORMACIÓN DEL MANTENIMIENTO
+    ======================================================= -->
 
     <div class="card shadow-sm border-0 mb-4">
 
         <div class="card-header bg-success text-white">
 
-            Información del mantenimiento
+            <i class="bi bi-tools"></i>
+            Información del Mantenimiento
 
         </div>
 
+
         <div class="card-body">
 
-            <div class="row">
+            <div class="row g-4">
 
                 <div class="col-md-3">
 
                     <strong>Tipo</strong><br>
 
                     {% if mantenimiento.tipo == "PREVENTIVO" %}
-                        <span class="badge bg-success">Preventivo</span>
+
+                        <span class="badge bg-success">
+                            Preventivo
+                        </span>
+
                     {% else %}
-                        <span class="badge bg-danger">Correctivo</span>
+
+                        <span class="badge bg-danger">
+                            Correctivo
+                        </span>
+
                     {% endif %}
 
                 </div>
+
 
                 <div class="col-md-3">
 
                     <strong>Estado</strong><br>
 
                     {% if mantenimiento.estado == "PROGRAMADO" %}
-                        <span class="badge bg-warning text-dark">Programado</span>
+
+                        <span class="badge bg-warning text-dark">
+                            Programado
+                        </span>
+
                     {% elif mantenimiento.estado == "EN_PROCESO" %}
-                        <span class="badge bg-primary">En proceso</span>
+
+                        <span class="badge bg-primary">
+                            En proceso
+                        </span>
+
                     {% else %}
-                        <span class="badge bg-success">Finalizado</span>
+
+                        <span class="badge bg-success">
+                            Finalizado
+                        </span>
+
                     {% endif %}
 
                 </div>
+
 
                 <div class="col-md-3">
 
                     <strong>Fecha programada</strong><br>
 
-                    {{ mantenimiento.fecha_programada }}
+                    {{ mantenimiento.fecha_programada|date:"d/m/Y" }}
 
                 </div>
+
 
                 <div class="col-md-3">
 
@@ -255,71 +359,537 @@ Detalle del Mantenimiento | SIGHI
 
                 </div>
 
+
+                <div class="col-md-3">
+
+                    <strong>Fecha de inicio</strong><br>
+
+                    {% if mantenimiento.fecha_inicio %}
+
+                        {{ mantenimiento.fecha_inicio|date:"d/m/Y" }}
+
+                    {% else %}
+
+                        <span class="text-muted">
+                            No registrada
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+
+                <div class="col-md-3">
+
+                    <strong>Fecha de finalización</strong><br>
+
+                    {% if mantenimiento.fecha_fin %}
+
+                        {{ mantenimiento.fecha_fin|date:"d/m/Y" }}
+
+                    {% else %}
+
+                        <span class="text-muted">
+                            No registrada
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+
+                <div class="col-md-3">
+
+                    <strong>Empresa</strong><br>
+
+                    {{ mantenimiento.empresa|default:"No registrada" }}
+
+                </div>
+
+
+                <div class="col-md-3">
+
+                    <strong>Costo</strong><br>
+
+                    $ {{ mantenimiento.costo|default:"0" }}
+
+                </div>
+
             </div>
 
         </div>
 
     </div>
 
-    <!-- Actividades -->
+
+    <!-- ======================================================
+         TRAZABILIDAD
+    ======================================================= -->
 
     <div class="card shadow-sm border-0 mb-4">
 
-        <div class="card-header bg-info text-white">
+        <div class="card-header bg-dark text-white">
 
-            Actividades realizadas
+            <i class="bi bi-diagram-3"></i>
+            Trazabilidad del Mantenimiento
 
         </div>
 
+
         <div class="card-body">
 
-            <h6>Descripción</h6>
+            <div class="row g-4">
 
-            <p>{{ mantenimiento.descripcion|linebreaks }}</p>
+                <!-- ANTERIOR -->
 
-            <hr>
+                <div class="col-md-6">
 
-            <h6>Actividades realizadas</h6>
+                    <div class="border rounded p-4 h-100">
 
-            <p>{{ mantenimiento.actividades_realizadas|linebreaks }}</p>
+                        <h6 class="fw-bold">
 
-            <hr>
+                            <i class="bi bi-arrow-left-circle"></i>
+                            Mantenimiento anterior
 
-            <h6>Repuestos utilizados</h6>
+                        </h6>
 
-            <p>{{ mantenimiento.repuestos|default:"No registra."|linebreaks }}</p>
 
-            <hr>
+                        {% if mantenimiento_anterior %}
 
-            <h6>Observaciones</h6>
+                            <hr>
 
-            <p>{{ mantenimiento.observaciones|default:"Sin observaciones."|linebreaks }}</p>
+                            <p class="mb-1">
+
+                                <strong>ID:</strong>
+
+                                #{{ mantenimiento_anterior.id }}
+
+                            </p>
+
+
+                            <p class="mb-1">
+
+                                <strong>Tipo:</strong>
+
+                                {{ mantenimiento_anterior.get_tipo_display }}
+
+                            </p>
+
+
+                            <p class="mb-1">
+
+                                <strong>Estado:</strong>
+
+                                {{ mantenimiento_anterior.get_estado_display }}
+
+                            </p>
+
+
+                            <p class="mb-3">
+
+                                <strong>Fecha:</strong>
+
+                                {{ mantenimiento_anterior.fecha_programada|date:"d/m/Y" }}
+
+                            </p>
+
+
+                            <a
+                                href="{% url 'detalle_mantenimiento' mantenimiento_anterior.id %}"
+                                class="btn btn-outline-secondary btn-sm"
+                            >
+
+                                <i class="bi bi-eye"></i>
+                                Ver mantenimiento anterior
+
+                            </a>
+
+                        {% else %}
+
+                            <div class="text-muted mt-3">
+
+                                <i class="bi bi-info-circle"></i>
+
+                                Este es el primer mantenimiento registrado
+                                para esta secuencia.
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <!-- SIGUIENTE -->
+
+                <div class="col-md-6">
+
+                    <div class="border rounded p-4 h-100">
+
+                        <h6 class="fw-bold">
+
+                            <i class="bi bi-arrow-right-circle"></i>
+                            Próximo mantenimiento
+
+                        </h6>
+
+
+                        {% if proximo_mantenimiento %}
+
+                            <hr>
+
+                            <p class="mb-1">
+
+                                <strong>ID:</strong>
+
+                                #{{ proximo_mantenimiento.id }}
+
+                            </p>
+
+
+                            <p class="mb-1">
+
+                                <strong>Tipo:</strong>
+
+                                {{ proximo_mantenimiento.get_tipo_display }}
+
+                            </p>
+
+
+                            <p class="mb-1">
+
+                                <strong>Estado:</strong>
+
+                                <span class="badge bg-warning text-dark">
+
+                                    {{ proximo_mantenimiento.get_estado_display }}
+
+                                </span>
+
+                            </p>
+
+
+                            <p class="mb-3">
+
+                                <strong>Fecha programada:</strong>
+
+                                {{ proximo_mantenimiento.fecha_programada|date:"d/m/Y" }}
+
+                            </p>
+
+
+                            <a
+                                href="{% url 'detalle_mantenimiento' proximo_mantenimiento.id %}"
+                                class="btn btn-outline-primary btn-sm"
+                            >
+
+                                <i class="bi bi-calendar-check"></i>
+                                Ver próximo mantenimiento
+
+                            </a>
+
+                        {% else %}
+
+                            <div class="text-muted mt-3">
+
+                                <i class="bi bi-calendar-x"></i>
+
+                                {% if mantenimiento.estado == "FINALIZADO" %}
+
+                                    No existe un próximo mantenimiento
+                                    programado.
+
+                                {% else %}
+
+                                    El próximo mantenimiento se generará
+                                    cuando este sea finalizado.
+
+                                {% endif %}
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
 
         </div>
 
     </div>
 
-    <!-- Costos y archivo -->
+
+    <!-- ======================================================
+         ACTIVIDADES DE LA GUÍA
+    ======================================================= -->
+
+    <div class="card shadow-sm border-0 mb-4">
+
+        <div class="card-header bg-info text-white">
+
+            <i class="bi bi-list-check"></i>
+            Actividades de Mantenimiento
+
+        </div>
+
+
+        <div class="card-body">
+
+            {% if actividades %}
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle">
+
+                        <thead>
+
+                            <tr>
+
+                                <th style="width: 70px;">
+                                    #
+                                </th>
+
+                                <th>
+                                    Actividad
+                                </th>
+
+                                <th style="width: 140px;">
+                                    Estado
+                                </th>
+
+                                <th>
+                                    Observación
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for item in actividades %}
+
+                                <tr>
+
+                                    <td>
+                                        {{ item.actividad.orden }}
+                                    </td>
+
+
+                                    <td>
+
+                                        {{ item.actividad.descripcion }}
+
+                                        {% if item.actividad.obligatorio %}
+
+                                            <span
+                                                class="badge bg-danger ms-2"
+                                            >
+                                                Obligatoria
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if item.realizada %}
+
+                                            <span class="badge bg-success">
+
+                                                <i class="bi bi-check-circle"></i>
+                                                Realizada
+
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge bg-secondary">
+
+                                                <i class="bi bi-dash-circle"></i>
+                                                No realizada
+
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if item.observacion %}
+
+                                            {{ item.observacion|linebreaks }}
+
+                                        {% else %}
+
+                                            <span class="text-muted">
+                                                Sin observación
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <div class="alert alert-secondary mb-0">
+
+                    <i class="bi bi-info-circle"></i>
+
+                    Este mantenimiento no tiene actividades
+                    registradas desde la guía de mantenimiento.
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- ======================================================
+         DESCRIPCIÓN Y RESULTADOS
+    ======================================================= -->
+
+    <div class="card shadow-sm border-0 mb-4">
+
+        <div class="card-header bg-info text-white">
+
+            <i class="bi bi-clipboard-check"></i>
+            Descripción y resultados
+
+        </div>
+
+
+        <div class="card-body">
+
+            <h6>
+                Descripción
+            </h6>
+
+            {% if mantenimiento.descripcion %}
+
+                {{ mantenimiento.descripcion|linebreaks }}
+
+            {% else %}
+
+                <span class="text-muted">
+                    No registra descripción.
+                </span>
+
+            {% endif %}
+
+
+            <hr>
+
+
+            <h6>
+                Actividades realizadas
+            </h6>
+
+            {% if mantenimiento.actividades_realizadas %}
+
+                {{ mantenimiento.actividades_realizadas|linebreaks }}
+
+            {% else %}
+
+                <span class="text-muted">
+                    No registra información adicional.
+                </span>
+
+            {% endif %}
+
+
+            <hr>
+
+
+            <h6>
+                Repuestos utilizados
+            </h6>
+
+            {% if mantenimiento.repuestos %}
+
+                {{ mantenimiento.repuestos|linebreaks }}
+
+            {% else %}
+
+                <span class="text-muted">
+                    No registra.
+                </span>
+
+            {% endif %}
+
+
+            <hr>
+
+
+            <h6>
+                Observaciones
+            </h6>
+
+            {% if mantenimiento.observaciones %}
+
+                {{ mantenimiento.observaciones|linebreaks }}
+
+            {% else %}
+
+                <span class="text-muted">
+                    Sin observaciones.
+                </span>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- ======================================================
+         COSTOS Y ARCHIVO
+    ======================================================= -->
 
     <div class="card shadow-sm border-0 mb-4">
 
         <div class="card-header bg-secondary text-white">
 
+            <i class="bi bi-folder2-open"></i>
             Cierre del mantenimiento
 
         </div>
 
+
         <div class="card-body">
 
-            <div class="row">
+            <div class="row g-4">
 
                 <div class="col-md-4">
 
                     <strong>Costo</strong><br>
 
-                    $ {{ mantenimiento.costo }}
+                    $ {{ mantenimiento.costo|default:"0" }}
 
                 </div>
+
 
                 <div class="col-md-8">
 
@@ -327,9 +897,11 @@ Detalle del Mantenimiento | SIGHI
 
                     {% if mantenimiento.archivo %}
 
-                        <a href="{{ mantenimiento.archivo.url }}"
-                           target="_blank"
-                           class="btn btn-outline-danger mt-2">
+                        <a
+                            href="{{ mantenimiento.archivo.url }}"
+                            target="_blank"
+                            class="btn btn-outline-danger mt-2"
+                        >
 
                             <i class="bi bi-file-earmark-pdf"></i>
 
@@ -339,7 +911,9 @@ Detalle del Mantenimiento | SIGHI
 
                     {% else %}
 
-                        No se adjuntó archivo.
+                        <span class="text-muted">
+                            No se adjuntó archivo.
+                        </span>
 
                     {% endif %}
 
@@ -351,17 +925,20 @@ Detalle del Mantenimiento | SIGHI
 
     </div>
 
-    <!-- ==========================================================
-        FIRMAS
-    ========================================================== -->
+
+    <!-- ======================================================
+         FIRMAS
+    ======================================================= -->
 
     <div class="card shadow-sm border-0 mt-4">
 
         <div class="card-header bg-dark text-white">
 
+            <i class="bi bi-pen"></i>
             Firmas
 
         </div>
+
 
         <div class="card-body">
 
@@ -374,6 +951,7 @@ Detalle del Mantenimiento | SIGHI
                     <h6 class="fw-bold mb-3">
                         Biomédico / Ingeniero
                     </h6>
+
 
                     {% if mantenimiento.firma_biomedico %}
 
@@ -412,6 +990,7 @@ Detalle del Mantenimiento | SIGHI
                         Responsable del Servicio
                     </h6>
 
+
                     {% if mantenimiento.firma_responsable %}
 
                         <div class="border rounded p-3 bg-light">
@@ -428,6 +1007,7 @@ Detalle del Mantenimiento | SIGHI
 
                         </div>
 
+
                         {% if mantenimiento.orden_trabajo %}
 
                             <div class="mt-2">
@@ -436,12 +1016,15 @@ Detalle del Mantenimiento | SIGHI
                                     {{ mantenimiento.orden_trabajo.responsable_nombre }}
                                 </strong>
 
+
                                 {% if mantenimiento.orden_trabajo.responsable_cargo %}
 
                                     <br>
 
                                     <small class="text-muted">
+
                                         {{ mantenimiento.orden_trabajo.responsable_cargo }}
+
                                     </small>
 
                                 {% endif %}
@@ -449,6 +1032,7 @@ Detalle del Mantenimiento | SIGHI
                             </div>
 
                         {% endif %}
+
 
                     {% else %}
 

@@ -1,0 +1,415 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ titulo }} | SIGHI
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+```
+<!-- ======================================================
+CABECERA
+======================================================= -->
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+
+        <h2 class="fw-bold">
+            <i class="bi bi-file-earmark-medical me-2"
+               style="color:#F25C05;">
+            </i>
+
+            Nueva Hoja de Vida
+        </h2>
+
+        <p class="text-muted mb-0">
+            Seleccione primero el servicio y posteriormente el equipo.
+        </p>
+
+    </div>
+
+    <a href="{% url 'lista_hojas_vida' %}"
+       class="btn btn-secondary">
+
+        <i class="bi bi-arrow-left me-1"></i>
+        Volver
+
+    </a>
+
+</div>
+
+
+<!-- ======================================================
+SELECCIÓN
+======================================================= -->
+
+<div class="row justify-content-center">
+
+    <div class="col-12 col-lg-8 col-xl-7">
+
+        <div class="card shadow-sm border-0">
+
+            <div class="card-header"
+                 style="
+                    background-color:#F25C05;
+                    color:white;
+                 ">
+
+                <h5 class="mb-0 fw-semibold">
+
+                    <i class="bi bi-diagram-3 me-2"></i>
+
+                    Selección del equipo
+
+                </h5>
+
+            </div>
+
+
+            <div class="card-body p-4">
+
+                <div class="alert alert-light border mb-4">
+
+                    <i class="bi bi-info-circle me-2"
+                       style="color:#F25C05;">
+                    </i>
+
+                    Seleccione el servicio donde se encuentra ubicado
+                    el equipo. Después seleccione el equipo al que
+                    desea crearle la Hoja de Vida.
+
+                </div>
+
+
+                <!-- ==================================================
+                SERVICIO
+                =================================================== -->
+
+                <div class="mb-4">
+
+                    <label class="form-label fw-semibold">
+
+                        <i class="bi bi-building me-1"
+                           style="color:#F25C05;">
+                        </i>
+
+                        Servicio
+
+                    </label>
+
+                    <select id="select-servicio"
+                            class="form-select form-select-lg">
+
+                        <option value="">
+                            Seleccione un servicio
+                        </option>
+
+                        {% for servicio in servicios %}
+
+                            <option value="{{ servicio.id }}">
+                                {{ servicio.nombre }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- ==================================================
+                EQUIPO
+                =================================================== -->
+
+                <div class="mb-4">
+
+                    <label class="form-label fw-semibold">
+
+                        <i class="bi bi-cpu me-1"
+                           style="color:#F25C05;">
+                        </i>
+
+                        Equipo
+
+                    </label>
+
+                    <select id="select-equipo"
+                            class="form-select form-select-lg"
+                            disabled>
+
+                        <option value="">
+                            Primero seleccione un servicio
+                        </option>
+
+                    </select>
+
+                    <div id="mensaje-equipos"
+                         class="form-text">
+
+                        Los equipos pertenecientes al servicio
+                        seleccionado aparecerán aquí.
+
+                    </div>
+
+                </div>
+
+
+                <!-- ==================================================
+                BOTÓN
+                =================================================== -->
+
+                <div class="d-flex justify-content-end gap-2">
+
+                    <a href="{% url 'lista_hojas_vida' %}"
+                       class="btn btn-secondary">
+
+                        <i class="bi bi-x-circle me-1"></i>
+
+                        Cancelar
+
+                    </a>
+
+                    <button type="button"
+                            id="btn-continuar"
+                            class="btn"
+                            style="
+                                background-color:#F25C05;
+                                color:white;
+                                border:none;
+                            "
+                            disabled>
+
+                        Continuar
+
+                        <i class="bi bi-arrow-right ms-1"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+```
+
+</div>
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const servicioSelect =
+            document.getElementById(
+                "select-servicio"
+            );
+
+        const equipoSelect =
+            document.getElementById(
+                "select-equipo"
+            );
+
+        const btnContinuar =
+            document.getElementById(
+                "btn-continuar"
+            );
+
+        const mensaje =
+            document.getElementById(
+                "mensaje-equipos"
+            );
+
+
+        servicioSelect.addEventListener(
+            "change",
+            function () {
+
+                const servicioId =
+                    this.value;
+
+
+                equipoSelect.innerHTML = "";
+
+                btnContinuar.disabled = true;
+
+
+                if (!servicioId) {
+
+                    equipoSelect.disabled = true;
+
+                    equipoSelect.innerHTML = `
+                        <option value="">
+                            Primero seleccione un servicio
+                        </option>
+                    `;
+
+                    mensaje.textContent =
+                        "Los equipos pertenecientes al servicio seleccionado aparecerán aquí.";
+
+                    return;
+
+                }
+
+
+                equipoSelect.disabled = true;
+
+                equipoSelect.innerHTML = `
+                    <option value="">
+                        Cargando equipos...
+                    </option>
+                `;
+
+
+                fetch(
+                    "{% url 'equipos_por_servicio' %}?servicio="
+                    + servicioId
+                )
+
+                .then(
+                    response => {
+
+                        if (!response.ok) {
+
+                            throw new Error(
+                                "No fue posible cargar los equipos."
+                            );
+
+                        }
+
+                        return response.json();
+
+                    }
+                )
+
+                .then(
+                    data => {
+
+                        equipoSelect.innerHTML = "";
+
+                        const opcionInicial =
+                            document.createElement(
+                                "option"
+                            );
+
+                        opcionInicial.value = "";
+                        opcionInicial.textContent =
+                            "Seleccione un equipo";
+
+                        equipoSelect.appendChild(
+                            opcionInicial
+                        );
+
+
+                        if (
+                            !data.equipos ||
+                            data.equipos.length === 0
+                        ) {
+
+                            equipoSelect.disabled = true;
+
+                            mensaje.textContent =
+                                "No existen equipos registrados en este servicio.";
+
+                            return;
+
+                        }
+
+
+                        data.equipos.forEach(
+                            function (equipo) {
+
+                                const opcion =
+                                    document.createElement(
+                                        "option"
+                                    );
+
+                                opcion.value =
+                                    equipo.id;
+
+                                opcion.textContent =
+                                    equipo.nombre;
+
+                                equipoSelect.appendChild(
+                                    opcion
+                                );
+
+                            }
+                        );
+
+
+                        equipoSelect.disabled = false;
+
+                        mensaje.textContent =
+                            data.equipos.length
+                            + " equipo(s) disponible(s).";
+
+                    }
+                )
+
+                .catch(
+                    function (error) {
+
+                        console.error(error);
+
+                        equipoSelect.innerHTML = `
+                            <option value="">
+                                Error al cargar los equipos
+                            </option>
+                        `;
+
+                        equipoSelect.disabled = true;
+
+                        mensaje.textContent =
+                            "No fue posible cargar los equipos.";
+
+                    }
+                );
+
+            }
+        );
+
+
+        equipoSelect.addEventListener(
+            "change",
+            function () {
+
+                btnContinuar.disabled =
+                    !this.value;
+
+            }
+        );
+
+
+        btnContinuar.addEventListener(
+            "click",
+            function () {
+
+                const equipoId =
+                    equipoSelect.value;
+
+                if (!equipoId) {
+                    return;
+                }
+
+                window.location.href =
+                    "{% url 'crear_hoja_vida' %}"
+                    + "?equipo="
+                    + equipoId;
+
+            }
+        );
+
+    }
+);
+
+</script>
+
+{% endblock %}

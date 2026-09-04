@@ -3,11 +3,12 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-
+from django.http import JsonResponse
+from apps.calibraciones.models import Calibracion
 from apps import hojas_vida
 from apps.mantenimiento.models import Mantenimiento
 from apps.usuarios.decorators import rol_requerido
-
+from apps.inspecciones.models import Inspeccion, DetalleInspeccion
 from .forms import (
     AccesorioHojaVidaForm,
     DocumentacionHojaVidaForm,
@@ -22,7 +23,7 @@ from .models import (
     AccesorioHojaVida,
 )
 from apps.equipos.models import Equipo
-
+from apps.servicios.models import Servicio
 # ==========================================================
 # CAMPOS TÉCNICOS DINÁMICOS
 # ==========================================================
@@ -172,11 +173,46 @@ def lista_hojas_vida(request):
 @rol_requerido(["SUPERADMIN", "ADMIN"])
 def crear_hoja_vida(request):
 
+    # ==========================================================
+    # PASO 1: SELECCIÓN DE SERVICIO Y EQUIPO
+    # ==========================================================
+
+    equipo_id = request.GET.get("equipo")
+
+    if not equipo_id and request.method == "GET":
+
+        servicios = Servicio.objects.all().order_by("nombre")
+
+        return render(
+            request,
+            "hojas_vida/seleccionar_equipo.html",
+            {
+                "servicios": servicios,
+                "titulo": "Nueva Hoja de Vida",
+            },
+        )
+
+    # ==========================================================
+    # EQUIPO SELECCIONADO
+    # ==========================================================
+
     equipo = None
     catalogo = None
 
+    if equipo_id:
+
+        equipo = get_object_or_404(
+            Equipo.objects.select_related(
+                "catalogo",
+                "servicio",
+            ),
+            id=equipo_id,
+        )
+
+        catalogo = equipo.catalogo
+
     # ==========================================================
-    # POST
+    # POST DEL FORMULARIO PRINCIPAL
     # ==========================================================
 
     if request.method == "POST":
@@ -186,33 +222,24 @@ def crear_hoja_vida(request):
             request.FILES,
         )
 
-        # ======================================================
-        # EQUIPO Y CATÁLOGO
-        # ======================================================
+        equipo_id_post = request.POST.get("equipo")
 
-        equipo_id = request.POST.get("equipo")
-
-        if equipo_id:
+        if equipo_id_post:
 
             equipo = get_object_or_404(
-                Equipo.objects.select_related("catalogo"),
-                id=equipo_id,
+                Equipo.objects.select_related(
+                    "catalogo",
+                    "servicio",
+                ),
+                id=equipo_id_post,
             )
 
             catalogo = equipo.catalogo
-
-        # ======================================================
-        # CAMPOS TÉCNICOS
-        # ======================================================
 
         form_tecnico = CamposTecnicosForm(
             request.POST,
             catalogo=catalogo,
         )
-
-        # ======================================================
-        # DOCUMENTACIÓN
-        # ======================================================
 
         formset_documentos = DocumentacionHojaVidaFormSet(
             request.POST,
@@ -220,10 +247,6 @@ def crear_hoja_vida(request):
             instance=form.instance,
             prefix="documentos",
         )
-
-        # ======================================================
-        # VALIDACIÓN
-        # ======================================================
 
         if (
             form.is_valid()
@@ -235,27 +258,13 @@ def crear_hoja_vida(request):
 
                 hoja = form.save(commit=False)
 
-                # ==============================================
-                # SINCRONIZAR CATÁLOGO
-                # ==============================================
-
                 if equipo and catalogo:
-
                     hoja.sincronizar_catalogo()
 
                 hoja.save()
 
-                # ==============================================
-                # GUARDAR DOCUMENTOS
-                # ==============================================
-
                 formset_documentos.instance = hoja
-
                 formset_documentos.save()
-
-                # ==============================================
-                # GUARDAR CAMPOS TÉCNICOS
-                # ==============================================
 
                 for nombre, campo_form in form_tecnico.fields.items():
 
@@ -265,15 +274,11 @@ def crear_hoja_vida(request):
                     ):
                         continue
 
-                    campo_tecnico = (
-                        campo_form.campo_tecnico
-                    )
+                    campo_tecnico = campo_form.campo_tecnico
 
-                    valor = (
-                        form_tecnico.cleaned_data.get(
-                            nombre,
-                            "",
-                        )
+                    valor = form_tecnico.cleaned_data.get(
+                        nombre,
+                        "",
                     )
 
                     ValorCampoTecnico.objects.update_or_create(
@@ -306,15 +311,21 @@ def crear_hoja_vida(request):
                 hoja.id,
             )
 
-    # ==========================================================
-    # GET
-    # ==========================================================
-
     else:
 
         form = HojaVidaForm()
 
-        form_tecnico = CamposTecnicosForm()
+        # ======================================================
+        # DEJAR EL EQUIPO PRESELECCIONADO
+        # ======================================================
+
+        if equipo:
+
+            form.fields["equipo"].initial = equipo
+
+        form_tecnico = CamposTecnicosForm(
+            catalogo=catalogo,
+        )
 
         formset_documentos = DocumentacionHojaVidaFormSet(
             instance=form.instance,
@@ -333,8 +344,6 @@ def crear_hoja_vida(request):
             "catalogo": catalogo,
         },
     )
-
-
 # ==========================================================
 # EDITAR HOJA DE VIDA
 # ==========================================================
@@ -544,7 +553,34 @@ def detalle_hoja_vida(request, id):
     # ==========================================================
 
     documentos = hoja.documentos.all()
-
+        # ==========================================================
+    # INSPECCIONES DEL EQUIPO
+    # ==========================================================
+    calibraciones = (
+        Calibracion.objects
+        .filter(equipo=hoja.equipo)
+        .order_by("-fecha_calibracion", "-creado")
+    )
+    inspecciones = (
+        Inspeccion.objects
+        .filter(
+            detalles__equipo=hoja.equipo
+        )
+        .select_related(
+            "institucion",
+            "servicio",
+            "biomedico",
+        )
+        .prefetch_related(
+            "detalles",
+            "firma",
+        )
+        .distinct()
+        .order_by(
+            "-fecha",
+            "-hora_inicio",
+        )
+    )
     # ==========================================================
     # INDICADORES
     # ==========================================================
@@ -607,14 +643,14 @@ def detalle_hoja_vida(request, id):
 
         "documentos": documentos,
 
+        "calibraciones": calibraciones,
+
         # Próximos módulos
 
-        "calibraciones": [],
-
-        "inspecciones": [],
+        "inspecciones": inspecciones,
 
         "tecnovigilancias": [],
-
+    
         # Indicadores
 
         "total_mantenimientos": total_mantenimientos,
@@ -637,4 +673,45 @@ def detalle_hoja_vida(request, id):
         request,
         "hojas_vida/detalle.html",
         context,
+    )
+
+@login_required
+@rol_requerido(["SUPERADMIN", "ADMIN"])
+def equipos_por_servicio(request):
+
+    servicio_id = request.GET.get("servicio")
+
+    if not servicio_id:
+        return JsonResponse(
+            {
+                "equipos": []
+            }
+        )
+
+    equipos = (
+        Equipo.objects
+        .filter(servicio_id=servicio_id)
+        .order_by("nombre", "codigo")
+    )
+
+    data = []
+
+    for equipo in equipos:
+
+        nombre = equipo.nombre
+
+        if equipo.codigo:
+            nombre += f" — {equipo.codigo}"
+
+        data.append(
+            {
+                "id": equipo.id,
+                "nombre": nombre,
+            }
+        )
+
+    return JsonResponse(
+        {
+            "equipos": data
+        }
     )

@@ -1,330 +1,1832 @@
+
 {% extends "base.html" %}
 
 {% block title %}
-{{ titulo }} | SIGHI
+    {{ titulo }} | Mantenimiento
 {% endblock %}
 
 {% block content %}
 
-<div class="container-fluid">
+<div class="container-fluid py-4">
+
+    <!-- =====================================================
+         ENCABEZADO
+         ===================================================== -->
 
     <div class="d-flex justify-content-between align-items-center mb-4">
 
         <div>
-
-            <h2 class="fw-bold">
-
+            <h2 class="fw-bold mb-1">
+                <i class="bi bi-tools"></i>
                 {{ titulo }}
-
             </h2>
 
-            <p class="text-muted">
-
-                Orden de Trabajo de Mantenimiento
-
+            <p class="text-muted mb-0">
+                Registro de mantenimiento de equipos
             </p>
+        </div>
+
+
+        <div>
+
+            {% if orden %}
+
+                <a
+                    href="{% url 'detalle_orden_trabajo' orden.id %}"
+                    class="btn btn-outline-secondary"
+                >
+                    <i class="bi bi-arrow-left"></i>
+                    Volver a la Orden de Trabajo
+                </a>
+
+            {% else %}
+
+                <a
+                    href="{% url 'lista_mantenimientos' %}"
+                    class="btn btn-outline-secondary"
+                >
+                    <i class="bi bi-arrow-left"></i>
+                    Volver
+                </a>
+
+            {% endif %}
 
         </div>
 
-        {% if orden %}
-            <a href="{% url 'detalle_orden_trabajo' orden.id %}"
-            class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i>
-                Volver
-            </a>
-        {% else %}
-            <a href="{% url 'lista_mantenimientos' %}"
-            class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i>
-                Volver
-            </a>
-        {% endif %}
-
     </div>
 
+
+    <!-- =====================================================
+         MENSAJES DE DJANGO
+         ===================================================== -->
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div
+                class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show"
+                role="alert"
+            >
+
+                {{ message }}
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Cerrar"
+                ></button>
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <!-- =====================================================
+         ERRORES GENERALES DEL FORMULARIO
+         ===================================================== -->
+
+    {% if form.non_field_errors %}
+
+        <div class="alert alert-danger">
+
+            <strong>
+                <i class="bi bi-exclamation-triangle"></i>
+                No se puede guardar el mantenimiento:
+            </strong>
+
+            <ul class="mb-0 mt-2">
+
+                {% for error in form.non_field_errors %}
+
+                    <li>{{ error }}</li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+    {% endif %}
+
+
+    <!-- =====================================================
+         FORMULARIO
+         ===================================================== -->
+
     <form
-        method="POST"
-        enctype="multipart/form-data">
+        method="post"
+        enctype="multipart/form-data"
+        id="formMantenimiento"
+    >
 
         {% csrf_token %}
 
-        <div class="card shadow-sm border-0">
+
+        <!-- =================================================
+             1. INFORMACIÓN GENERAL
+             ================================================= -->
+
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header bg-primary text-white">
+
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    Información general
+                </h5>
+
+            </div>
+
 
             <div class="card-body">
 
-                {% if form.errors %}
-
-                <div class="alert alert-danger">
-
-                    <strong>
-
-                        Corrija los siguientes errores
-
-                    </strong>
-
-                    <hr>
-
-                    {{ form.errors }}
-
-                </div>
-
-                {% endif %}
-
-                <!-- ===========================
-                     INFORMACIÓN GENERAL
-                ============================ -->
-
-                <h5 class="fw-bold mb-3">
-
-                    Información General
-
-                </h5>
-
                 <div class="row">
+
+
+                    <!-- =====================================
+                         SERVICIO
+                         ===================================== -->
 
                     <div class="col-md-6 mb-3">
 
-                        <label class="form-label">
+                        <label
+                            for="{{ form.servicio.id_for_label }}"
+                            class="form-label fw-semibold"
+                        >
+                            Servicio
+                            <span class="text-danger">*</span>
+                        </label>
 
+                        {{ form.servicio }}
+
+                        {% if form.servicio.help_text %}
+
+                            <div class="form-text">
+                                {{ form.servicio.help_text }}
+                            </div>
+
+                        {% endif %}
+
+                        {% for error in form.servicio.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <!-- =====================================
+                         EQUIPO
+                         ===================================== -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label
+                            for="{{ form.hoja_vida.id_for_label }}"
+                            class="form-label fw-semibold"
+                        >
                             Equipo
-
+                            <span class="text-danger">*</span>
                         </label>
 
                         {{ form.hoja_vida }}
 
+                        <div class="form-text">
+                            Seleccione primero el servicio.
+                        </div>
+
+                        {% for error in form.hoja_vida.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
                     </div>
 
-                    <div class="col-md-3 mb-3">
+                </div>
 
-                        <label class="form-label">
 
-                            Tipo
+                <!-- =========================================
+                     INFORMACIÓN DEL EQUIPO
+                     ========================================= -->
 
+                <div
+                    id="informacionEquipo"
+                    class="alert alert-light border mb-3"
+                    style="display: none;"
+                >
+
+                    <div class="row">
+
+                        <div class="col-md-3 mb-2 mb-md-0">
+
+                            <small class="text-muted d-block">
+                                Equipo
+                            </small>
+
+                            <div
+                                id="equipoNombre"
+                                class="fw-bold"
+                            >
+                                -
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-md-3 mb-2 mb-md-0">
+
+                            <small class="text-muted d-block">
+                                Serial
+                            </small>
+
+                            <div
+                                id="equipoSerial"
+                                class="fw-bold"
+                            >
+                                -
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-md-3 mb-2 mb-md-0">
+
+                            <small class="text-muted d-block">
+                                Código
+                            </small>
+
+                            <div
+                                id="equipoCodigo"
+                                class="fw-bold"
+                            >
+                                -
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-md-3">
+
+                            <small class="text-muted d-block">
+                                Marca / Modelo
+                            </small>
+
+                            <div
+                                id="equipoMarcaModelo"
+                                class="fw-bold"
+                            >
+                                -
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="row">
+
+
+                    <!-- =====================================
+                         TIPO
+                         ===================================== -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label
+                            for="{{ form.tipo.id_for_label }}"
+                            class="form-label fw-semibold"
+                        >
+                            Tipo de mantenimiento
+                            <span class="text-danger">*</span>
                         </label>
 
                         {{ form.tipo }}
 
+                        {% for error in form.tipo.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
                     </div>
 
-                    <div class="col-md-3 mb-3">
 
-                        <label class="form-label">
+                    <!-- =====================================
+                         ESTADO
+                         ===================================== -->
 
+                    <div class="col-md-6 mb-3">
+
+                        <label
+                            for="{{ form.estado.id_for_label }}"
+                            class="form-label fw-semibold"
+                        >
                             Estado
-
+                            <span class="text-danger">*</span>
                         </label>
 
                         {{ form.estado }}
 
+                        {% for error in form.estado.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
                     </div>
 
                 </div>
 
-                <!-- ===========================
-                     FECHAS
-                ============================ -->
+            </div>
 
-                <h5 class="fw-bold mt-4 mb-3">
+        </div>
 
-                    Fechas
 
+        <!-- =================================================
+             2. FECHAS
+             ================================================= -->
+
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header">
+
+                <h5 class="mb-0">
+                    <i class="bi bi-calendar-event"></i>
+                    Fechas del mantenimiento
                 </h5>
+
+            </div>
+
+
+            <div class="card-body">
 
                 <div class="row">
 
+
                     <div class="col-md-4 mb-3">
 
-                        <label class="form-label">
-
-                            Programada
-
+                        <label
+                            for="{{ form.fecha_programada.id_for_label }}"
+                            class="form-label fw-semibold"
+                        >
+                            Fecha programada
+                            <span class="text-danger">*</span>
                         </label>
 
                         {{ form.fecha_programada }}
 
+                        {% for error in form.fecha_programada.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
                     </div>
+
 
                     <div class="col-md-4 mb-3">
 
-                        <label class="form-label">
-
-                            Inicio
-
+                        <label
+                            for="{{ form.fecha_inicio.id_for_label }}"
+                            class="form-label fw-semibold"
+                        >
+                            Fecha de inicio
                         </label>
 
                         {{ form.fecha_inicio }}
 
+                        {% for error in form.fecha_inicio.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
                     </div>
+
 
                     <div class="col-md-4 mb-3">
 
-                        <label class="form-label">
-
-                            Finalización
-
+                        <label
+                            for="{{ form.fecha_fin.id_for_label }}"
+                            class="form-label fw-semibold"
+                        >
+                            Fecha de finalización
                         </label>
 
                         {{ form.fecha_fin }}
 
+                        {% for error in form.fecha_fin.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
                     </div>
 
                 </div>
 
-                <!-- ===========================
-                     RESPONSABLE
-                ============================ -->
+            </div>
 
-                <h5 class="fw-bold mt-4 mb-3">
+        </div>
 
-                    Responsable
 
+        <!-- =================================================
+             3. RESPONSABLE
+             ================================================= -->
+
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header">
+
+                <h5 class="mb-0">
+                    <i class="bi bi-person-badge"></i>
+                    Responsable del mantenimiento
                 </h5>
+
+            </div>
+
+
+            <div class="card-body">
 
                 <div class="row">
 
+
                     <div class="col-md-6 mb-3">
 
-                        <label class="form-label">
-
+                        <label
+                            for="{{ form.ingeniero.id_for_label }}"
+                            class="form-label fw-semibold"
+                        >
                             Ingeniero / Biomédico
-
                         </label>
 
                         {{ form.ingeniero }}
 
+                        {% for error in form.ingeniero.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
                     </div>
+
 
                     <div class="col-md-6 mb-3">
 
-                        <label class="form-label">
-
+                        <label
+                            for="{{ form.empresa.id_for_label }}"
+                            class="form-label fw-semibold"
+                        >
                             Empresa
-
                         </label>
 
                         {{ form.empresa }}
 
+                        {% for error in form.empresa.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
                     </div>
 
                 </div>
 
-                <!-- ===========================
-                     ACTIVIDADES
-                ============================ -->
+            </div>
 
-                <h5 class="fw-bold mt-4 mb-3">
+        </div>
 
+
+        <!-- =================================================
+             4. TRABAJO REALIZADO
+             ================================================= -->
+
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header bg-light">
+
+                <h5 class="mb-0">
+                    <i class="bi bi-wrench-adjustable"></i>
                     Trabajo realizado
-
                 </h5>
 
-                <div class="mb-3">
+            </div>
 
-                    <label class="form-label">
 
-                        Descripción
+            <div class="card-body">
 
+
+                <!-- =========================================
+                     DESCRIPCIÓN
+                     ========================================= -->
+
+                <div class="mb-4">
+
+                    <label
+                        for="{{ form.descripcion.id_for_label }}"
+                        class="form-label fw-semibold"
+                    >
+                        Descripción del trabajo realizado
+                        <span class="text-danger">*</span>
                     </label>
 
                     {{ form.descripcion }}
 
+                    {% for error in form.descripcion.errors %}
+
+                        <div class="text-danger small mt-1">
+                            {{ error }}
+                        </div>
+
+                    {% endfor %}
+
                 </div>
 
-                <div class="mb-3">
 
-                    <label class="form-label">
+                <!-- =========================================
+                     GUÍA DE MANTENIMIENTO
+                     ========================================= -->
 
-                        Actividades realizadas
+                <div
+                    id="contenedorGuia"
+                    class="mt-4"
+                    style="display: none;"
+                >
 
-                    </label>
+                    <div class="card border">
+
+                        <div class="card-header bg-primary text-white">
+
+                            <div
+                                class="d-flex justify-content-between align-items-center"
+                            >
+
+                                <div>
+
+                                    <i class="bi bi-clipboard-check"></i>
+
+                                    <strong>
+                                        Guía de Mantenimiento
+                                    </strong>
+
+                                </div>
+
+
+                                <span
+                                    id="frecuenciaMantenimiento"
+                                    class="badge bg-light text-dark"
+                                ></span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="card-body">
+
+                            <h5
+                                id="nombreGuia"
+                                class="fw-bold mb-3"
+                            ></h5>
+
+
+                            <div
+                                id="mensajeGuia"
+                                class="alert alert-info"
+                                style="display: none;"
+                            ></div>
+
+
+                            <div
+                                id="listaActividades"
+                            ></div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =========================================
+                     CAMPO LEGACY
+                     =========================================
+
+                     Este campo se conserva oculto para que
+                     las Órdenes de Trabajo y su PDF sigan
+                     funcionando correctamente.
+                     -->
+
+                <div style="display: none;">
 
                     {{ form.actividades_realizadas }}
 
                 </div>
 
-                <div class="mb-3">
 
-                    <label class="form-label">
+                <!-- =========================================
+                     REPUESTOS
+                     ========================================= -->
 
+                <div class="mt-4 mb-3">
+
+                    <label
+                        for="{{ form.repuestos.id_for_label }}"
+                        class="form-label fw-semibold"
+                    >
                         Repuestos utilizados
-
                     </label>
 
                     {{ form.repuestos }}
 
+                    {% for error in form.repuestos.errors %}
+
+                        <div class="text-danger small mt-1">
+                            {{ error }}
+                        </div>
+
+                    {% endfor %}
+
                 </div>
 
-                <!-- ===========================
-                     CIERRE
-                ============================ -->
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             5. CIERRE
+             ================================================= -->
+
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header">
+
+                <h5 class="mb-0">
+                    <i class="bi bi-clipboard-check"></i>
+                    Cierre del mantenimiento
+                </h5>
+
+            </div>
+
+
+            <div class="card-body">
 
                 <div class="row">
 
-                    <div class="col-md-4 mb-3">
 
-                        <label class="form-label">
+                    <!-- =====================================
+                         COSTO
+                         ===================================== -->
 
+                    <div class="col-md-6 mb-3">
+
+                        <label
+                            for="{{ form.costo.id_for_label }}"
+                            class="form-label fw-semibold"
+                        >
                             Costo
-
                         </label>
 
                         {{ form.costo }}
 
+                        {% for error in form.costo.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
                     </div>
 
-                    <div class="col-md-8 mb-3">
 
-                        <label class="form-label">
+                    <!-- =====================================
+                         ARCHIVO
+                         ===================================== -->
 
-                            Archivo (PDF)
+                    <div class="col-md-6 mb-3">
 
+                        <label
+                            for="{{ form.archivo.id_for_label }}"
+                            class="form-label fw-semibold"
+                        >
+                            Archivo / Informe de mantenimiento
                         </label>
 
                         {{ form.archivo }}
+
+                        {% if mantenimiento.archivo %}
+
+                            <div class="form-text">
+
+                                Archivo actual:
+
+                                <a
+                                    href="{{ mantenimiento.archivo.url }}"
+                                    target="_blank"
+                                >
+                                    Ver archivo
+                                </a>
+
+                            </div>
+
+                        {% endif %}
+
+                        {% for error in form.archivo.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
                     </div>
 
                 </div>
 
+
+                <!-- =========================================
+                     OBSERVACIONES
+                     ========================================= -->
+
                 <div class="mb-3">
 
-                    <label class="form-label">
-
-                        Observaciones
-
+                    <label
+                        for="{{ form.observaciones.id_for_label }}"
+                        class="form-label fw-semibold"
+                    >
+                        Observaciones generales
                     </label>
 
                     {{ form.observaciones }}
 
+                    {% for error in form.observaciones.errors %}
+
+                        <div class="text-danger small mt-1">
+                            {{ error }}
+                        </div>
+
+                    {% endfor %}
+
                 </div>
 
             </div>
 
-            <div class="card-footer bg-white text-end">
+        </div>
+
+
+        <!-- =================================================
+             BOTONES
+             ================================================= -->
+
+        <div
+            class="d-flex justify-content-end gap-2 mb-5"
+        >
+
+            {% if orden %}
+
+                <a
+                    href="{% url 'detalle_orden_trabajo' orden.id %}"
+                    class="btn btn-outline-secondary"
+                >
+                    <i class="bi bi-x-circle"></i>
+                    Cancelar
+                </a>
+
+            {% else %}
 
                 <a
                     href="{% url 'lista_mantenimientos' %}"
-                    class="btn btn-secondary">
-
+                    class="btn btn-outline-secondary"
+                >
+                    <i class="bi bi-x-circle"></i>
                     Cancelar
-
                 </a>
 
-                <button
-                    type="submit"
-                    class="btn btn-primary">
+            {% endif %}
 
-                    <i class="bi bi-save"></i>
 
-                    Guardar mantenimiento
+            <button
+                type="submit"
+                class="btn btn-primary px-4"
+                id="btnGuardar"
+            >
 
-                </button>
+                <i class="bi bi-save"></i>
+                Guardar mantenimiento
 
-            </div>
+            </button>
 
         </div>
 
     </form>
 
 </div>
+
+
+<!-- =========================================================
+     DATOS DE ACTIVIDADES GUARDADAS
+     =========================================================
+     -->
+
+{{ actividades_guardadas|default:"[]"|json_script:"actividades-guardadas-data" }}
+
+
+<!-- =========================================================
+     JAVASCRIPT
+     ========================================================= -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    /* =====================================================
+       ELEMENTOS PRINCIPALES
+       ===================================================== */
+
+    const servicioSelect = document.getElementById("id_servicio");
+    const equipoSelect = document.getElementById("id_hoja_vida");
+    const formulario = document.getElementById("formMantenimiento");
+
+    /* =====================================================
+       INFORMACIÓN DEL EQUIPO
+       ===================================================== */
+
+    const informacionEquipo = document.getElementById("informacionEquipo");
+    const equipoNombre = document.getElementById("equipoNombre");
+    const equipoSerial = document.getElementById("equipoSerial");
+    const equipoCodigo = document.getElementById("equipoCodigo");
+    const equipoMarcaModelo = document.getElementById("equipoMarcaModelo");
+
+    /* =====================================================
+       GUÍA DE MANTENIMIENTO
+       ===================================================== */
+
+    const contenedorGuia = document.getElementById("contenedorGuia");
+    const nombreGuia = document.getElementById("nombreGuia");
+    const listaActividades = document.getElementById("listaActividades");
+    const mensajeGuia = document.getElementById("mensajeGuia");
+    const frecuenciaMantenimiento = document.getElementById(
+        "frecuenciaMantenimiento"
+    );
+
+    /* =====================================================
+       CAMPO LEGACY
+       ===================================================== */
+
+    const actividadesRealizadas = document.getElementById(
+        "id_actividades_realizadas"
+    );
+
+    /* =====================================================
+       ACTIVIDADES GUARDADAS
+       ===================================================== */
+
+    let actividadesGuardadas = [];
+
+    const elementoActividadesGuardadas = document.getElementById(
+        "actividades-guardadas-data"
+    );
+
+    if (elementoActividadesGuardadas) {
+        try {
+            actividadesGuardadas = JSON.parse(
+                elementoActividadesGuardadas.textContent
+            );
+
+            if (!Array.isArray(actividadesGuardadas)) {
+                actividadesGuardadas = [];
+            }
+
+            actividadesGuardadas = actividadesGuardadas.map(
+                Number
+            );
+
+        } catch (error) {
+            console.error(
+                "Error leyendo actividades guardadas:",
+                error
+            );
+
+            actividadesGuardadas = [];
+        }
+    }
+
+    /* =====================================================
+       OCULTAR INFORMACIÓN DEL EQUIPO
+       ===================================================== */
+
+    function ocultarInformacionEquipo() {
+
+        if (informacionEquipo) {
+            informacionEquipo.style.display = "none";
+        }
+
+        if (equipoNombre) {
+            equipoNombre.textContent = "-";
+        }
+
+        if (equipoSerial) {
+            equipoSerial.textContent = "-";
+        }
+
+        if (equipoCodigo) {
+            equipoCodigo.textContent = "-";
+        }
+
+        if (equipoMarcaModelo) {
+            equipoMarcaModelo.textContent = "-";
+        }
+    }
+
+    /* =====================================================
+       MOSTRAR INFORMACIÓN DEL EQUIPO
+       ===================================================== */
+
+    function actualizarInformacionEquipo() {
+
+        if (!equipoSelect) {
+            return;
+        }
+
+        const option =
+            equipoSelect.options[equipoSelect.selectedIndex];
+
+        if (
+            !option ||
+            !option.value ||
+            !option.dataset.nombre
+        ) {
+            ocultarInformacionEquipo();
+            return;
+        }
+
+        if (equipoNombre) {
+            equipoNombre.textContent =
+                option.dataset.nombre || "-";
+        }
+
+        if (equipoSerial) {
+            equipoSerial.textContent =
+                option.dataset.serie || "Sin serial";
+        }
+
+        if (equipoCodigo) {
+            equipoCodigo.textContent =
+                option.dataset.codigo || "Sin código";
+        }
+
+        const marca = option.dataset.marca || "";
+        const modelo = option.dataset.modelo || "";
+
+        let marcaModelo = "-";
+
+        if (marca && modelo) {
+            marcaModelo = marca + " / " + modelo;
+        } else if (marca) {
+            marcaModelo = marca;
+        } else if (modelo) {
+            marcaModelo = modelo;
+        }
+
+        if (equipoMarcaModelo) {
+            equipoMarcaModelo.textContent = marcaModelo;
+        }
+
+        if (informacionEquipo) {
+            informacionEquipo.style.display = "block";
+        }
+    }
+
+    /* =====================================================
+       OCULTAR GUÍA
+       ===================================================== */
+
+    function ocultarGuia() {
+
+        if (contenedorGuia) {
+            contenedorGuia.style.display = "none";
+        }
+
+        if (nombreGuia) {
+            nombreGuia.textContent = "";
+        }
+
+        if (listaActividades) {
+            listaActividades.innerHTML = "";
+        }
+
+        if (mensajeGuia) {
+            mensajeGuia.style.display = "none";
+            mensajeGuia.textContent = "";
+        }
+
+        if (frecuenciaMantenimiento) {
+            frecuenciaMantenimiento.textContent = "";
+        }
+    }
+
+    /* =====================================================
+       CARGAR EQUIPOS POR SERVICIO
+       ===================================================== */
+
+    function cargarEquipos(
+        servicioId,
+        equipoSeleccionado = null
+    ) {
+
+        if (!equipoSelect) {
+            return;
+        }
+
+        /* -----------------------------------------------
+           SIN SERVICIO
+           ----------------------------------------------- */
+
+        if (!servicioId) {
+
+            equipoSelect.innerHTML =
+                '<option value="">Seleccione primero un servicio</option>';
+
+            equipoSelect.disabled = true;
+
+            ocultarInformacionEquipo();
+            ocultarGuia();
+
+            return;
+        }
+
+        /* -----------------------------------------------
+           CARGANDO
+           ----------------------------------------------- */
+
+        equipoSelect.disabled = true;
+
+        equipoSelect.innerHTML =
+            '<option value="">Cargando equipos...</option>';
+
+        /* -----------------------------------------------
+           URL
+           ----------------------------------------------- */
+
+        const url =
+            "{% url 'equipos_por_servicio' %}" +
+            "?servicio=" +
+            encodeURIComponent(servicioId);
+
+        /* -----------------------------------------------
+           CONSULTA
+           ----------------------------------------------- */
+
+        fetch(url)
+
+            .then(function (response) {
+
+                if (!response.ok) {
+                    throw new Error(
+                        "No fue posible cargar los equipos."
+                    );
+                }
+
+                return response.json();
+            })
+
+            .then(function (data) {
+
+                equipoSelect.innerHTML =
+                    '<option value="">Seleccione un equipo</option>';
+
+                /* ---------------------------------------
+                   ERROR
+                   --------------------------------------- */
+
+                if (data.error) {
+
+                    equipoSelect.innerHTML =
+                        '<option value="">' +
+                        data.error +
+                        '</option>';
+
+                    equipoSelect.disabled = true;
+
+                    ocultarInformacionEquipo();
+                    ocultarGuia();
+
+                    return;
+                }
+
+                /* ---------------------------------------
+                   SIN EQUIPOS
+                   --------------------------------------- */
+
+                if (
+                    !data.equipos ||
+                    data.equipos.length === 0
+                ) {
+
+                    equipoSelect.innerHTML =
+                        '<option value="">' +
+                        'No hay equipos con hoja de vida en este servicio' +
+                        '</option>';
+
+                    equipoSelect.disabled = true;
+
+                    ocultarInformacionEquipo();
+                    ocultarGuia();
+
+                    return;
+                }
+
+                /* ---------------------------------------
+                   CREAR OPCIONES
+                   --------------------------------------- */
+
+                data.equipos.forEach(function (equipo) {
+
+                    const option =
+                        document.createElement("option");
+
+                    option.value = equipo.id;
+
+                    option.textContent =
+                        equipo.nombre +
+                        " | Serial: " +
+                        (equipo.serie || "Sin serial") +
+                        " | Código: " +
+                        (equipo.codigo || "Sin código");
+
+                    /* Datos para mostrar en pantalla */
+
+                    option.dataset.nombre =
+                        equipo.nombre || "";
+
+                    option.dataset.serie =
+                        equipo.serie || "";
+
+                    option.dataset.codigo =
+                        equipo.codigo || "";
+
+                    option.dataset.marca =
+                        equipo.marca || "";
+
+                    option.dataset.modelo =
+                        equipo.modelo || "";
+
+                    /* Mantener selección en edición */
+
+                    if (
+                        equipoSeleccionado &&
+                        String(equipo.id) ===
+                        String(equipoSeleccionado)
+                    ) {
+                        option.selected = true;
+                    }
+
+                    equipoSelect.appendChild(option);
+                });
+
+                equipoSelect.disabled = false;
+
+                actualizarInformacionEquipo();
+
+                /* ---------------------------------------
+                   CARGAR GUÍA DEL EQUIPO
+                   --------------------------------------- */
+
+                if (equipoSelect.value) {
+
+                    cargarGuia(
+                        equipoSelect.value
+                    );
+
+                } else {
+
+                    ocultarGuia();
+                }
+            })
+
+            .catch(function (error) {
+
+                console.error(
+                    "Error cargando equipos:",
+                    error
+                );
+
+                equipoSelect.innerHTML =
+                    '<option value="">' +
+                    'Error al cargar los equipos' +
+                    '</option>';
+
+                equipoSelect.disabled = true;
+
+                ocultarInformacionEquipo();
+                ocultarGuia();
+            });
+    }
+
+    /* =====================================================
+       CARGAR GUÍA DE MANTENIMIENTO
+       ===================================================== */
+
+    function cargarGuia(hojaId) {
+
+        if (!hojaId) {
+            ocultarGuia();
+            return;
+        }
+
+        if (contenedorGuia) {
+            contenedorGuia.style.display = "block";
+        }
+
+        if (nombreGuia) {
+            nombreGuia.textContent =
+                "Cargando guía...";
+        }
+
+        if (listaActividades) {
+
+            listaActividades.innerHTML =
+                '<div class="text-muted">' +
+                '<i class="bi bi-hourglass-split"></i> ' +
+                'Cargando actividades...' +
+                '</div>';
+        }
+
+        if (mensajeGuia) {
+            mensajeGuia.style.display = "none";
+            mensajeGuia.textContent = "";
+        }
+
+        const url =
+            "{% url 'guia_por_equipo' %}" +
+            "?hoja=" +
+            encodeURIComponent(hojaId);
+
+        fetch(url)
+
+            .then(function (response) {
+
+                if (!response.ok) {
+                    throw new Error(
+                        "No fue posible cargar la guía."
+                    );
+                }
+
+                return response.json();
+            })
+
+            .then(function (data) {
+
+                /* =========================================
+                   ERROR
+                   ========================================= */
+
+                if (data.error) {
+
+                    if (nombreGuia) {
+                        nombreGuia.textContent =
+                            "Guía no disponible";
+                    }
+
+                    if (listaActividades) {
+                        listaActividades.innerHTML = "";
+                    }
+
+                    if (mensajeGuia) {
+
+                        mensajeGuia.textContent =
+                            data.error;
+
+                        mensajeGuia.className =
+                            "alert alert-danger";
+
+                        mensajeGuia.style.display =
+                            "block";
+                    }
+
+                    return;
+                }
+
+                /* =========================================
+                   FRECUENCIA
+                   ========================================= */
+
+                if (
+                    data.frecuencia !== null &&
+                    data.frecuencia !== undefined
+                ) {
+
+                    if (frecuenciaMantenimiento) {
+
+                        frecuenciaMantenimiento.textContent =
+                            "Frecuencia: " +
+                            data.frecuencia +
+                            " meses";
+                    }
+
+                } else {
+
+                    if (frecuenciaMantenimiento) {
+                        frecuenciaMantenimiento.textContent = "";
+                    }
+                }
+
+                /* =========================================
+                   SIN GUÍA
+                   ========================================= */
+
+                if (!data.guia) {
+
+                    if (nombreGuia) {
+                        nombreGuia.textContent =
+                            "Guía no disponible";
+                    }
+
+                    if (listaActividades) {
+                        listaActividades.innerHTML = "";
+                    }
+
+                    if (mensajeGuia) {
+
+                        mensajeGuia.textContent =
+                            data.mensaje ||
+                            "Este equipo no tiene una guía de mantenimiento activa.";
+
+                        mensajeGuia.className =
+                            "alert alert-warning";
+
+                        mensajeGuia.style.display =
+                            "block";
+                    }
+
+                    return;
+                }
+
+                /* =========================================
+                   NOMBRE DE LA GUÍA
+                   ========================================= */
+
+                if (nombreGuia) {
+
+                    nombreGuia.textContent =
+                        data.guia.nombre;
+                }
+
+                if (listaActividades) {
+                    listaActividades.innerHTML = "";
+                }
+
+                /* =========================================
+                   SIN ACTIVIDADES
+                   ========================================= */
+
+                if (
+                    !data.actividades ||
+                    data.actividades.length === 0
+                ) {
+
+                    if (listaActividades) {
+
+                        listaActividades.innerHTML =
+                            '<div class="alert alert-warning">' +
+                            'La guía no tiene actividades registradas.' +
+                            '</div>';
+                    }
+
+                    return;
+                }
+
+                /* =========================================
+                   CREAR ACTIVIDADES
+                   ========================================= */
+
+                data.actividades.forEach(
+                    function (actividad, indice) {
+
+                        /* ---------------------------------
+                           CONTENEDOR
+                           --------------------------------- */
+
+                        const contenedor =
+                            document.createElement("div");
+
+                        contenedor.className =
+                            "border rounded p-3 mb-3";
+
+                        /* ---------------------------------
+                           FILA
+                           --------------------------------- */
+
+                        const fila =
+                            document.createElement("div");
+
+                        fila.className =
+                            "form-check";
+
+                        /* ---------------------------------
+                           CHECKBOX
+                           --------------------------------- */
+
+                        const checkbox =
+                            document.createElement("input");
+
+                        checkbox.type = "checkbox";
+
+                        checkbox.className =
+                            "form-check-input actividad-check";
+
+                        checkbox.name = "actividad";
+
+                        checkbox.value =
+                            actividad.id;
+
+                        checkbox.id =
+                            "actividad_" +
+                            actividad.id;
+
+                        checkbox.dataset.descripcion =
+                            actividad.descripcion || "";
+
+                        checkbox.dataset.obligatorio =
+                            actividad.obligatorio
+                                ? "true"
+                                : "false";
+
+                        /* ---------------------------------
+                           ACTIVIDAD PREVIAMENTE GUARDADA
+                           --------------------------------- */
+
+                        if (
+                            actividadesGuardadas.includes(
+                                Number(actividad.id)
+                            )
+                        ) {
+
+                            checkbox.checked = true;
+                        }
+
+                        /* ---------------------------------
+                           LABEL
+                           --------------------------------- */
+
+                        const label =
+                            document.createElement("label");
+
+                        label.className =
+                            "form-check-label";
+
+                        label.htmlFor =
+                            checkbox.id;
+
+                        const numero =
+                            document.createElement("strong");
+
+                        numero.textContent =
+                            (indice + 1) + ". ";
+
+                        label.appendChild(numero);
+
+                        const descripcion =
+                            document.createTextNode(
+                                actividad.descripcion
+                            );
+
+                        label.appendChild(descripcion);
+
+                        /* ---------------------------------
+                           BADGE OBLIGATORIA
+                           --------------------------------- */
+
+                        if (actividad.obligatorio) {
+
+                            const obligatorio =
+                                document.createElement("span");
+
+                            obligatorio.className =
+                                "badge bg-danger ms-2";
+
+                            obligatorio.textContent =
+                                "Obligatoria";
+
+                            label.appendChild(
+                                obligatorio
+                            );
+                        }
+
+                        fila.appendChild(checkbox);
+                        fila.appendChild(label);
+
+                        contenedor.appendChild(fila);
+
+                        /* ---------------------------------
+                           OBSERVACIÓN
+                           --------------------------------- */
+
+                        const observacion =
+                            document.createElement("textarea");
+
+                        observacion.className =
+                            "form-control mt-2 actividad-observacion";
+
+                        observacion.name =
+                            "observacion_actividad_" +
+                            actividad.id;
+
+                        observacion.rows = 2;
+
+                        observacion.placeholder =
+                            "Observación de esta actividad (opcional)...";
+
+                        contenedor.appendChild(
+                            observacion
+                        );
+
+                        /* ---------------------------------
+                           AGREGAR AL FORMULARIO
+                           --------------------------------- */
+
+                        listaActividades.appendChild(
+                            contenedor
+                        );
+                    }
+                );
+
+                actualizarActividadesRealizadas();
+            })
+
+            .catch(function (error) {
+
+                console.error(
+                    "Error cargando guía:",
+                    error
+                );
+
+                if (nombreGuia) {
+                    nombreGuia.textContent = "Error";
+                }
+
+                if (listaActividades) {
+
+                    listaActividades.innerHTML =
+                        '<div class="alert alert-danger">' +
+                        'No fue posible cargar la guía de mantenimiento.' +
+                        '</div>';
+                }
+            });
+    }
+
+    /* =====================================================
+       ACTUALIZAR CAMPO LEGACY
+       ===================================================== */
+
+    function actualizarActividadesRealizadas() {
+
+        if (!actividadesRealizadas) {
+            return;
+        }
+
+        const actividades =
+            document.querySelectorAll(
+                ".actividad-check"
+            );
+
+        const realizadas = [];
+
+        actividades.forEach(function (checkbox) {
+
+            if (!checkbox.checked) {
+                return;
+            }
+
+            const actividadId =
+                checkbox.value;
+
+            const descripcion =
+                checkbox.dataset.descripcion || "";
+
+            const observacion =
+                document.querySelector(
+                    'textarea[name="observacion_actividad_' +
+                    actividadId +
+                    '"]'
+                );
+
+            let texto =
+                "✓ " + descripcion;
+
+            if (
+                observacion &&
+                observacion.value.trim()
+            ) {
+
+                texto +=
+                    " — " +
+                    observacion.value.trim();
+            }
+
+            realizadas.push(texto);
+        });
+
+        actividadesRealizadas.value =
+            realizadas.join("\n");
+    }
+
+    /* =====================================================
+       CAMBIO DE SERVICIO
+       ===================================================== */
+
+    if (servicioSelect) {
+
+        servicioSelect.addEventListener(
+            "change",
+            function () {
+
+                cargarEquipos(
+                    this.value
+                );
+            }
+        );
+    }
+
+    /* =====================================================
+       CAMBIO DE EQUIPO
+       ===================================================== */
+
+    if (equipoSelect) {
+
+        equipoSelect.addEventListener(
+            "change",
+            function () {
+
+                actualizarInformacionEquipo();
+
+                cargarGuia(
+                    this.value
+                );
+            }
+        );
+    }
+
+    /* =====================================================
+       CAMBIOS EN ACTIVIDADES
+       ===================================================== */
+
+    if (listaActividades) {
+
+        listaActividades.addEventListener(
+            "change",
+            function (event) {
+
+                if (
+                    event.target.classList.contains(
+                        "actividad-check"
+                    )
+                ) {
+
+                    actualizarActividadesRealizadas();
+                }
+            }
+        );
+
+        listaActividades.addEventListener(
+            "input",
+            function (event) {
+
+                if (
+                    event.target.classList.contains(
+                        "actividad-observacion"
+                    )
+                ) {
+
+                    actualizarActividadesRealizadas();
+                }
+            }
+        );
+    }
+
+    /* =====================================================
+       ESTADO INICIAL
+       ===================================================== */
+
+    if (
+        servicioSelect &&
+        equipoSelect
+    ) {
+
+        const servicioInicial =
+            servicioSelect.value;
+
+        const equipoInicial =
+            equipoSelect.value;
+
+        if (servicioInicial) {
+
+            cargarEquipos(
+                servicioInicial,
+                equipoInicial
+            );
+
+        } else {
+
+            equipoSelect.disabled = true;
+
+            equipoSelect.innerHTML =
+                '<option value="">' +
+                'Seleccione primero un servicio' +
+                '</option>';
+
+            ocultarInformacionEquipo();
+            ocultarGuia();
+        }
+    }
+
+    /* =====================================================
+       VALIDACIÓN ANTES DE GUARDAR
+       ===================================================== */
+
+    if (formulario) {
+
+        formulario.addEventListener(
+            "submit",
+            function (event) {
+
+                /* -----------------------------------------
+                   SERVICIO
+                   ----------------------------------------- */
+
+                if (
+                    servicioSelect &&
+                    !servicioSelect.value
+                ) {
+
+                    event.preventDefault();
+
+                    alert(
+                        "Debe seleccionar un servicio."
+                    );
+
+                    servicioSelect.focus();
+
+                    return;
+                }
+
+                /* -----------------------------------------
+                   EQUIPO
+                   ----------------------------------------- */
+
+                if (
+                    equipoSelect &&
+                    !equipoSelect.value
+                ) {
+
+                    event.preventDefault();
+
+                    alert(
+                        "Debe seleccionar un equipo."
+                    );
+
+                    equipoSelect.focus();
+
+                    return;
+                }
+
+                /* -----------------------------------------
+                   ACTUALIZAR LEGACY
+                   ----------------------------------------- */
+
+                actualizarActividadesRealizadas();
+            }
+        );
+    }
+
+});
+</script>
+
 
 {% endblock %}

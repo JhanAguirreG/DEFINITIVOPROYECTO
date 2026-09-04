@@ -96,5 +96,20 @@ urlpatterns = [
         views.eliminar_orden_trabajo,
         name="eliminar_orden_trabajo",
     ),
+    path(
+        "equipos-por-servicio/",
+        views.equipos_por_servicio,
+        name="equipos_por_servicio",
+    ),
+    path(
+        "guia-por-equipo/",
+        views.guia_por_equipo,
+        name="guia_por_equipo",
+    ),
+    path(
+        "calendario/",
+        views.calendario_mantenimientos,
+        name="calendario_mantenimientos",
+    ),
 
 ]

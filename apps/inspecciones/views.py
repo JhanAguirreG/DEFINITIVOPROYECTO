@@ -1,7 +1,7 @@
 import base64
 import uuid
 import os
-
+from xml.sax.saxutils import escape
 
 from django.conf import settings
 from django.contrib import messages
@@ -1166,6 +1166,7 @@ def generar_pdf(request, id):
             )
         )
 
+
         elementos.append(
             Paragraph(
                 detalle.observaciones
@@ -1338,8 +1339,12 @@ def generar_pdf(request, id):
 
     elementos.append(
         Paragraph(
-            observaciones_finales
-            or "Sin observaciones finales.",
+            escape(
+                str(
+                    observaciones_finales
+                    or "Sin observaciones finales."
+                )
+            ),
             normal,
         )
     )
@@ -1411,17 +1416,19 @@ def generar_pdf(request, id):
     # ------------------------------------------------------
     # NOMBRES
     # ------------------------------------------------------
-
-    nombre_biomedico = (
-        inspeccion.biomedico.get_full_name()
-        or inspeccion.biomedico.username
+    nombre_biomedico = escape(
+        str(
+            inspeccion.biomedico.get_full_name()
+            or inspeccion.biomedico.username
+        )
     )
 
-    nombre_responsable = (
-        responsable
-        or "No registrado"
+    nombre_responsable = escape(
+        str(
+            responsable
+            or "No registrado"
+        )
     )
-
 
     # ------------------------------------------------------
     # TABLA DE FIRMAS

@@ -91,7 +91,33 @@ CABECERA
                         Equipo
                     </label>
 
-                    {{ form.equipo }}
+                    {% if equipo %}
+
+                        <input type="text"
+                            class="form-control bg-light"
+                            value="{{ equipo.nombre }}{% if equipo.codigo %} — {{ equipo.codigo }}{% endif %}"
+                            readonly>
+
+                        <input type="hidden"
+                            name="equipo"
+                            value="{{ equipo.id }}">
+
+                        <div class="form-text">
+
+                            <i class="bi bi-check-circle text-success me-1"></i>
+
+                            Equipo seleccionado desde el servicio
+                            <strong>
+                                {{ equipo.servicio.nombre }}
+                            </strong>
+
+                        </div>
+
+                    {% else %}
+
+                        {{ form.equipo }}
+
+                    {% endif %}
 
                 </div>
 
@@ -1326,88 +1352,155 @@ JAVASCRIPT
 
 <script>
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
-    const equipoSelect = document.getElementById("id_equipo");
+        const equipoSelect =
+            document.getElementById("id_equipo");
 
-    const contenedor = document.getElementById(
-        "contenedor-campos-tecnicos"
-    );
+        const equipoHidden =
+            document.querySelector(
+                'input[name="equipo"]'
+            );
 
-    if (!equipoSelect || !contenedor) {
-        return;
-    }
+        const contenedor =
+            document.getElementById(
+                "contenedor-campos-tecnicos"
+            );
 
-    equipoSelect.addEventListener("change", function () {
 
-        const equipoId = this.value;
-
-        if (!equipoId) {
-
-            contenedor.innerHTML = "";
-
+        if (!contenedor) {
             return;
-
         }
 
-        contenedor.innerHTML = `
-            <div class="text-center py-4">
 
-                <div class="spinner-border text-primary"></div>
+        // ======================================================
+        // FUNCIÓN PARA CARGAR CARACTERÍSTICAS TÉCNICAS
+        // ======================================================
 
-                <p class="mt-2 text-muted">
-                    Cargando características técnicas...
-                </p>
+        function cargarCamposTecnicos(equipoId) {
 
-            </div>
-        `;
+            if (!equipoId) {
 
-        fetch(
-            "{% url 'campos_tecnicos_equipo' %}?equipo="
-            + equipoId
-        )
+                contenedor.innerHTML = "";
 
-        .then(response => {
-
-            if (!response.ok) {
-
-                throw new Error(
-                    "Error al cargar los campos técnicos."
-                );
+                return;
 
             }
 
-            return response.text();
-
-        })
-
-        .then(html => {
-
-            contenedor.innerHTML = html;
-
-        })
-
-        .catch(error => {
-
-            console.error(error);
 
             contenedor.innerHTML = `
 
-                <div class="alert alert-danger">
+                <div class="text-center py-4">
 
-                    <i class="bi bi-exclamation-triangle"></i>
+                    <div class="spinner-border text-primary"></div>
 
-                    No fue posible cargar las características técnicas.
+                    <p class="mt-2 text-muted">
+                        Cargando características técnicas...
+                    </p>
 
                 </div>
 
             `;
 
-        });
 
-    });
+            fetch(
+                "{% url 'campos_tecnicos_equipo' %}?equipo="
+                + equipoId
+            )
 
-});
+            .then(
+                response => {
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            "Error al cargar los campos técnicos."
+                        );
+
+                    }
+
+                    return response.text();
+
+                }
+            )
+
+            .then(
+                html => {
+
+                    contenedor.innerHTML =
+                        html;
+
+                }
+            )
+
+            .catch(
+                error => {
+
+                    console.error(error);
+
+                    contenedor.innerHTML = `
+
+                        <div class="alert alert-danger">
+
+                            <i class="bi bi-exclamation-triangle"></i>
+
+                            No fue posible cargar las
+                            características técnicas.
+
+                        </div>
+
+                    `;
+
+                }
+            );
+
+        }
+
+
+        // ======================================================
+        // EDICIÓN
+        // ======================================================
+
+        if (equipoSelect) {
+
+            equipoSelect.addEventListener(
+                "change",
+                function () {
+
+                    cargarCamposTecnicos(
+                        this.value
+                    );
+
+                }
+            );
+
+        }
+
+
+        // ======================================================
+        // NUEVA HOJA DE VIDA
+        // EQUIPO PRESELECCIONADO
+        // ======================================================
+
+        if (equipoHidden) {
+
+            const equipoId =
+                equipoHidden.value;
+
+            if (equipoId) {
+
+                cargarCamposTecnicos(
+                    equipoId
+                );
+
+            }
+
+        }
+
+    }
+);
 
 </script>
 

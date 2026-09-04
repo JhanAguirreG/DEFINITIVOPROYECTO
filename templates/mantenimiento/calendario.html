@@ -1,0 +1,452 @@
+{% extends "base.html" %}
+
+{% block title %}
+Calendario de Mantenimientos | SIGHI
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- ======================================================
+         ENCABEZADO
+    ======================================================= -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+
+        <div>
+
+            <h2 class="fw-bold mb-1">
+                <i class="bi bi-calendar3"></i>
+                Calendario de Mantenimientos
+            </h2>
+
+            <p class="text-muted mb-0">
+                Programación mensual de mantenimientos.
+            </p>
+
+        </div>
+
+        <div class="d-flex gap-2">
+
+            <a
+                href="{% url 'lista_mantenimientos' %}"
+                class="btn btn-secondary"
+            >
+                <i class="bi bi-list"></i>
+                Lista
+            </a>
+
+            <a
+                href="{% url 'crear_mantenimiento' %}"
+                class="btn btn-primary"
+            >
+                <i class="bi bi-plus-circle"></i>
+                Nuevo mantenimiento
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- ======================================================
+         FILTROS
+    ======================================================= -->
+
+    <div class="card shadow-sm border-0 mb-4">
+
+        <div class="card-header bg-primary text-white">
+
+            <i class="bi bi-funnel"></i>
+            Filtros
+
+        </div>
+
+        <div class="card-body">
+
+            <form method="get">
+
+                <input
+                    type="hidden"
+                    name="year"
+                    value="{{ year }}"
+                >
+
+                <input
+                    type="hidden"
+                    name="month"
+                    value="{{ month }}"
+                >
+
+                <div class="row g-3">
+
+                    <div class="col-md-4">
+
+                        <label class="form-label fw-bold">
+                            Servicio
+                        </label>
+
+                        <select
+                            name="servicio"
+                            class="form-select"
+                        >
+
+                            <option value="">
+                                Todos los servicios
+                            </option>
+
+                            {% for servicio in servicios %}
+
+                                <option
+                                    value="{{ servicio.id }}"
+                                    {% if servicio_seleccionado == servicio.id|stringformat:"s" %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ servicio.nombre }}
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="col-md-3">
+
+                        <label class="form-label fw-bold">
+                            Estado
+                        </label>
+
+                        <select
+                            name="estado"
+                            class="form-select"
+                        >
+
+                            <option value="">
+                                Todos
+                            </option>
+
+                            {% for valor, nombre in estados %}
+
+                                <option
+                                    value="{{ valor }}"
+                                    {% if estado_seleccionado == valor %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ nombre }}
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="col-md-3">
+
+                        <label class="form-label fw-bold">
+                            Tipo
+                        </label>
+
+                        <select
+                            name="tipo"
+                            class="form-select"
+                        >
+
+                            <option value="">
+                                Todos
+                            </option>
+
+                            {% for valor, nombre in tipos %}
+
+                                <option
+                                    value="{{ valor }}"
+                                    {% if tipo_seleccionado == valor %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ nombre }}
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="col-md-2 d-flex align-items-end">
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary w-100"
+                        >
+                            <i class="bi bi-search"></i>
+                            Filtrar
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- ======================================================
+         NAVEGACIÓN
+    ======================================================= -->
+
+    <div class="card shadow-sm border-0 mb-4">
+
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <a
+                    href="?year={{ anio_anterior }}&month={{ mes_anterior }}{% if servicio_seleccionado %}&servicio={{ servicio_seleccionado }}{% endif %}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}{% if tipo_seleccionado %}&tipo={{ tipo_seleccionado }}{% endif %}"
+                    class="btn btn-outline-primary"
+                >
+                    <i class="bi bi-chevron-left"></i>
+                    Anterior
+                </a>
+
+
+                <div class="text-center">
+
+                    <h3 class="fw-bold mb-0">
+                        {{ nombre_mes }} {{ year }}
+                    </h3>
+
+                    <small class="text-muted">
+
+                        {{ total_mantenimientos }}
+                        mantenimiento{{ total_mantenimientos|pluralize }}
+
+                    </small>
+
+                </div>
+
+
+                <div class="d-flex gap-2">
+
+                    <a
+                        href="{% url 'calendario_mantenimientos' %}"
+                        class="btn btn-outline-secondary"
+                    >
+                        Hoy
+                    </a>
+
+                    <a
+                        href="?year={{ anio_siguiente }}&month={{ mes_siguiente }}{% if servicio_seleccionado %}&servicio={{ servicio_seleccionado }}{% endif %}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}{% if tipo_seleccionado %}&tipo={{ tipo_seleccionado }}{% endif %}"
+                        class="btn btn-outline-primary"
+                    >
+                        Siguiente
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ======================================================
+         CALENDARIO
+    ======================================================= -->
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-body p-2">
+
+            <div class="table-responsive">
+
+                <table
+                    class="table table-bordered mb-0"
+                    style="table-layout: fixed;"
+                >
+
+                    <thead>
+
+                        <tr class="text-center">
+
+                            <th>Lunes</th>
+                            <th>Martes</th>
+                            <th>Miércoles</th>
+                            <th>Jueves</th>
+                            <th>Viernes</th>
+                            <th>Sábado</th>
+                            <th>Domingo</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for semana in semanas %}
+
+                            <tr>
+
+                                {% for celda in semana %}
+
+                                    {% if celda.dia == 0 %}
+
+                                        <td
+                                            class="bg-light"
+                                            style="height: 150px;"
+                                        >
+                                        </td>
+
+                                    {% else %}
+
+                                        <td
+                                            style="
+                                                height: 150px;
+                                                vertical-align: top;
+                                            "
+                                            class="{% if hoy.year == year and hoy.month == month and hoy.day == celda.dia %}table-primary{% endif %}"
+                                        >
+
+                                            <!-- DÍA -->
+
+                                            <div class="d-flex justify-content-between mb-2">
+
+                                                <span class="fw-bold">
+
+                                                    {{ celda.dia }}
+
+                                                    {% if hoy.year == year and hoy.month == month and hoy.day == celda.dia %}
+
+                                                        <span class="badge bg-primary">
+                                                            Hoy
+                                                        </span>
+
+                                                    {% endif %}
+
+                                                </span>
+
+                                            </div>
+
+
+                                            <!-- MANTENIMIENTOS -->
+
+                                            {% for mantenimiento in celda.mantenimientos %}
+
+                                                <a
+                                                    href="{% url 'detalle_mantenimiento' mantenimiento.id %}"
+                                                    class="text-decoration-none"
+                                                >
+
+                                                    <div
+                                                        class="border rounded p-2 mb-2 small bg-white shadow-sm"
+                                                    >
+
+                                                        <div class="fw-bold text-dark">
+
+                                                            {{ mantenimiento.hoja_vida.equipo.nombre }}
+
+                                                        </div>
+
+
+                                                        <div class="text-muted">
+
+                                                            Serial:
+                                                            {{ mantenimiento.hoja_vida.equipo.serie|default:"Sin serial" }}
+
+                                                        </div>
+
+
+                                                        <div class="text-muted">
+
+                                                            {{ mantenimiento.hoja_vida.equipo.servicio.nombre }}
+
+                                                        </div>
+
+
+                                                        <div class="mt-1">
+
+                                                            {% if mantenimiento.tipo == "PREVENTIVO" %}
+
+                                                                <span class="badge bg-success">
+                                                                    Preventivo
+                                                                </span>
+
+                                                            {% else %}
+
+                                                                <span class="badge bg-danger">
+                                                                    Correctivo
+                                                                </span>
+
+                                                            {% endif %}
+
+
+                                                            {% if mantenimiento.estado == "PROGRAMADO" %}
+
+                                                                <span class="badge bg-warning text-dark">
+                                                                    Programado
+                                                                </span>
+
+                                                            {% elif mantenimiento.estado == "EN_PROCESO" %}
+
+                                                                <span class="badge bg-primary">
+                                                                    En proceso
+                                                                </span>
+
+                                                            {% else %}
+
+                                                                <span class="badge bg-success">
+                                                                    Finalizado
+                                                                </span>
+
+                                                            {% endif %}
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </a>
+
+                                            {% empty %}
+
+                                                <div class="text-muted small">
+                                                </div>
+
+                                            {% endfor %}
+
+                                        </td>
+
+                                    {% endif %}
+
+                                {% endfor %}
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+{% endblock %}

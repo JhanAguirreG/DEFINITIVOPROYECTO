@@ -1761,32 +1761,28 @@ Hoja de Vida | SIGHI
 
     <div class="card shadow-sm border-0 mb-4">
 
-        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+        <div class="card-header d-flex justify-content-between align-items-center"
+            style="background-color: #F25C05; color: white;">
 
-            <div>
-
-                <i class="bi bi-rulers"></i>
-
+            <div class="fw-semibold">
+                <i class="bi bi-rulers me-2"></i>
                 Historial de Calibraciones
-
             </div>
 
             {% if user.es_superadmin or user.es_admin %}
 
-                <button
-                    class="btn btn-light btn-sm"
-                    disabled
-                >
+                <a href="{% url 'calibraciones:crear_calibracion_equipo' hoja.equipo.id %}"
+                class="btn btn-light btn-sm">
 
-                    <i class="bi bi-plus-circle"></i>
+                    <i class="bi bi-plus-lg me-1"></i>
+                    Agregar calibración
 
-                    Nueva calibración
-
-                </button>
+                </a>
 
             {% endif %}
 
         </div>
+
 
         <div class="card-body">
 
@@ -1794,23 +1790,32 @@ Hoja de Vida | SIGHI
 
                 <div class="table-responsive">
 
-                    <table class="table table-hover">
+                    <table class="table table-hover align-middle mb-0">
 
                         <thead class="table-light">
 
                             <tr>
 
-                                <th>Fecha</th>
+                                <th>
+                                    Fecha
+                                </th>
 
-                                <th>Proveedor</th>
+                                <th>
+                                    Código
+                                </th>
 
-                                <th>Resultado</th>
+                                <th>
+                                    Empresa
+                                </th>
 
-                                <th>Próxima</th>
+                                <th class="text-center">
+                                    Certificado
+                                </th>
 
                             </tr>
 
                         </thead>
+
 
                         <tbody>
 
@@ -1818,20 +1823,68 @@ Hoja de Vida | SIGHI
 
                                 <tr>
 
-                                    <td>
-                                        {{ calibracion.fecha|date:"d/m/Y" }}
-                                    </td>
+                                    <!-- FECHA -->
 
                                     <td>
-                                        {{ calibracion.proveedor }}
+
+                                        <span class="fw-semibold">
+                                            {{ calibracion.fecha_calibracion|date:"d/m/Y" }}
+                                        </span>
+
                                     </td>
 
-                                    <td>
-                                        {{ calibracion.resultado }}
-                                    </td>
+
+                                    <!-- CÓDIGO -->
 
                                     <td>
-                                        {{ calibracion.proxima_fecha|date:"d/m/Y" }}
+
+                                        <span class="badge bg-light text-dark border">
+                                            {{ calibracion.codigo }}
+                                        </span>
+
+                                    </td>
+
+
+                                    <!-- EMPRESA -->
+
+                                    <td>
+
+                                        <div class="d-flex align-items-center">
+
+                                            <i class="bi bi-building me-2"
+                                            style="color: #F25C05;">
+                                            </i>
+
+                                            {{ calibracion.empresa }}
+
+                                        </div>
+
+                                    </td>
+
+
+                                    <!-- CERTIFICADO -->
+
+                                    <td class="text-center">
+
+                                        {% if calibracion.certificado %}
+
+                                            <a href="{{ calibracion.certificado.url }}"
+                                            target="_blank"
+                                            class="btn btn-outline-danger btn-sm">
+
+                                                <i class="bi bi-file-earmark-pdf me-1"></i>
+                                                Ver PDF
+
+                                            </a>
+
+                                        {% else %}
+
+                                            <span class="text-muted small">
+                                                Sin certificado
+                                            </span>
+
+                                        {% endif %}
+
                                     </td>
 
                                 </tr>
@@ -1850,11 +1903,13 @@ Hoja de Vida | SIGHI
 
                     <i class="bi bi-rulers fs-1"></i>
 
-                    <h5 class="mt-3">
-
+                    <h5 class="mt-3 mb-2">
                         No existen calibraciones registradas
-
                     </h5>
+
+                    <p class="mb-0">
+                        Este equipo aún no tiene registros de calibración.
+                    </p>
 
                 </div>
 
@@ -1864,86 +1919,229 @@ Hoja de Vida | SIGHI
 
     </div>
 
-
     <!-- ======================================================
     INSPECCIONES
     ======================================================= -->
+    <!--======================================================
+    HISTORIAL DE INSPECCIONES
+    =======================================================-->
 
     <div class="card shadow-sm border-0 mb-4">
 
-        <div class="card-header bg-info text-white">
+        
+        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
 
-            <i class="bi bi-clipboard-check"></i>
+            <div>
 
-            Historial de Inspecciones
+                <i class="bi bi-clipboard-check"></i>
+
+                Historial de Inspecciones
+
+            </div>
+
+            <span class="badge bg-light text-dark">
+
+                {{ inspecciones|length }} inspección{{ inspecciones|length|pluralize }}
+
+            </span>
 
         </div>
+
 
         <div class="card-body">
 
             {% if inspecciones %}
 
-                <div class="table-responsive">
+            <div class="table-responsive">
 
-                    <table class="table table-striped">
+                <table class="table table-hover align-middle">
 
-                        <thead>
+                    <thead class="table-light">
 
-                            <tr>
+                        <tr>
 
-                                <th>Fecha</th>
+                            <th>Fecha</th>
 
-                                <th>Servicio</th>
+                            <th>Servicio</th>
 
-                                <th>Resultado</th>
+                            <th>Estado</th>
 
-                                <th>Inspector</th>
+                            <th>Inspector</th>
 
-                            </tr>
+                            <th>Hora inicio</th>
 
-                        </thead>
+                            <th>Hora fin</th>
 
-                        <tbody>
+                            <th class="text-center">Acciones</th>
 
-                            {% for inspeccion in inspecciones %}
+                        </tr>
 
-                                <tr>
+                    </thead>
 
-                                    <td>{{ inspeccion.fecha }}</td>
 
-                                    <td>{{ inspeccion.servicio }}</td>
+                    <tbody>
 
-                                    <td>{{ inspeccion.resultado }}</td>
+                    {% for inspeccion in inspecciones %}
 
-                                    <td>{{ inspeccion.usuario }}</td>
+                        <tr>
 
-                                </tr>
+                            <!-- FECHA -->
 
-                            {% endfor %}
+                            <td>
 
-                        </tbody>
+                                {{ inspeccion.fecha|date:"d/m/Y" }}
 
-                    </table>
+                            </td>
 
-                </div>
+
+                            <!-- SERVICIO -->
+
+                            <td>
+
+                                {{ inspeccion.servicio }}
+
+                            </td>
+
+
+                            <!-- ESTADO -->
+
+                            <td>
+
+                                {% if inspeccion.estado == "FINALIZADA" %}
+
+                                    <span class="badge bg-success">
+
+                                        <i class="bi bi-check-circle"></i>
+
+                                        Finalizada
+
+                                    </span>
+
+                                {% elif inspeccion.estado == "ABIERTA" %}
+
+                                    <span class="badge bg-warning text-dark">
+
+                                        <i class="bi bi-clock"></i>
+
+                                        Abierta
+
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-secondary">
+
+                                        {{ inspeccion.get_estado_display }}
+
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- INSPECTOR -->
+
+                            <td>
+
+                                {% if inspeccion.biomedico %}
+
+                                    {{ inspeccion.biomedico.get_full_name|default:inspeccion.biomedico.username }}
+
+                                {% else %}
+
+                                    <span class="text-muted">
+
+                                        No registrado
+
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- HORA INICIO -->
+
+                            <td>
+
+                                {% if inspeccion.hora_inicio %}
+
+                                    {{ inspeccion.hora_inicio|date:"d/m/Y H:i" }}
+
+                                {% else %}
+
+                                    -
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- HORA FIN -->
+
+                            <td>
+
+                                {% if inspeccion.hora_fin %}
+
+                                    {{ inspeccion.hora_fin|date:"d/m/Y H:i" }}
+
+                                {% else %}
+
+                                    -
+
+                                {% endif %}
+
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'inspecciones:detalle_inspeccion' inspeccion.id %}"
+                                class="btn btn-outline-primary btn-sm"
+                                title="Ver detalle de la inspección">
+
+                                    <i class="bi bi-eye"></i>
+
+                                    Ver detalle
+
+                                </a>
+
+                            </td>
+
+
+                        </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
 
             {% else %}
 
-                <div class="text-center py-5 text-muted">
+            <div class="text-center py-5 text-muted">
 
-                    <i class="bi bi-clipboard-check fs-1"></i>
+                <i class="bi bi-clipboard-x fs-1"></i>
 
-                    <h5 class="mt-3">
+                <h5 class="mt-3">
 
-                        No existen inspecciones registradas
+                    No existen inspecciones registradas
 
-                    </h5>
+                </h5>
 
-                </div>
+                <p class="mb-0">
+
+                    Este equipo aún no ha sido incluido en ninguna inspección.
+
+                </p>
+
+            </div>
 
             {% endif %}
 
         </div>
+        ```
 
     </div>
 

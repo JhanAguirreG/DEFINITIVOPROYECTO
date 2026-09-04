@@ -207,6 +207,15 @@ class Mantenimiento(models.Model):
         verbose_name="Firma del responsable",
     )
 
+    mantenimiento_anterior = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="mantenimiento_siguiente",
+        verbose_name="Mantenimiento anterior",
+    )
+
     class Meta:
         ordering = [
             "-fecha_programada",
@@ -221,3 +230,42 @@ class Mantenimiento(models.Model):
             f"{self.get_tipo_display()} - "
             f"{self.hoja_vida.equipo.nombre}"
         )
+
+class MantenimientoActividad(models.Model):
+    mantenimiento = models.ForeignKey(
+        "mantenimiento.Mantenimiento",
+        on_delete=models.CASCADE,
+        related_name="actividades",
+        verbose_name="Mantenimiento",
+    )
+
+    actividad = models.ForeignKey(
+        "catalogo.ActividadMantenimiento",
+        on_delete=models.PROTECT,
+        related_name="ejecuciones",
+        verbose_name="Actividad",
+    )
+
+    realizada = models.BooleanField(
+        default=False,
+        verbose_name="Realizada",
+    )
+
+    observacion = models.TextField(
+        blank=True,
+        verbose_name="Observación",
+    )
+
+    class Meta:
+        verbose_name = "Actividad de Mantenimiento"
+        verbose_name_plural = "Actividades de Mantenimiento"
+        ordering = ["actividad__orden"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["mantenimiento", "actividad"],
+                name="unique_mantenimiento_actividad",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.mantenimiento} - {self.actividad}"

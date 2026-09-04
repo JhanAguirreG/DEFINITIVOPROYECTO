@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}
+Calibraciones | SIGHI
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+
+        <div>
+            <h2 class="fw-bold mb-1">
+                <i class="bi bi-rulers"></i>
+                Calibraciones
+            </h2>
+
+            <p class="text-muted mb-0">
+                Historial de certificados de calibración de los equipos.
+            </p>
+        </div>
+
+        <a href="{% url 'calibraciones:crear_calibracion' %}"
+           class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i>
+            Nueva calibración
+        </a>
+
+    </div>
+
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-body">
+
+            {% if calibraciones %}
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle">
+
+                        <thead>
+                            <tr>
+                                <th>Equipo</th>
+                                <th>Fecha</th>
+                                <th>Código</th>
+                                <th>Empresa</th>
+                                <th class="text-center">Certificado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for calibracion in calibraciones %}
+
+                                <tr>
+
+                                    <td>
+                                        <strong>
+                                            {{ calibracion.equipo }}
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        {{ calibracion.fecha_calibracion|date:"d/m/Y" }}
+                                    </td>
+
+                                    <td>
+                                        <span class="badge bg-secondary">
+                                            {{ calibracion.codigo }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        {{ calibracion.empresa }}
+                                    </td>
+
+                                    <td class="text-center">
+
+                                        {% if calibracion.certificado %}
+
+                                            <a href="{{ calibracion.certificado.url }}"
+                                               target="_blank"
+                                               class="btn btn-outline-danger btn-sm">
+
+                                                <i class="bi bi-file-earmark-pdf"></i>
+                                                Ver PDF
+
+                                            </a>
+
+                                        {% else %}
+
+                                            <span class="text-muted">
+                                                Sin archivo
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                    <td class="text-center">
+
+                                        <div class="btn-group">
+
+                                            <a href="{% url 'calibraciones:editar_calibracion' calibracion.id %}"
+                                               class="btn btn-outline-primary btn-sm"
+                                               title="Editar">
+
+                                                <i class="bi bi-pencil"></i>
+
+                                            </a>
+
+                                            <a href="{% url 'calibraciones:eliminar_calibracion' calibracion.id %}"
+                                               class="btn btn-outline-danger btn-sm"
+                                               title="Eliminar">
+
+                                                <i class="bi bi-trash"></i>
+
+                                            </a>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <div class="text-center py-5">
+
+                    <i class="bi bi-rulers fs-1 text-muted"></i>
+
+                    <h5 class="mt-3">
+                        No hay calibraciones registradas
+                    </h5>
+
+                    <p class="text-muted">
+                        Registra la primera calibración para comenzar
+                        el historial de certificados.
+                    </p>
+
+                    <a href="{% url 'calibraciones:crear_calibracion' %}"
+                       class="btn btn-primary">
+
+                        <i class="bi bi-plus-lg"></i>
+                        Registrar calibración
+
+                    </a>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

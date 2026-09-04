@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'apps.catalogo',
     'apps.hojas_vida',
     'apps.mantenimiento',
+    "apps.calibraciones",
         
 ]
 

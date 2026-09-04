@@ -40,6 +40,10 @@ urlpatterns = [
     "inspecciones/",
     include("apps.inspecciones.urls"),
     ),
+    path(
+    "calibraciones/",
+    include("apps.calibraciones.urls"),
+    ),
 
 ]
 

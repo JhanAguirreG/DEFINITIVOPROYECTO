@@ -2,24 +2,28 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.db import transaction
+from apps import mantenimiento
 from apps.usuarios.decorators import rol_requerido
 
 from .forms import MantenimientoForm, OrdenTrabajoForm
-from .models import Mantenimiento, OrdenTrabajo
+from .models import Mantenimiento, OrdenTrabajo, MantenimientoActividad
 
 from datetime import timedelta
 
 from django.db.models import Count
-from django.utils import timezone
+from django.utils import json, timezone
 from io import BytesIO
-
-from django.http import HttpResponse
-
+from apps.servicios.models import Servicio
+from apps.hojas_vida.models import HojaVida
+from apps.catalogo.models import GuiaMantenimiento
+from django.http import HttpResponse, JsonResponse, request
+from apps.catalogo.models import GuiaMantenimiento, ActividadMantenimiento
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
+from apps.hojas_vida.models import HojaVida
 
 from reportlab.platypus import (
     SimpleDocTemplate,
@@ -31,6 +35,405 @@ from reportlab.platypus import (
     Image,
 )
 from xml.sax.saxutils import escape
+import calendar
+from datetime import date
+def sumar_meses(fecha, meses):
+    """
+    Suma una cantidad de meses a una fecha,
+    conservando el día cuando sea posible.
+
+    Ejemplo:
+    31/01/2026 + 1 mes = 28/02/2026
+    """
+
+    mes = fecha.month - 1 + meses
+
+    anio = fecha.year + mes // 12
+
+    mes = mes % 12 + 1
+
+    dia = min(
+        fecha.day,
+        calendar.monthrange(anio, mes)[1]
+    )
+
+    return date(
+        anio,
+        mes,
+        dia
+    )
+
+def programar_siguiente_mantenimiento(mantenimiento):
+    """
+    Programa automáticamente el siguiente mantenimiento
+    cuando el mantenimiento actual queda FINALIZADO.
+
+    La frecuencia se obtiene del catálogo asociado al equipo.
+    """
+
+    # ---------------------------------------------------------
+    # SOLO SE PROGRAMA SI ESTÁ FINALIZADO
+    # ---------------------------------------------------------
+
+    if mantenimiento.estado != Mantenimiento.Estado.FINALIZADO:
+        return None
+
+    with transaction.atomic():
+
+        # -----------------------------------------------------
+        # BLOQUEAR ÚNICAMENTE EL REGISTRO DE MANTENIMIENTO
+        # -----------------------------------------------------
+
+        mantenimiento = (
+            Mantenimiento.objects
+            .select_for_update()
+            .get(pk=mantenimiento.pk)
+        )
+
+        # -----------------------------------------------------
+        # VERIFICAR SI YA EXISTE EL SIGUIENTE
+        # -----------------------------------------------------
+
+        siguiente_existente = (
+            Mantenimiento.objects
+            .filter(
+                mantenimiento_anterior=mantenimiento
+            )
+            .order_by("-id")
+            .first()
+        )
+
+        if siguiente_existente:
+            return siguiente_existente
+
+        # -----------------------------------------------------
+        # OBTENER EQUIPO Y CATÁLOGO
+        # -----------------------------------------------------
+
+        equipo = mantenimiento.hoja_vida.equipo
+
+        catalogo = equipo.catalogo
+
+        if not catalogo:
+            return None
+
+        # -----------------------------------------------------
+        # VERIFICAR SI REQUIERE MANTENIMIENTO
+        # -----------------------------------------------------
+
+        if not catalogo.requiere_mantenimiento:
+            return None
+
+        frecuencia = catalogo.frecuencia_mantenimiento
+
+        if not frecuencia or frecuencia <= 0:
+            return None
+
+        # -----------------------------------------------------
+        # FECHA BASE
+        # -----------------------------------------------------
+
+        fecha_base = (
+            mantenimiento.fecha_fin
+            or mantenimiento.fecha_programada
+        )
+
+        # -----------------------------------------------------
+        # CALCULAR FECHA DEL PRÓXIMO MANTENIMIENTO
+        # -----------------------------------------------------
+
+        fecha_siguiente = sumar_meses(
+            fecha_base,
+            frecuencia
+        )
+
+        # -----------------------------------------------------
+        # CREAR SIGUIENTE MANTENIMIENTO
+        # -----------------------------------------------------
+
+        siguiente = Mantenimiento.objects.create(
+
+            hoja_vida=mantenimiento.hoja_vida,
+
+            tipo=Mantenimiento.Tipo.PREVENTIVO,
+
+            estado=Mantenimiento.Estado.PROGRAMADO,
+
+            fecha_programada=fecha_siguiente,
+
+            descripcion=(
+                "Mantenimiento preventivo programado "
+                "automáticamente después del mantenimiento "
+                f"#{mantenimiento.id}."
+            ),
+
+            mantenimiento_anterior=mantenimiento,
+        )
+
+        # -----------------------------------------------------
+        # CARGAR ACTIVIDADES DE LA GUÍA
+        # -----------------------------------------------------
+
+        guia = GuiaMantenimiento.objects.filter(
+            catalogo=catalogo,
+            activa=True,
+        ).first()
+
+        if guia:
+
+            actividades = list(
+                guia.actividades.order_by(
+                    "orden",
+                    "id"
+                )
+            )
+
+            MantenimientoActividad.objects.bulk_create(
+                [
+                    MantenimientoActividad(
+                        mantenimiento=siguiente,
+                        actividad=actividad,
+                        realizada=False,
+                        observacion="",
+                    )
+                    for actividad in actividades
+                ]
+            )
+
+        return siguiente
+
+def guardar_actividades_mantenimiento(mantenimiento, request):
+    """
+    Guarda las actividades ejecutadas de un mantenimiento.
+
+    También valida que todas las actividades obligatorias
+    de la guía hayan sido realizadas.
+
+    Retorna:
+        (True, None) si todo está correcto.
+        (False, mensaje_error) si existe algún problema.
+    """
+
+    hoja_vida = mantenimiento.hoja_vida
+    equipo = hoja_vida.equipo
+    catalogo = equipo.catalogo
+
+    # ---------------------------------------------------------
+    # Si el equipo no tiene catálogo, no hay actividades
+    # que validar.
+    # ---------------------------------------------------------
+
+    if not catalogo:
+        MantenimientoActividad.objects.filter(
+            mantenimiento=mantenimiento
+        ).delete()
+
+        return True, None
+
+
+    # ---------------------------------------------------------
+    # Buscar guía activa
+    # ---------------------------------------------------------
+
+    guia = GuiaMantenimiento.objects.filter(
+        catalogo=catalogo,
+        activa=True,
+    ).first()
+
+
+    # ---------------------------------------------------------
+    # Si no existe guía, simplemente no hay actividades
+    # ---------------------------------------------------------
+
+    if not guia:
+        MantenimientoActividad.objects.filter(
+            mantenimiento=mantenimiento
+        ).delete()
+
+        return True, None
+
+
+    # ---------------------------------------------------------
+    # Actividades válidas de esta guía
+    # ---------------------------------------------------------
+
+    actividades_guia = list(
+        guia.actividades.order_by("orden", "id")
+    )
+
+    actividades_ids_validos = {
+        actividad.id
+        for actividad in actividades_guia
+    }
+
+
+    # ---------------------------------------------------------
+    # Actividades marcadas por el usuario
+    #
+    # El JavaScript envía:
+    #
+    # actividad = 1
+    # actividad = 4
+    # actividad = 7
+    # ---------------------------------------------------------
+
+    actividades_seleccionadas = request.POST.getlist(
+        "actividad"
+    )
+
+
+    try:
+        actividades_seleccionadas = {
+            int(pk)
+            for pk in actividades_seleccionadas
+        }
+
+    except (TypeError, ValueError):
+
+        return False, (
+            "Se encontraron actividades inválidas "
+            "en el formulario."
+        )
+
+
+    # ---------------------------------------------------------
+    # Seguridad:
+    # evitar que alguien envíe manualmente una actividad
+    # perteneciente a otra guía.
+    # ---------------------------------------------------------
+
+    actividades_fuera_de_guia = (
+        actividades_seleccionadas -
+        actividades_ids_validos
+    )
+
+    if actividades_fuera_de_guia:
+
+        return False, (
+            "Una o más actividades seleccionadas "
+            "no pertenecen a la guía de mantenimiento "
+            "del equipo."
+        )
+
+
+    # ---------------------------------------------------------
+    # VALIDAR ACTIVIDADES OBLIGATORIAS
+    # ---------------------------------------------------------
+
+    actividades_obligatorias = {
+        actividad.id
+        for actividad in actividades_guia
+        if actividad.obligatorio
+    }
+
+
+    faltantes = (
+        actividades_obligatorias -
+        actividades_seleccionadas
+    )
+
+
+    if faltantes:
+
+        actividades_faltantes = [
+            actividad.descripcion
+            for actividad in actividades_guia
+            if actividad.id in faltantes
+        ]
+
+        mensaje = (
+            "Debe completar todas las actividades obligatorias: "
+            + ", ".join(actividades_faltantes)
+        )
+
+        return False, mensaje
+
+
+    # ---------------------------------------------------------
+    # GUARDAR ACTIVIDADES
+    #
+    # Primero eliminamos las anteriores y reconstruimos
+    # el estado actual del mantenimiento.
+    # ---------------------------------------------------------
+
+    MantenimientoActividad.objects.filter(
+        mantenimiento=mantenimiento
+    ).delete()
+
+
+    registros = []
+
+    for actividad in actividades_guia:
+
+        realizada = (
+            actividad.id in actividades_seleccionadas
+        )
+
+        observacion = request.POST.get(
+            f"observacion_actividad_{actividad.id}",
+            ""
+        ).strip()
+
+
+        registros.append(
+            MantenimientoActividad(
+                mantenimiento=mantenimiento,
+                actividad=actividad,
+                realizada=realizada,
+                observacion=observacion,
+            )
+        )
+
+
+    if registros:
+        MantenimientoActividad.objects.bulk_create(
+            registros
+        )
+
+
+    # ---------------------------------------------------------
+    # MANTENER COMPATIBILIDAD CON EL CAMPO ANTIGUO
+    #
+    # Esto permite que el PDF de las Órdenes de Trabajo
+    # continúe mostrando las actividades realizadas.
+    # ---------------------------------------------------------
+
+    actividades_realizadas_texto = []
+
+    for actividad in actividades_guia:
+
+        if actividad.id in actividades_seleccionadas:
+
+            observacion = request.POST.get(
+                f"observacion_actividad_{actividad.id}",
+                ""
+            ).strip()
+
+            texto = f"✓ {actividad.descripcion}"
+
+            if observacion:
+                texto += f" — {observacion}"
+
+            actividades_realizadas_texto.append(
+                texto
+            )
+
+
+    mantenimiento.actividades_realizadas = "\n".join(
+        actividades_realizadas_texto
+    )
+
+    mantenimiento.save(
+        update_fields=[
+            "actividades_realizadas",
+            "actualizado",
+        ]
+    )
+
+
+    return True, None
+
+
 # ==========================================================
 # LISTADO
 # ==========================================================
@@ -171,10 +574,178 @@ def lista_mantenimientos(request):
         "mantenimiento/index.html",
         context,
     )
+@login_required
+@rol_requerido(["SUPERADMIN", "ADMIN"])
+def equipos_por_servicio(request):
 
+    servicio_id = request.GET.get("servicio")
+
+    if not servicio_id:
+        return JsonResponse(
+            {
+                "equipos": []
+            }
+        )
+
+    servicio = get_object_or_404(
+        Servicio.objects.select_related("institucion"),
+        id=servicio_id,
+    )
+
+    # ==========================================================
+    # SEGURIDAD POR INSTITUCIÓN
+    # ==========================================================
+
+    if request.user.es_admin:
+
+        if servicio.institucion != request.user.institucion:
+
+            return JsonResponse(
+                {
+                    "error": "No tiene permisos para consultar este servicio."
+                },
+                status=403,
+            )
+
+    hojas_vida = (
+        HojaVida.objects
+        .filter(
+            equipo__servicio=servicio,
+            equipo__institucion=servicio.institucion,
+        )
+        .select_related(
+            "equipo",
+            "equipo__catalogo",
+        )
+        .order_by(
+            "equipo__nombre",
+            "equipo__serie",
+        )
+    )
+
+    equipos = []
+
+    for hoja in hojas_vida:
+
+        equipo = hoja.equipo
+
+        equipos.append(
+            {
+                "id": hoja.id,
+                "nombre": equipo.nombre,
+                "serie": equipo.serie or "Sin serial",
+                "codigo": equipo.codigo or "Sin código",
+                "marca": equipo.marca or "",
+                "modelo": equipo.modelo or "",
+                "catalogo_id": (
+                    equipo.catalogo_id
+                    if equipo.catalogo
+                    else None
+                ),
+            }
+        )
+
+    return JsonResponse(
+        {
+            "equipos": equipos
+        }
+    )
+@login_required
+@rol_requerido(["SUPERADMIN", "ADMIN"])
+def guia_por_equipo(request):
+
+    hoja_id = request.GET.get("hoja")
+
+    if not hoja_id:
+        return JsonResponse({
+            "guia": None,
+            "actividades": [],
+        })
+
+    hoja_vida = get_object_or_404(
+        HojaVida.objects.select_related(
+            "equipo",
+            "equipo__catalogo",
+            "equipo__servicio",
+            "equipo__institucion",
+        ),
+        id=hoja_id,
+    )
+
+    equipo = hoja_vida.equipo
+
+    if request.user.es_admin:
+
+        if equipo.institucion != request.user.institucion:
+
+            return JsonResponse(
+                {
+                    "error": (
+                        "No tiene permisos para consultar "
+                        "este equipo."
+                    )
+                },
+                status=403,
+            )
+
+    catalogo = equipo.catalogo
+
+    if not catalogo:
+
+        return JsonResponse({
+            "guia": None,
+            "actividades": [],
+            "mensaje": (
+                "El equipo no tiene un catálogo asociado."
+            ),
+        })
+
+    guia = GuiaMantenimiento.objects.filter(
+        catalogo=catalogo,
+        activa=True,
+    ).first()
+
+    if not guia:
+
+        return JsonResponse({
+            "guia": None,
+            "actividades": [],
+            "mensaje": (
+                "Este catálogo no tiene una guía de "
+                "mantenimiento activa."
+            ),
+            "frecuencia": catalogo.frecuencia_mantenimiento,
+        })
+
+    actividades = (
+        guia.actividades
+        .order_by("orden", "id")
+    )
+
+    datos_actividades = []
+
+    for actividad in actividades:
+
+        datos_actividades.append({
+            "id": actividad.id,
+            "descripcion": actividad.descripcion,
+            "obligatorio": actividad.obligatorio,
+            "orden": actividad.orden,
+        })
+
+    return JsonResponse({
+        "guia": {
+            "id": guia.id,
+            "nombre": guia.nombre,
+            "activa": guia.activa,
+        },
+        "actividades": datos_actividades,
+        "frecuencia": catalogo.frecuencia_mantenimiento,
+    })
 # ==========================================================
 # CREAR
 # ==========================================================
+
 @login_required
 @rol_requerido(["SUPERADMIN", "ADMIN"])
 def crear_mantenimiento(request):
@@ -185,62 +756,111 @@ def crear_mantenimiento(request):
 
         form = MantenimientoForm(
             request.POST,
-            request.FILES,
+            request.FILES
         )
 
         if form.is_valid():
 
-            mantenimiento = form.save()
+            try:
 
-            messages.success(
-                request,
-                "Mantenimiento registrado correctamente."
-            )
+                with transaction.atomic():
 
-            return redirect(
-                "detalle_mantenimiento",
-                mantenimiento.id,
-            )
+                    mantenimiento = form.save()
+
+                    # -----------------------------------------
+                    # GUARDAR Y VALIDAR ACTIVIDADES
+                    # -----------------------------------------
+
+                    actividades_ok, error = (
+                        guardar_actividades_mantenimiento(
+                            mantenimiento,
+                            request
+                        )
+                    )
+
+
+                    if not actividades_ok:
+
+                        raise ValueError(error)
+                    
+                    siguiente = programar_siguiente_mantenimiento(
+                        mantenimiento
+                    )
+
+                    if siguiente:
+
+                        messages.success(
+                            request,
+                            (
+                                "Mantenimiento registrado correctamente. "
+                                f"El próximo mantenimiento quedó programado "
+                                f"para el {siguiente.fecha_programada.strftime('%d/%m/%Y')}."
+                            )
+                        )
+
+                    else:
+
+                        messages.success(
+                            request,
+                            "Mantenimiento registrado correctamente."
+                        )
+
+
+            except ValueError as error:
+
+                form.add_error(
+                    None,
+                    str(error)
+                )
+
 
     else:
 
         initial = {}
 
         if hoja_id:
-
             initial["hoja_vida"] = hoja_id
 
         form = MantenimientoForm(
             initial=initial
         )
 
+
     return render(
-
         request,
-
         "mantenimiento/form.html",
-
         {
-
             "form": form,
-
             "titulo": "Nuevo mantenimiento",
-
+            "actividades_guardadas": [],
         },
-
     )
-# ==========================================================
-# EDITAR
-# ==========================================================
 
 @login_required
 @rol_requerido(["SUPERADMIN", "ADMIN"])
 def editar_mantenimiento(request, id):
 
     mantenimiento = get_object_or_404(
-        Mantenimiento,
+        Mantenimiento.objects.select_related(
+            "hoja_vida",
+            "hoja_vida__equipo",
+            "hoja_vida__equipo__institucion",
+            "hoja_vida__equipo__servicio",
+            "hoja_vida__equipo__catalogo",
+        ),
         id=id,
     )
+    actividades_guardadas = list(
+        mantenimiento.actividades.values_list(
+            "actividad_id",
+            flat=True
+        )
+    )
+
+
+    # ---------------------------------------------------------
+    # SEGURIDAD POR INSTITUCIÓN
+    # ---------------------------------------------------------
 
     if request.user.es_admin:
 
@@ -258,33 +878,96 @@ def editar_mantenimiento(request, id):
                 "lista_mantenimientos"
             )
 
+
+    # ---------------------------------------------------------
+    # POST
+    # ---------------------------------------------------------
+
     if request.method == "POST":
 
         form = MantenimientoForm(
             request.POST,
             request.FILES,
-            instance=mantenimiento,
+            instance=mantenimiento
         )
+
 
         if form.is_valid():
 
-            form.save()
+            try:
 
-            messages.success(
-                request,
-                "Mantenimiento actualizado correctamente."
-            )
+                with transaction.atomic():
 
-            return redirect(
-                "lista_mantenimientos"
-            )
+                    mantenimiento = form.save()
+
+
+                    # -----------------------------------------
+                    # GUARDAR ACTIVIDADES
+                    # -----------------------------------------
+
+                    actividades_ok, error = (
+                        guardar_actividades_mantenimiento(
+                            mantenimiento,
+                            request
+                        )
+                    )
+
+
+                    if not actividades_ok:
+
+                        raise ValueError(error)
+                    siguiente = programar_siguiente_mantenimiento(
+                        mantenimiento
+                    )
+
+                if siguiente:
+
+                    messages.success(
+                        request,
+                        (
+                            "Mantenimiento actualizado correctamente. "
+                            f"El próximo mantenimiento quedó programado "
+                            f"para el {siguiente.fecha_programada.strftime('%d/%m/%Y')}."
+                        )
+                    )
+
+                else:
+
+                    messages.success(
+                        request,
+                        "Mantenimiento actualizado correctamente."
+                    )
+
+                return redirect(
+                    "detalle_mantenimiento",
+                    mantenimiento.id
+                )
+
+
+            except ValueError as error:
+
+                form.add_error(
+                    None,
+                    str(error)
+                )
+
+
+    # ---------------------------------------------------------
+    # GET
+    # ---------------------------------------------------------
 
     else:
 
         form = MantenimientoForm(
-            instance=mantenimiento,
+            instance=mantenimiento
         )
 
+    actividades_guardadas = list(
+        mantenimiento.actividades.values_list(
+            "actividad_id",
+            flat=True
+        )
+    )
     return render(
         request,
         "mantenimiento/form.html",
@@ -292,10 +975,14 @@ def editar_mantenimiento(request, id):
             "form": form,
             "titulo": "Editar mantenimiento",
             "editar": True,
+            "mantenimiento": mantenimiento,
+            "actividades_guardadas": actividades_guardadas,
         },
     )
 
-
+# ==========================================================
+# DETALLE
+# ==========================================================
 # ==========================================================
 # DETALLE
 # ==========================================================
@@ -308,11 +995,18 @@ def detalle_mantenimiento(request, id):
         Mantenimiento.objects.select_related(
             "hoja_vida",
             "hoja_vida__equipo",
+            "hoja_vida__equipo__institucion",
+            "hoja_vida__equipo__servicio",
+            "hoja_vida__equipo__catalogo",
             "ingeniero",
             "orden_trabajo",
         ),
         id=id,
     )
+
+    # ---------------------------------------------------------
+    # SEGURIDAD POR INSTITUCIÓN
+    # ---------------------------------------------------------
 
     if request.user.es_admin or request.user.es_biomedico:
 
@@ -329,9 +1023,41 @@ def detalle_mantenimiento(request, id):
             return redirect(
                 "lista_mantenimientos"
             )
-    # ======================================================
+
+    # ---------------------------------------------------------
+    # MANTENIMIENTO ANTERIOR
+    # ---------------------------------------------------------
+
+    mantenimiento_anterior = (
+        mantenimiento.mantenimiento_anterior
+    )
+
+    # ---------------------------------------------------------
+    # PRÓXIMO MANTENIMIENTO
+    # ---------------------------------------------------------
+
+    proximo_mantenimiento = (
+        mantenimiento.mantenimiento_siguiente
+        .order_by("-id")
+        .first()
+    )
+
+    # ---------------------------------------------------------
+    # ACTIVIDADES
+    # ---------------------------------------------------------
+
+    actividades = (
+        mantenimiento.actividades
+        .select_related("actividad")
+        .order_by(
+            "actividad__orden",
+            "actividad__id"
+        )
+    )
+
+    # ---------------------------------------------------------
     # DETERMINAR DE DÓNDE VIENE
-    # ======================================================
+    # ---------------------------------------------------------
 
     volver_a_ordenes = (
         mantenimiento.orden_trabajo is not None
@@ -343,6 +1069,9 @@ def detalle_mantenimiento(request, id):
         "mantenimiento/detalle.html",
         {
             "mantenimiento": mantenimiento,
+            "mantenimiento_anterior": mantenimiento_anterior,
+            "proximo_mantenimiento": proximo_mantenimiento,
+            "actividades": actividades,
             "volver_a_ordenes": volver_a_ordenes,
         },
     )
@@ -605,25 +1334,18 @@ def editar_orden_trabajo(request, id):
 # AGREGAR MANTENIMIENTO A UNA ORDEN
 # ==========================================================
 
-
 @login_required
 @rol_requerido(["SUPERADMIN", "ADMIN"])
 def agregar_mantenimiento_orden(request, id):
-    """
-    Agrega un equipo/mantenimiento a una Orden de Trabajo.
-    """
 
     orden = get_object_or_404(
         OrdenTrabajo.objects.select_related(
             "servicio",
-            "servicio__institucion",
+            "servicio__institucion"
         ),
         id=id,
     )
 
-    # ======================================================
-    # SEGURIDAD
-    # ======================================================
 
     if request.user.es_admin:
 
@@ -634,51 +1356,85 @@ def agregar_mantenimiento_orden(request, id):
 
             messages.error(
                 request,
-                "No tiene permisos para modificar esta "
-                "Orden de Trabajo."
+                "No tiene permisos para modificar esta Orden de Trabajo."
             )
 
             return redirect(
                 "lista_ordenes_trabajo"
             )
 
-    # ======================================================
-    # CREAR MANTENIMIENTO
-    # ======================================================
 
     if request.method == "POST":
 
         form = MantenimientoForm(
             request.POST,
             request.FILES,
-            orden_trabajo=orden,
+            orden_trabajo=orden
         )
+
 
         if form.is_valid():
 
-            mantenimiento = form.save(
-                commit=False
-            )
+            try:
 
-            # Asociar automáticamente la OT
-            mantenimiento.orden_trabajo = orden
+                with transaction.atomic():
 
-            # El servicio de la OT determina los equipos
-            # permitidos. Validaremos esto posteriormente
-            # también desde el formulario/interfaz.
+                    mantenimiento = form.save(
+                        commit=False
+                    )
 
-            mantenimiento.save()
+                    mantenimiento.orden_trabajo = orden
 
-            messages.success(
-                request,
-                "Equipo agregado correctamente a la "
-                "Orden de Trabajo."
-            )
+                    mantenimiento.save()
 
-            return redirect(
-                "detalle_orden_trabajo",
-                orden.id,
-            )
+
+                    actividades_ok, error = (
+                        guardar_actividades_mantenimiento(
+                            mantenimiento,
+                            request
+                        )
+                    )
+
+
+                    if not actividades_ok:
+
+                        raise ValueError(error)
+                    
+                    siguiente = programar_siguiente_mantenimiento(
+                        mantenimiento
+                    )
+
+                if siguiente:
+
+                    messages.success(
+                        request,
+                        (
+                            "Equipo agregado correctamente a la Orden de Trabajo. "
+                            f"El próximo mantenimiento quedó programado "
+                            f"para el {siguiente.fecha_programada.strftime('%d/%m/%Y')}."
+                        )
+                    )
+
+                else:
+
+                    messages.success(
+                        request,
+                        "Equipo agregado correctamente a la Orden de Trabajo."
+                    )
+
+                return redirect(
+                    "detalle_orden_trabajo",
+                    orden.id
+                )
+
+
+            except ValueError as error:
+
+                form.add_error(
+                    None,
+                    str(error)
+                )
+
 
     else:
 
@@ -691,18 +1447,17 @@ def agregar_mantenimiento_orden(request, id):
             orden_trabajo=orden,
         )
 
+
     return render(
         request,
         "mantenimiento/form.html",
         {
             "form": form,
-            "titulo": (
-                f"Agregar equipo a la OT {orden.numero}"
-            ),
+            "titulo": f"Agregar equipo a la OT {orden.numero}",
             "orden": orden,
+            "actividades_guardadas": [],
         },
     )
-
 
 # ==========================================================
 # QUITAR MANTENIMIENTO DE UNA ORDEN
@@ -1958,4 +2713,290 @@ def eliminar_orden_trabajo(request, id):
 
     return redirect(
         "lista_ordenes_trabajo"
+    )
+@login_required
+@rol_requerido(["SUPERADMIN", "ADMIN", "BIOMEDICO"])
+def calendario_mantenimientos(request):
+    """
+    Calendario mensual de mantenimientos.
+
+    Permite visualizar los mantenimientos programados
+    por fecha y filtrarlos por servicio, estado y tipo.
+
+    SUPERADMIN:
+        Puede visualizar todos los mantenimientos.
+
+    ADMIN / BIOMEDICO:
+        Solo pueden visualizar mantenimientos de su institución.
+    """
+
+    hoy = timezone.localdate()
+
+    # ==========================================================
+    # MES Y AÑO SELECCIONADOS
+    # ==========================================================
+
+    try:
+        year = int(request.GET.get("year", hoy.year))
+        month = int(request.GET.get("month", hoy.month))
+    except (TypeError, ValueError):
+        year = hoy.year
+        month = hoy.month
+
+    if month < 1 or month > 12:
+        year = hoy.year
+        month = hoy.month
+
+    # ==========================================================
+    # SERVICIOS DISPONIBLES
+    # ==========================================================
+
+    servicios = (
+        Servicio.objects
+        .all()
+        .order_by("nombre")
+    )
+
+    if request.user.es_admin or request.user.es_biomedico:
+        servicios = servicios.filter(
+            institucion=request.user.institucion
+        )
+
+    # ==========================================================
+    # MANTENIMIENTOS DEL MES
+    # ==========================================================
+
+    mantenimientos = (
+        Mantenimiento.objects
+        .select_related(
+            "hoja_vida",
+            "hoja_vida__equipo",
+            "hoja_vida__equipo__servicio",
+            "hoja_vida__equipo__institucion",
+            "hoja_vida__equipo__catalogo",
+            "ingeniero",
+        )
+        .filter(
+            fecha_programada__year=year,
+            fecha_programada__month=month,
+        )
+    )
+
+    # ==========================================================
+    # RESTRICCIÓN POR INSTITUCIÓN
+    # ==========================================================
+
+    if request.user.es_admin or request.user.es_biomedico:
+        mantenimientos = mantenimientos.filter(
+            hoja_vida__equipo__institucion=request.user.institucion
+        )
+
+    # ==========================================================
+    # FILTROS
+    # ==========================================================
+
+    servicio_id = request.GET.get(
+        "servicio",
+        ""
+    ).strip()
+
+    estado = request.GET.get(
+        "estado",
+        ""
+    ).strip()
+
+    tipo = request.GET.get(
+        "tipo",
+        ""
+    ).strip()
+
+    # ==========================================================
+    # FILTRO POR SERVICIO
+    # ==========================================================
+
+    if servicio_id:
+
+        mantenimientos = mantenimientos.filter(
+            hoja_vida__equipo__servicio_id=servicio_id
+        )
+
+    # ==========================================================
+    # FILTRO POR ESTADO
+    # ==========================================================
+
+    if estado:
+
+        mantenimientos = mantenimientos.filter(
+            estado=estado
+        )
+
+    # ==========================================================
+    # FILTRO POR TIPO
+    # ==========================================================
+
+    if tipo:
+
+        mantenimientos = mantenimientos.filter(
+            tipo=tipo
+        )
+
+    # ==========================================================
+    # ORDEN
+    # ==========================================================
+
+    mantenimientos = mantenimientos.order_by(
+        "fecha_programada",
+        "hoja_vida__equipo__nombre",
+        "hoja_vida__equipo__serie",
+    )
+
+    # ==========================================================
+    # ORGANIZAR MANTENIMIENTOS POR DÍA
+    # ==========================================================
+
+    mantenimientos_por_fecha = {}
+
+    for mantenimiento in mantenimientos:
+
+        dia = mantenimiento.fecha_programada.day
+
+        if dia not in mantenimientos_por_fecha:
+            mantenimientos_por_fecha[dia] = []
+
+        mantenimientos_por_fecha[dia].append(
+            mantenimiento
+        )
+
+    # ==========================================================
+    # GENERAR CALENDARIO DEL MES
+    # ==========================================================
+
+    calendario_base = calendar.Calendar(
+        firstweekday=0
+    ).monthdayscalendar(
+        year,
+        month,
+    )
+
+    # ==========================================================
+    # PREPARAR SEMANAS PARA EL TEMPLATE
+    # ==========================================================
+
+    semanas = []
+
+    for semana in calendario_base:
+
+        semana_datos = []
+
+        for dia in semana:
+
+            if dia == 0:
+
+                semana_datos.append({
+                    "dia": 0,
+                    "mantenimientos": [],
+                })
+
+            else:
+
+                semana_datos.append({
+                    "dia": dia,
+                    "mantenimientos": (
+                        mantenimientos_por_fecha.get(
+                            dia,
+                            []
+                        )
+                    ),
+                })
+
+        semanas.append(
+            semana_datos
+        )
+
+    # ==========================================================
+    # MES ANTERIOR
+    # ==========================================================
+
+    if month == 1:
+
+        mes_anterior = 12
+        anio_anterior = year - 1
+
+    else:
+
+        mes_anterior = month - 1
+        anio_anterior = year
+
+    # ==========================================================
+    # MES SIGUIENTE
+    # ==========================================================
+
+    if month == 12:
+
+        mes_siguiente = 1
+        anio_siguiente = year + 1
+
+    else:
+
+        mes_siguiente = month + 1
+        anio_siguiente = year
+
+    # ==========================================================
+    # NOMBRES DE LOS MESES
+    # ==========================================================
+
+    nombres_meses = [
+        "",
+        "Enero",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto",
+        "Septiembre",
+        "Octubre",
+        "Noviembre",
+        "Diciembre",
+    ]
+
+    nombre_mes = nombres_meses[month]
+
+    # ==========================================================
+    # CONTEXTO
+    # ==========================================================
+
+    contexto = {
+        "semanas": semanas,
+
+        "year": year,
+        "month": month,
+
+        "nombre_mes": nombre_mes,
+
+        "anio_anterior": anio_anterior,
+        "mes_anterior": mes_anterior,
+
+        "anio_siguiente": anio_siguiente,
+        "mes_siguiente": mes_siguiente,
+
+        "hoy": hoy,
+
+        "servicios": servicios,
+
+        "servicio_seleccionado": servicio_id,
+        "estado_seleccionado": estado,
+        "tipo_seleccionado": tipo,
+
+        "estados": Mantenimiento.Estado.choices,
+        "tipos": Mantenimiento.Tipo.choices,
+
+        "total_mantenimientos": mantenimientos.count(),
+    }
+
+    return render(
+        request,
+        "mantenimiento/calendario.html",
+        contexto,
     )
