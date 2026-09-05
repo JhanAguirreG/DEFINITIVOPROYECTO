@@ -257,8 +257,21 @@ def crear_hoja_vida(request):
             with transaction.atomic():
 
                 hoja = form.save(commit=False)
+                        # Obtener el equipo seleccionado definitivamente
+                equipo_id_post = request.POST.get("equipo")
+                if equipo_id_post:
+                    equipo = get_object_or_404(
+                        Equipo.objects.select_related(
+                                "catalogo",
+                                "servicio",
+                        ),
+                        id=equipo_id_post,
+                    )
+                    
+                    hoja.equipo = equipo
 
-                if equipo and catalogo:
+                        # Sincronizar catálogo
+                if hoja.equipo and hoja.equipo.catalogo:
                     hoja.sincronizar_catalogo()
 
                 hoja.save()

@@ -40,7 +40,7 @@ urlpatterns = [
     path(
         "equipos-por-servicio/",
         views.equipos_por_servicio,
-        name="equipos_por_servicio",
-    ),  
+        name="hojas_vida_equipos_por_servicio",
+    ),
 
 ]

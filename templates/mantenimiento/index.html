@@ -480,6 +480,26 @@ Mantenimientos | SIGHI
 
                             {% endif %}
 
+                            <form
+                                method="post"
+                                action="{% url 'eliminar_mantenimiento' mantenimiento.id %}"
+                                onsubmit="return confirm('¿Está seguro de eliminar este mantenimiento? Esta acción no se puede deshacer.');"
+                                style="display:inline;"
+                            >
+
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-danger"
+                                >
+
+                                    <i class="bi bi-trash"></i>
+
+                                </button>
+
+                            </form>
+
                         </td>
 
                     </tr>

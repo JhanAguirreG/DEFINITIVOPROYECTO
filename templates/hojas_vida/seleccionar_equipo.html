@@ -269,7 +269,7 @@ document.addEventListener(
 
 
                 fetch(
-                    "{% url 'equipos_por_servicio' %}?servicio="
+                    "{% url 'hojas_vida_equipos_por_servicio' %}?servicio="
                     + servicioId
                 )
 
@@ -288,9 +288,11 @@ document.addEventListener(
 
                     }
                 )
-
+                    
                 .then(
                     data => {
+                        console.log("Servicio seleccionado:", servicioId);
+                        console.log("Respuesta equipos:", data);
 
                         equipoSelect.innerHTML = "";
 

@@ -124,7 +124,12 @@
     >
 
         {% csrf_token %}
-
+        <input
+            type="hidden"
+            name="programar_siguiente"
+            id="programarSiguiente"
+            value="no"
+        >
 
         <!-- =================================================
              1. INFORMACIÓN GENERAL
@@ -872,6 +877,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const servicioSelect = document.getElementById("id_servicio");
     const equipoSelect = document.getElementById("id_hoja_vida");
     const formulario = document.getElementById("formMantenimiento");
+
+    const tipoSelect = document.getElementById("id_tipo");
+    const estadoSelect = document.getElementById("id_estado");
+    const programarSiguiente = document.getElementById(
+        "programarSiguiente"
+    );
 
     /* =====================================================
        INFORMACIÓN DEL EQUIPO
@@ -1770,60 +1781,123 @@ document.addEventListener("DOMContentLoaded", function () {
        VALIDACIÓN ANTES DE GUARDAR
        ===================================================== */
 
-    if (formulario) {
+/* =====================================================
+   VALIDACIÓN ANTES DE GUARDAR
+   ===================================================== */
 
-        formulario.addEventListener(
-            "submit",
-            function (event) {
+   if (formulario) {
 
-                /* -----------------------------------------
-                   SERVICIO
-                   ----------------------------------------- */
+    formulario.addEventListener(
+        "submit",
+        function (event) {
 
-                if (
-                    servicioSelect &&
-                    !servicioSelect.value
-                ) {
+            // ==========================================
+            // VALIDAR SERVICIO
+            // ==========================================
 
-                    event.preventDefault();
+            if (
+                servicioSelect &&
+                !servicioSelect.value
+            ) {
 
-                    alert(
-                        "Debe seleccionar un servicio."
-                    );
+                event.preventDefault();
 
-                    servicioSelect.focus();
+                alert(
+                    "Debe seleccionar un servicio."
+                );
 
-                    return;
-                }
+                servicioSelect.focus();
 
-                /* -----------------------------------------
-                   EQUIPO
-                   ----------------------------------------- */
-
-                if (
-                    equipoSelect &&
-                    !equipoSelect.value
-                ) {
-
-                    event.preventDefault();
-
-                    alert(
-                        "Debe seleccionar un equipo."
-                    );
-
-                    equipoSelect.focus();
-
-                    return;
-                }
-
-                /* -----------------------------------------
-                   ACTUALIZAR LEGACY
-                   ----------------------------------------- */
-
-                actualizarActividadesRealizadas();
+                return;
             }
-        );
-    }
+
+
+            // ==========================================
+            // VALIDAR EQUIPO
+            // ==========================================
+
+            if (
+                equipoSelect &&
+                !equipoSelect.value
+            ) {
+
+                event.preventDefault();
+
+                alert(
+                    "Debe seleccionar un equipo."
+                );
+
+                equipoSelect.focus();
+
+                return;
+            }
+
+
+            // ==========================================
+            // ACTUALIZAR ACTIVIDADES
+            // ==========================================
+
+            actualizarActividadesRealizadas();
+
+
+            // ==========================================
+            // DECISIÓN SOBRE EL SIGUIENTE PREVENTIVO
+            // ==========================================
+
+            const tipo = tipoSelect
+                ? tipoSelect.value
+                : "";
+
+            const estado = estadoSelect
+                ? estadoSelect.value
+                : "";
+
+
+            // Solo preguntar cuando:
+            // PREVENTIVO + FINALIZADO
+
+            if (
+                tipo === "PREVENTIVO" &&
+                estado === "FINALIZADO"
+            ) {
+
+                const confirmar = confirm(
+
+                    "⚠️ MANTENIMIENTO PREVENTIVO FINALIZADO\n\n" +
+
+                    "Este mantenimiento ha sido marcado como FINALIZADO.\n\n" +
+
+                    "¿Desea programar automáticamente el próximo " +
+                    "mantenimiento preventivo según la frecuencia " +
+                    "configurada para este equipo?\n\n" +
+
+                    "Aceptar = Programar siguiente mantenimiento\n" +
+
+                    "Cancelar = Finalizar sin programar otro"
+                );
+
+
+                if (confirmar) {
+
+                    programarSiguiente.value = "si";
+
+                } else {
+
+                    programarSiguiente.value = "no";
+
+                }
+
+            } else {
+
+                // Para correctivos o mantenimientos
+                // que no estén finalizados
+
+                programarSiguiente.value = "no";
+            }
+
+        }
+    );
+}
 
 });
 </script>

@@ -783,9 +783,21 @@ def crear_mantenimiento(request):
 
                         raise ValueError(error)
                     
-                    siguiente = programar_siguiente_mantenimiento(
-                        mantenimiento
+                    siguiente = None
+
+                    programar_siguiente = (
+                        request.POST.get("programar_siguiente") == "si"
                     )
+
+                    if (
+                        programar_siguiente
+                        and mantenimiento.tipo == Mantenimiento.Tipo.PREVENTIVO
+                        and mantenimiento.estado == Mantenimiento.Estado.FINALIZADO
+                    ):
+
+                        siguiente = programar_siguiente_mantenimiento(
+                            mantenimiento
+                        )
 
                     if siguiente:
 
@@ -916,9 +928,26 @@ def editar_mantenimiento(request, id):
                     if not actividades_ok:
 
                         raise ValueError(error)
-                    siguiente = programar_siguiente_mantenimiento(
-                        mantenimiento
+                    # -----------------------------------------
+                    # PROGRAMAR SIGUIENTE SOLO SI EL USUARIO
+                    # LO SOLICITÓ
+                    # -----------------------------------------
+
+                    siguiente = None
+
+                    programar_siguiente = (
+                        request.POST.get("programar_siguiente") == "si"
                     )
+
+                    if (
+                        programar_siguiente
+                        and mantenimiento.tipo == Mantenimiento.Tipo.PREVENTIVO
+                        and mantenimiento.estado == Mantenimiento.Estado.FINALIZADO
+                    ):
+                        
+                        siguiente = programar_siguiente_mantenimiento(
+                            mantenimiento
+                        )
 
                 if siguiente:
 
