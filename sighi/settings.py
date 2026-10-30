@@ -30,7 +30,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    "django_extensions",
+
+    'django_extensions',
+    'storages',
 
     # Apps del proyecto
     'apps.usuarios',
@@ -41,10 +43,9 @@ INSTALLED_APPS = [
     'apps.catalogo',
     'apps.hojas_vida',
     'apps.mantenimiento',
-    "apps.calibraciones",
-        
-]
+    'apps.calibraciones',
 
+]
 # --------------------------------------------------
 # MIDDLEWARE
 # --------------------------------------------------
@@ -158,10 +159,6 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # ALMACENAMIENTO DE ARCHIVOS - NEON OBJECT STORAGE
 
-INSTALLED_APPS = [
-    # Tus aplicaciones actuales
-    "storages",
-]
 
 STORAGES = {
     "default": {
