@@ -156,23 +156,37 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# ALMACENAMIENTO DE ARCHIVOS - NEON OBJECT STORAGE
+
+INSTALLED_APPS = [
+    # Tus aplicaciones actuales
+    "storages",
+]
+
 STORAGES = {
     "default": {
-        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        "BACKEND": "storages.backends.s3.S3Storage",
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
-# 2. Credenciales y parámetros del Object Storage de Neon
+
 AWS_STORAGE_BUCKET_NAME = os.environ.get("NEON_STORAGE_BUCKET_NAME")
 AWS_S3_ENDPOINT_URL = os.environ.get("NEON_STORAGE_ENDPOINT_URL")
+
 AWS_ACCESS_KEY_ID = os.environ.get("NEON_STORAGE_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.environ.get("NEON_STORAGE_SECRET_ACCESS_KEY")
 
-# Evita que boto3 intente consultar metadatos de AWS EC2 de forma innecesaria
-AWS_PRELOAD_METADATA = True
-AWS_QUERYSTRING_AUTH = False  # Mantiene las URLs de los archivos limpias y públicas para lectura
+AWS_S3_REGION_NAME = os.environ.get("NEON_STORAGE_REGION", "us-east-1")
+
+AWS_S3_SIGNATURE_VERSION = "s3v4"
+
+AWS_QUERYSTRING_AUTH = False
+
+AWS_DEFAULT_ACL = None
+
+AWS_S3_FILE_OVERWRITE = False
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
